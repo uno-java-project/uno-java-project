@@ -252,8 +252,7 @@ public class UnoGameGUI extends JPanel {
 
             return topCardPanel;
         }
-        JPanel topCardPanel = new JPanel();
-        return topCardPanel;
+        return new JPanel();
     }
 
     private void playCard(String card, int playerIndex) {
