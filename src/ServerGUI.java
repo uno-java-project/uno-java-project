@@ -260,5 +260,7 @@ public class ServerGUI extends JFrame {
     public static void main(String[] args) {
         int port = 54321;
         ServerGUI server = new ServerGUI(port);
+
+
     }
 }
