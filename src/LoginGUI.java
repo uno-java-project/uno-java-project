@@ -1,18 +1,28 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.*;
 
 public class LoginGUI extends JFrame {
     private String serverAddress;
     private int serverPort;
-    private JTextField t_userID;
-    private JTextField t_hostAddr;
-    private JButton b_start, b_exit, b_login;
+    private ObjectOutputStream out;
+    JTextField t_userID;
+    JTextField t_hostAddr;
+    JTextField t_portNum;
+
+    private JButton b_start, b_exit, b_send, b_select;
     private JTextPane t_display;
     private JTextField t_input;
     private DefaultStyledDocument document;
+    Socket socket;
+    private Thread receiveThread = null;
+    private String uid;
 
     public LoginGUI(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -32,6 +42,85 @@ public class LoginGUI extends JFrame {
         this.add(splitPane, BorderLayout.CENTER);
     }
 
+    private void printDisplay(String msg) {
+        t_display.setCaretPosition(t_display.getDocument().getLength());
+        int len = t_display.getDocument().getLength();
+        /*try {
+            document.insertString(len, msg + "\n", null);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        t_display.setCaretPosition(len);*/
+        try {
+            document.insertString(len, msg + "\n", null);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        t_display.setCaretPosition(len);
+
+
+    }
+    private void sendImage() {
+        String filename = t_input.getText().strip();
+        if (filename.isEmpty()) return;
+
+        File file = new File(filename);
+        if (!file.exists()) {
+            printDisplay(">> 파일이 존재하지 않습니다 : " + filename);
+            return;
+        }
+        ImageIcon icon = new ImageIcon(filename);
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        t_input.setText("");
+    }
+
+    private void sendUserID() {
+        uid = t_userID.getText();
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
+    }
+    private String getLocalAddr() {
+        InetAddress local = null;
+        String addr = "";
+        try {
+            local = InetAddress.getLocalHost();
+            addr = local.getHostAddress();
+            System.out.println(addr);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return addr;
+    }
+    private void send(ChatMsg msg) {
+        try {
+            out.writeObject(msg);
+            out.flush();
+        } catch (IOException e) {
+            System.out.println("클라 오류" + e.getMessage());
+        }
+    }
+    private JPanel createInfoPanel() {
+        // GridLayout을 사용하여 세로로 정렬
+        JPanel p = new JPanel(new GridLayout(3, 2, 5, 5)); // 3행 2열, 컴포넌트 간 여백 설정
+
+        t_userID = new JTextField(7);
+        t_hostAddr = new JTextField(12);
+        t_portNum = new JTextField(5);
+        t_userID.setText("guest" + getLocalAddr().split("\\.")[3]);
+        t_hostAddr.setText(this.serverAddress);
+        t_portNum.setText(String.valueOf(this.serverPort));
+
+        p.add(new JLabel("아이디:"));
+        p.add(t_userID);
+        p.add(new JLabel("서버주소:"));
+        p.add(t_hostAddr);
+        p.add(new JLabel("포트번호:"));
+        p.add(t_portNum);
+
+        return p;
+    }
+
+
+
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
 
@@ -45,100 +134,235 @@ public class LoginGUI extends JFrame {
 
         // 이미지 패널 추가 및 여백 포함
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBorder(BorderFactory.createEmptyBorder(200, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(200, 0, 100, 0)); // 상단과 하단에 여백 추가
         imagePanel.add(imageLabel, BorderLayout.CENTER);
 
         leftPanel.add(imagePanel, BorderLayout.NORTH); // 이미지 패널 추가
 
-        // 하단 영역: 로그인 및 버튼
-        JPanel lowerPanel = new JPanel(new GridLayout(1, 2, 10, 10)); // 좌우로 나눔
+        // 하단 패널: InfoPanel과 ControlPanel을 좌우로 배치
+        JPanel lowerPanel = new JPanel(new GridLayout(1, 2, 10, 10)); // 좌우로 나누는 레이아웃
+        lowerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // 패딩 추가
 
-        // 로그인 정보 입력 영역
-        JPanel loginPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        loginPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10)); // 패딩 추가
+        // InfoPanel과 ControlPanel 추가
+        lowerPanel.add(createInfoPanel());  // 왼쪽: InfoPanel
+        lowerPanel.add(createControlPanel()); // 오른쪽: ControlPanel
 
-        loginPanel.add(new JLabel("User Name:"));
-        t_userID = new JTextField();
-        loginPanel.add(t_userID);
-
-        loginPanel.add(new JLabel("IP Address:"));
-        t_hostAddr = new JTextField();
-        loginPanel.add(t_hostAddr);
-
-        // 버튼 패널
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5)); // 세로로 나눔
-
-        b_start = new JButton("게임 접속");
-        b_start.addActionListener(this::onStartClicked);
-
-        b_exit = new JButton("게임 종료");
-        b_exit.addActionListener(e -> System.exit(0));
-
-        buttonPanel.add(b_start);
-        buttonPanel.add(b_exit);
-
-        // 하단 패널에 좌측: 로그인, 우측: 버튼 패널 추가
-        lowerPanel.add(loginPanel);
-        lowerPanel.add(buttonPanel);
-
-        // 하단 패널을 전체 레이아웃의 남쪽에 추가
+        // 하단 패널을 LeftPanel의 남쪽에 추가
         leftPanel.add(lowerPanel, BorderLayout.SOUTH);
+
         return leftPanel;
     }
 
 
-
-    private JPanel createRightPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout());
-
-        // 텍스트 표시 영역
+    private JPanel createDisplayPanel() {
+        JPanel p = new JPanel(new BorderLayout());
         document = new DefaultStyledDocument();
         t_display = new JTextPane(document);
+
         t_display.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(t_display);
-        rightPanel.add(scrollPane, BorderLayout.CENTER);
+        p.add(new JScrollPane(t_display), BorderLayout.CENTER);
 
-        // 입력 패널
+        return p;
+    }
+    private JPanel createRightPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+
+        JPanel displayPanel = createDisplayPanel();
+        panel.add(displayPanel, BorderLayout.CENTER); // 중앙에 배치해 가장 큰 영역 할당
+
+        // Input 필드 및 버튼 패널 구성
         JPanel inputPanel = new JPanel(new BorderLayout());
-        t_input = new JTextField();
-        inputPanel.add(t_input, BorderLayout.CENTER);
 
-        JButton b_send = new JButton("보내기");
-        b_send.addActionListener(e -> sendMessage());
-        inputPanel.add(b_send, BorderLayout.EAST);
+        // 텍스트 입력 필드
+        t_input = new JTextField(30);
+        t_input.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
+        inputPanel.add(t_input, BorderLayout.NORTH); // 입력 필드는 상단에 배치
 
-        rightPanel.add(inputPanel, BorderLayout.SOUTH);
-        return rightPanel;
-    }
+        // 버튼 패널 (보내기, 선택하기 버튼)
+        JPanel p_button = new JPanel(new GridLayout(1, 2, 5, 5)); // 가로로 두 개 버튼 배치
+        b_send = new JButton("보내기");
+        b_send.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sendMessage();
+            }
+        });
 
-    private void onLoginClicked(ActionEvent e) {
-        String username = t_userID.getText();
-        String ipAddress = t_hostAddr.getText();
-        try {
-            document.insertString(document.getLength(), "로그인: " + username + " / IP: " + ipAddress + "\n", null);
-        } catch (BadLocationException ex) {
-            ex.printStackTrace();
-        }
-    }
+        b_select = new JButton("선택하기");
+        b_select.addActionListener(new ActionListener() {
+            JFileChooser chooser = new JFileChooser();
 
-    private void onStartClicked(ActionEvent e) {
-        try {
-            document.insertString(document.getLength(), "게임 접속 시도...\n", null);
-        } catch (BadLocationException ex) {
-            ex.printStackTrace();
-        }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                        "JPG & GIF & PNG Images",
+                        "jpg", "gif", "png");
+                chooser.setFileFilter(filter);
+
+                int ret = chooser.showOpenDialog(LoginGUI.this);
+                if (ret != JFileChooser.APPROVE_OPTION) {
+                    JOptionPane.showMessageDialog(LoginGUI.this, "파일을 선택하지 않았습니다");
+                    return;
+                }
+                t_input.setText(chooser.getSelectedFile().getAbsolutePath());
+                sendImage();
+            }
+        });
+
+        // 버튼들을 버튼 패널에 추가
+        p_button.add(b_select);
+        p_button.add(b_send);
+
+        inputPanel.add(p_button, BorderLayout.SOUTH); // 버튼 패널은 입력 필드 아래에 배치
+
+        // Input 패널 전체를 Right Panel의 하단에 추가
+        panel.add(inputPanel, BorderLayout.SOUTH);
+
+        return panel;
     }
 
     private void sendMessage() {
         String message = t_input.getText();
         if (message.isEmpty()) return;
-        try {
-            document.insertString(document.getLength(), "You: " + message + "\n", null);
-        } catch (BadLocationException e) {
-            e.printStackTrace();
+
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+
+        t_input.setText(""); // 보낸 후 입력창은 비우기
+
+    }
+
+    private void printDisplay(ImageIcon icon) {
+        t_display.setCaretPosition(t_display.getDocument().getLength());
+
+        if (icon.getIconWidth() > 400) {
+            Image img = icon.getImage();
+            Image changeImg = img.getScaledInstance(400, -1, Image.SCALE_SMOOTH);
+            icon = new ImageIcon(changeImg);
         }
+        t_display.insertIcon(icon);
+        printDisplay("");
         t_input.setText("");
     }
+    private JPanel createControlPanel() {
+        b_start = new JButton("접속하기");
+
+        b_start.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                LoginGUI.this.serverAddress = t_hostAddr.getText();
+                LoginGUI.this.serverPort = Integer.parseInt(t_portNum.getText());
+
+                try {
+                    connectToServer();
+                    sendUserID();
+
+                    // ServerRoomGUI 실행
+                    SwingUtilities.invokeLater(() -> new ServerRoomGUI(serverAddress, serverPort));
+
+                    // 현재 LoginGUI 닫기
+                    LoginGUI.this.dispose();
+                } catch (Exception e) {
+                    printDisplay("오류 발생: " + e.getMessage());
+                }
+            }
+        });
+
+
+        b_exit = new JButton("접속 끊기");
+        b_exit.setEnabled(false); // 처음엔 비활성화
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                disconnect();
+            }
+        });
+
+        b_exit = new JButton("종료하기");
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
+
+        JPanel panel = new JPanel(new GridLayout(0, 3));
+        panel.add(b_start);
+        panel.add(b_exit);
+        panel.add(b_exit);
+
+        return panel;
+    }
+
+    private void connectToServer() throws UnknownHostException, IOException {
+        socket = new Socket();
+        SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
+        socket.connect(sa, 3000);
+        out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+        //in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        receiveThread = new Thread(new Runnable() {
+            private ObjectInputStream in;
+
+            private void receiveMessage() {
+                try {
+                    ChatMsg inMsg = (ChatMsg) in.readObject();
+                    if (inMsg == null) {
+                        disconnect();
+                        printDisplay("서버 연결 끊김");
+                        return;
+                    }
+                    switch (inMsg.mode) {
+                        case ChatMsg.MODE_TX_STRING:
+                            printDisplay(inMsg.userID + ":" + inMsg.message);
+                            break;
+                        case ChatMsg.MODE_TX_IMAGE:
+                            printDisplay(inMsg.userID + ":" + inMsg.message);
+                            printDisplay(inMsg.image);
+                            break;
+                    }
+                } catch (IOException e) {
+                    printDisplay("연결 종류");
+                } catch (ClassNotFoundException e) {
+                    printDisplay("잘못된 객체가 전달되었습니다");
+                }
+            }
+
+            @Override
+            public void run() {
+                try {
+                    in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+
+                } catch (IOException e) {
+                    printDisplay("입력 스트림이 열리지 않음");
+                }
+                while (receiveThread == Thread.currentThread()) {
+                    receiveMessage();
+                }
+            }
+        });
+        receiveThread.start();
+        b_select.setEnabled(true);
+        b_send.setEnabled(true);
+        b_start.setEnabled(false);
+        b_exit.setEnabled(true);
+        b_exit.setEnabled(false);
+    }
+    private void disconnect() {
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        try {
+            receiveThread = null;
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("클라이언트 닫기 오류 > " + e.getMessage());
+            System.exit(-1);
+        }
+        b_start.setEnabled(true);
+        b_exit.setEnabled(false);
+        b_exit.setEnabled(true);
+    }
+
 
     public static void main(String[] args) {
         String serverAddress = "localhost";

@@ -7,7 +7,9 @@ public class ChatMsg implements Serializable {
     public final static int MODE_TX_STRING = 0x10;
     public final static int MODE_TX_FILE = 0x20;
     public final static int MODE_TX_IMAGE = 0x40;
-
+    public static final int MODE_ROOM_STATUS = 3;
+    public static final int MODE_ROOM_JOIN = 3;
+    public static final int MODE_ROOM_PORT = 10;
     String userID;
     int mode;
     String message;
