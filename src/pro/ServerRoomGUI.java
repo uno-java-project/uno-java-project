@@ -1,9 +1,14 @@
+package pro;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ServerRoomGUI extends JFrame {
@@ -12,16 +17,17 @@ public class ServerRoomGUI extends JFrame {
     private Socket socket;
     private JTextPane t_display;
     private Thread receiveThread;
-    private String uid = "Guest"; // 기본 사용자 ID
+    private String uid ; // 기본 사용자 ID
     private DefaultStyledDocument document;
     private String serverAddress;
     private int serverPort;
     private JLabel[] roomLabels = new JLabel[8]; // 각 방의 라벨을 저장
 
-    public ServerRoomGUI(String serverAddress, int serverPort) {
+    public ServerRoomGUI(String serverAddress, int serverPort, String uid) {
         super("Server Room GUI");
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
+        this.uid = uid; // uid 저장
 
         buildGUI(); // GUI 초기화
         setBounds(100, 100, 800, 600);
@@ -31,15 +37,20 @@ public class ServerRoomGUI extends JFrame {
         // 서버 연결 시도
         connectToServer(serverAddress, serverPort);
     }
+
     private void buildGUI() {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
         splitPane.setDividerLocation(300);
         add(splitPane, BorderLayout.CENTER);
     }
-    private void ReceiveThread() {
+
+    private synchronized void ReceiveThread() {
+        if (receiveThread != null && receiveThread.isAlive()) {
+            receiveThread.interrupt(); // Stop previous thread if active
+        }
         receiveThread = new Thread(() -> {
             try {
-                while (!Thread.currentThread().isInterrupted()) { // 스레드 중단 요청 확인
+                while (!Thread.currentThread().isInterrupted()) {
                     ChatMsg msg = (ChatMsg) in.readObject();
                     if (msg != null) {
                         handleIncomingMessage(msg);
@@ -48,16 +59,23 @@ public class ServerRoomGUI extends JFrame {
             } catch (IOException | ClassNotFoundException e) {
                 SwingUtilities.invokeLater(() -> printDisplay("서버 연결이 끊어졌습니다: " + e.getMessage()));
             } finally {
-                try {
-                    if (socket != null && !socket.isClosed()) {
-                        socket.close(); // 소켓 닫기
-                    }
-                } catch (IOException e) {
-                    printDisplay("소켓 닫기 오류: " + e.getMessage());
-                }
+                cleanupResources();
             }
         });
         receiveThread.start();
+    }
+
+    private void cleanupResources() {
+        try {
+            if (socket != null && !socket.isClosed()) {
+                socket.close(); // Close socket
+            }
+            if (receiveThread != null && receiveThread.isAlive()) {
+                receiveThread.interrupt(); // Interrupt thread
+            }
+        } catch (IOException e) {
+            printDisplay("자원 정리 중 오류: " + e.getMessage());
+        }
     }
 
 
@@ -68,53 +86,42 @@ public class ServerRoomGUI extends JFrame {
                 out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
 
-                SwingUtilities.invokeLater(() -> printDisplay("서버에 연결되었습니다!"));
-
-                receiveThread = new Thread(() -> {
-                    try {
-                        while (true) {
-                            ChatMsg msg = (ChatMsg) in.readObject();
-                            if (msg != null) {
-                                handleIncomingMessage(msg);
-                            }
-                        }
-                    } catch (IOException | ClassNotFoundException e) {
-                        SwingUtilities.invokeLater(() -> printDisplay("서버 연결이 끊어졌습니다: " + e.getMessage()));
-                    }
-                });
-                receiveThread.start();
+                send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, "로그인"));
+                ReceiveThread();
             } catch (IOException e) {
                 SwingUtilities.invokeLater(() -> printDisplay("서버에 연결할 수 없습니다: " + e.getMessage()));
             }
         }).start();
     }
+
+
+
+
+
     private int getPortForRoom(int roomNumber) {
         return 54321 + roomNumber; // 방 번호에 따라 포트 설정
     }
+
+
+    private void updateRoomLabels(String message) {
+        // 메시지 형식: "방 1 (2/4)"
+        String[] parts = message.split(" "); // "방 1 (2/4)" -> ["방", "1", "(2/4)"]
+        int roomNumber = Integer.parseInt(parts[1]) - 1; // 배열 인덱스는 0부터 시작
+        SwingUtilities.invokeLater(() -> roomLabels[roomNumber].setText(message)); // 해당 방의 라벨 업데이트
+    }
+
+
     private void handleIncomingMessage(ChatMsg msg) {
         SwingUtilities.invokeLater(() -> {
             switch (msg.mode) {
                 case ChatMsg.MODE_ROOM_STATUS:
-                    updateRoomLabels(msg.message); // 방 상태 업데이트
+                    updateRoomLabels(msg.message); // 서버로부터 받은 방 상태 업데이트
                     break;
                 default:
                     printDisplay("알 수 없는 메시지: " + msg.message);
             }
         });
     }
-
-    private void updateRoomLabels(String message) {
-        String[] lines = message.split("\n"); // 메시지를 줄 단위로 분리
-        for (String line : lines) {
-            if (line.startsWith("방")) {
-                String[] parts = line.split(" "); // "방 1 (1/4)" -> ["방", "1", "(1/4)"]
-                int roomNumber = Integer.parseInt(parts[1]) - 1; // 배열 인덱스는 0부터 시작
-                roomLabels[roomNumber].setText(line); // 해당 방의 라벨 업데이트
-            }
-        }
-    }
-
-
 
 
     private void printDisplay(String msg) {
@@ -130,12 +137,14 @@ public class ServerRoomGUI extends JFrame {
 
     private void send(ChatMsg msg) {
         try {
+            System.out.println("전송 메시지: " + msg.message);
             out.writeObject(msg);
             out.flush();
         } catch (IOException e) {
             printDisplay("메시지 전송 오류: " + e.getMessage());
         }
     }
+
 
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -165,43 +174,34 @@ public class ServerRoomGUI extends JFrame {
     private void joinRoom(int roomNumber, JLabel roomLabel) {
         new Thread(() -> {
             try {
-                // 기존 연결 닫기
-                if (socket != null && !socket.isClosed()) {
-                    try {
-                        receiveThread.interrupt(); // 기존 수신 스레드 종료 요청
-                        socket.close(); // 기존 소켓 닫기
-                    } catch (IOException e) {
-                        printDisplay("기존 소켓 닫기 오류: " + e.getMessage());
-                    }
-                }
-
-                // 새 소켓 연결
                 int roomPort = getPortForRoom(roomNumber);
+                printDisplay("방 " + roomNumber + " 연결 시도 중. 포트: " + roomPort);
+
+                // 서버 연결
                 socket = new Socket(serverAddress, roomPort);
-                out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+                out = new ObjectOutputStream(socket.getOutputStream());
+                in = new ObjectInputStream(socket.getInputStream());
 
-                // 서버에 입장 메시지 전송
+                // 방 입장 메시지 전송
                 send(new ChatMsg(uid, ChatMsg.MODE_ROOM_JOIN, "방 " + roomNumber + " 입장"));
+                printDisplay("방 " + roomNumber + "에 메시지 전송 완료");
 
-                // UI 업데이트
-                SwingUtilities.invokeLater(() -> roomLabel.setText("방 " + roomNumber + " (연결됨)"));
-
-                // 새 수신 스레드 시작
-                if (receiveThread != null && receiveThread.isAlive()) {
-                    receiveThread.interrupt(); // 이전 수신 스레드 중단 요청
+                // 서버로부터 응답 수신
+                ChatMsg response = (ChatMsg) in.readObject();
+                if (response != null && response.mode == ChatMsg.MODE_ROOM_STATUS) {
+                    printDisplay("서버 응답: " + response.message);
+                    updateRoomLabels(response.message); // 방 상태 업데이트
                 }
-                ReceiveThread();
-
-                printDisplay("방 " + roomNumber + "에 입장했습니다.");
-            } catch (IOException e) {
-                SwingUtilities.invokeLater(() -> printDisplay("방 입장 오류: " + e.getMessage()));
+            } catch (IOException | ClassNotFoundException e) {
+                printDisplay("방 입장 오류: " + e.getMessage());
             }
         }).start();
     }
 
 
-
+    private void requestRoomStatus() {
+        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_STATUS, "방 상태 요청"));
+    }
 
 
 

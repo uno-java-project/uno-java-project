@@ -1,5 +1,6 @@
+package pro;
+
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import java.awt.*;
@@ -169,10 +170,8 @@ public class LoginGUI extends JFrame {
 
         JPanel displayPanel = createDisplayPanel();
         panel.add(displayPanel, BorderLayout.CENTER); // 중앙에 배치해 가장 큰 영역 할당
-
         // Input 필드 및 버튼 패널 구성
         JPanel inputPanel = new JPanel(new BorderLayout());
-
         // 텍스트 입력 필드
         t_input = new JTextField(30);
         t_input.addActionListener(new ActionListener() {
@@ -181,45 +180,6 @@ public class LoginGUI extends JFrame {
             }
         });
         inputPanel.add(t_input, BorderLayout.NORTH); // 입력 필드는 상단에 배치
-
-        // 버튼 패널 (보내기, 선택하기 버튼)
-        JPanel p_button = new JPanel(new GridLayout(1, 2, 5, 5)); // 가로로 두 개 버튼 배치
-        b_send = new JButton("보내기");
-        b_send.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendMessage();
-            }
-        });
-
-        b_select = new JButton("선택하기");
-        b_select.addActionListener(new ActionListener() {
-            JFileChooser chooser = new JFileChooser();
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                        "JPG & GIF & PNG Images",
-                        "jpg", "gif", "png");
-                chooser.setFileFilter(filter);
-
-                int ret = chooser.showOpenDialog(LoginGUI.this);
-                if (ret != JFileChooser.APPROVE_OPTION) {
-                    JOptionPane.showMessageDialog(LoginGUI.this, "파일을 선택하지 않았습니다");
-                    return;
-                }
-                t_input.setText(chooser.getSelectedFile().getAbsolutePath());
-                sendImage();
-            }
-        });
-
-        // 버튼들을 버튼 패널에 추가
-        p_button.add(b_select);
-        p_button.add(b_send);
-
-        inputPanel.add(p_button, BorderLayout.SOUTH); // 버튼 패널은 입력 필드 아래에 배치
-
-        // Input 패널 전체를 Right Panel의 하단에 추가
-        panel.add(inputPanel, BorderLayout.SOUTH);
 
         return panel;
     }
@@ -259,8 +219,8 @@ public class LoginGUI extends JFrame {
                     connectToServer();
                     sendUserID();
 
-                    // ServerRoomGUI 실행
-                    SwingUtilities.invokeLater(() -> new ServerRoomGUI(serverAddress, serverPort));
+                    // ServerRoomGUI 실행 (uid 전달)
+                    SwingUtilities.invokeLater(() -> new ServerRoomGUI(serverAddress, serverPort, uid));
 
                     // 현재 LoginGUI 닫기
                     LoginGUI.this.dispose();
@@ -271,15 +231,6 @@ public class LoginGUI extends JFrame {
         });
 
 
-        b_exit = new JButton("접속 끊기");
-        b_exit.setEnabled(false); // 처음엔 비활성화
-        b_exit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                disconnect();
-            }
-        });
-
         b_exit = new JButton("종료하기");
         b_exit.addActionListener(new ActionListener() {
             @Override
@@ -288,9 +239,8 @@ public class LoginGUI extends JFrame {
             }
         });
 
-        JPanel panel = new JPanel(new GridLayout(0, 3));
+        JPanel panel = new JPanel(new GridLayout(1, 3));
         panel.add(b_start);
-        panel.add(b_exit);
         panel.add(b_exit);
 
         return panel;
@@ -343,11 +293,8 @@ public class LoginGUI extends JFrame {
             }
         });
         receiveThread.start();
-        b_select.setEnabled(true);
-        b_send.setEnabled(true);
-        b_start.setEnabled(false);
+        b_start.setEnabled(true);
         b_exit.setEnabled(true);
-        b_exit.setEnabled(false);
     }
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
