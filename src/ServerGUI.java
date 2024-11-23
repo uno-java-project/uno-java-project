@@ -33,6 +33,22 @@ public class ServerGUI extends JFrame {
         // 채팅 패널을 오른쪽에 추가
         add(serverPanel, BorderLayout.EAST);  // 채팅 패널 추가
 
+
+        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
+        JLabel imageLabel = new JLabel();
+        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        Image scaledImage = imageIcon.getImage().getScaledInstance(400, -1, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
+        imageLabel.setIcon(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+
+        // 이미지 패널 추가 및 여백 포함
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(80, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
+
+        add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
+
 //        // 우노 게임 패널
 //        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();
 //        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
