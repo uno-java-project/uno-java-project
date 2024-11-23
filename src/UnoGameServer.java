@@ -14,8 +14,8 @@ public class UnoGameServer extends JFrame {
         setLayout(new BorderLayout());
 
         // 채팅 패널을 오른쪽에 추가
-        ServerGUI serverGUI = new ServerGUI(port);
-        add(serverGUI, BorderLayout.EAST);  // 채팅 패널 추가
+        ServerGameGUI serverGameGUI = new ServerGameGUI(port);
+        add(serverGameGUI, BorderLayout.EAST);  // 채팅 패널 추가
         
 //        // 우노 게임 패널
 //        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();

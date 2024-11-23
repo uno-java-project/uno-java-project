@@ -7,7 +7,7 @@ import java.net.*;
 import java.util.*;
 import java.util.List;
 
-public class ServerGUI extends JFrame {
+public class ServerGameGUI extends JFrame {
     private UnoGame unoGame;
     private int port;
     private JPanel serverPanel;
@@ -19,7 +19,7 @@ public class ServerGUI extends JFrame {
     private List<String> playersUid = new ArrayList<>();
     private int maxPlayers = 4;  // 최대 플레이어 수 설정
 
-    public ServerGUI(int port) {
+    public ServerGameGUI(int port) {
         super("Uno Game");
         this.port = port;
         this.setSize(870, 830);
@@ -304,6 +304,6 @@ public class ServerGUI extends JFrame {
 
     public static void main(String[] args) {
         int port = 54321;
-        ServerGUI server = new ServerGUI(port);
+        ServerGameGUI server = new ServerGameGUI(port);
     }
 }
