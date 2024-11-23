@@ -192,7 +192,7 @@ public class ServerGUI extends JPanel {
                 out = new ObjectOutputStream(new BufferedOutputStream(cs.getOutputStream()));
 
                 // 접속할 때마다 현재 유저 수 확인
-                if (users.size() >= maxPlayers) {
+                if (users.size() >= maxPlayers + 1) {
                     // 최대 인원 초과 시, 클라이언트에게 메시지 전송하고 연결 종료
                     ChatMsg msg = new ChatMsg("Server", ChatMsg.MODE_TX_STRING, "최대 인원 수 초과. 접속을 종료합니다.");
                     out.writeObject(msg);
