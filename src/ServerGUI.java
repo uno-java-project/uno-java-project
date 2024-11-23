@@ -4,32 +4,46 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
-public class ServerGUI extends JPanel {
+public class ServerGUI extends JFrame {
+    private UnoGame unoGame;
     private int port;
+    private JPanel serverPanel;
     private ServerSocket serverSocket;
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
+    private List<String> playersUid = new ArrayList<>();
     private int maxPlayers = 4;  // 최대 플레이어 수 설정
 
     public ServerGUI(int port) {
-//        super("WithCharServer");
+        super("Uno Game");
         this.port = port;
-        this.setLayout(new BorderLayout());
-        buildGUI();
-        this.setBounds(100, 200, 400, 300);
+        this.setSize(870, 830);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setLocationRelativeTo(null);
 
-//        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        this.setVisible(true); //this는 전부 필수 아니지만 있는 게 나음
-    } // 생성자
+        serverPanel = new JPanel(new BorderLayout());
+        buildGUI();
+
+        setLayout(new BorderLayout());
+        // 채팅 패널을 오른쪽에 추가
+        add(serverPanel, BorderLayout.EAST);  // 채팅 패널 추가
+
+//        // 우노 게임 패널
+//        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();
+//        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+
+
+        setVisible(true);
+    }
 
     private void buildGUI() {
-        add(createDisplayPanel(), BorderLayout.CENTER);
-        add(createControlPanel(), BorderLayout.SOUTH);
-
+        serverPanel.add(createDisplayPanel(), BorderLayout.CENTER);
+        serverPanel.add(createControlPanel(), BorderLayout.SOUTH);
     }
 
     private String getLocalAddr() {
@@ -191,21 +205,25 @@ public class ServerGUI extends JPanel {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(cs.getInputStream()));
                 out = new ObjectOutputStream(new BufferedOutputStream(cs.getOutputStream()));
 
-                // 접속할 때마다 현재 유저 수 확인
-                if (users.size() >= maxPlayers + 1) {
-                    // 최대 인원 초과 시, 클라이언트에게 메시지 전송하고 연결 종료
-                    ChatMsg msg = new ChatMsg("Server", ChatMsg.MODE_TX_STRING, "최대 인원 수 초과. 접속을 종료합니다.");
-                    out.writeObject(msg);
-                    out.flush();
-                    cs.close();
-                    return; // 클라이언트 접속 종료
-                }
 
                 String message;
                 ChatMsg msg;
                 while ((msg = (ChatMsg) in.readObject()) != null) {
+                    // 현재 유저 수 확인후 실행
+                    if (users.size() == maxPlayers && unoGame == null) {
+                        unoGame = new UnoGame();
+                        unoGame.setPlayers(playersUid);
+                        // 우노 게임 패널
+                        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
+                        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+
+                        revalidate(); // 레이아웃을 갱신
+                        repaint(); // 화면을 새로 그리기
+                    }
+
                     if (msg.mode == ChatMsg.MODE_LOGIN) {
                         uid = msg.userID;
+                        playersUid.add(uid);
                         printDisplay("새 참가자: " + uid);
                         printDisplay("현재 참가자 수: " + users.size());
                         continue;
@@ -218,7 +236,6 @@ public class ServerGUI extends JPanel {
 
                         printDisplay(message);
                         broadcasting(msg);
-                        ;
                     }
                     else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
@@ -269,8 +286,8 @@ public class ServerGUI extends JPanel {
         }
     }
 
-//    public static void main(String[] args) {
-//        int port = 54321;
-//        ServerGUI server = new ServerGUI(port);
-//    }
+    public static void main(String[] args) {
+        int port = 54321;
+        ServerGUI server = new ServerGUI(port);
+    }
 }

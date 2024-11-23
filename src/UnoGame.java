@@ -8,11 +8,9 @@ public class UnoGame {
     private List<String> deck;
     private List<String> player1List, player2List, player3List, player4List;
     private String topCard;
-    private String[] turn;
+    private List<String> turn;
 
     public UnoGame() {
-        turn = new String[] {"Player 1", "Player 2", "Player 3", "Player 4"};
-
         // 초기화
         deck = new ArrayList<>();
 
@@ -21,7 +19,18 @@ public class UnoGame {
         player2List = new ArrayList<>();
         player3List = new ArrayList<>();
         player4List = new ArrayList<>();
+    }
 
+    public void setPlayers(List<String> players) {
+        turn = players;
+    }
+
+    public boolean startGame(){
+        if(turn != null){
+            dealCards();
+            return true;
+        }
+        return false;
     }
 
     public void dealCards() {
@@ -77,7 +86,7 @@ public class UnoGame {
         }
     }
 
-    public String[] getTurn() {
+    public List<String> getTurn() {
         return turn;
     }
 
@@ -109,7 +118,7 @@ public class UnoGame {
 
     public void drawCard(int playerIndex) {
         if (!deck.isEmpty()) {
-            String drawnCard = deck.remove(0);
+            String drawnCard = deck.removeFirst();
             switch (playerIndex) {
                 case 1: player1List.add(drawnCard); break;
                 case 2: player2List.add(drawnCard); break;
@@ -120,10 +129,10 @@ public class UnoGame {
     }
 
     public void nextTurn() {
-        // 턴 변경: turn 배열에서 첫 번째 아이템을 맨 뒤로 보냄
-        String firstPlayer = turn[0];
-        System.arraycopy(turn, 1, turn, 0, turn.length - 1);  // 배열에서 첫 번째 요소를 뺀 나머지를 한 칸씩 앞으로
-        turn[turn.length - 1] = firstPlayer;  // 첫 번째 플레이어를 배열의 마지막에 넣기
+        // 턴 변경: turn 리스트에서 첫 번째 아이템을 맨 뒤로 보냄
+        String firstPlayer = turn.getFirst();
+        turn.removeFirst();  // 첫 번째 요소를 리스트에서 제거
+        turn.add(firstPlayer);  // 첫 번째 플레이어를 리스트의 마지막에 추가
     }
 
     public void jumpTurn() {
@@ -132,10 +141,8 @@ public class UnoGame {
     }
 
     public void reverseTurn() {
-        // turn 배열을 뒤집음
-        List<String> turnList = new ArrayList<>(List.of(turn));
-        Collections.reverse(turnList);
-        turn = turnList.toArray(new String[0]);  // 배열로 다시 변환
+        // turn 리스트를 뒤집음
+        Collections.reverse(turn);
     }
 
     public int getRemainingCardCount() {

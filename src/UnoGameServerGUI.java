@@ -11,7 +11,7 @@ public class UnoGameServerGUI extends JPanel {
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
 
-    public UnoGameServerGUI() {
+    public UnoGameServerGUI(UnoGame unoGame) {
     	setLayout(new BorderLayout()); // 기존의 레이아웃 설정
     	setPreferredSize(new Dimension(615, 830));
     	
@@ -25,21 +25,20 @@ public class UnoGameServerGUI extends JPanel {
         remainingCardsLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(remainingCardsLabel, BorderLayout.NORTH);
 
-        unoGame = new UnoGame();
+        this.unoGame = unoGame;
 
         updateGamePanel();
 
         // 게임 시작 버튼
         JButton startButton = new JButton("게임 시작");
-        startButton.addActionListener(e -> dealCardsUpdate());
+        startButton.addActionListener(e -> gameStartUp());
         add(startButton, BorderLayout.SOUTH);
 
         setVisible(true);
     }
 
-    private void dealCardsUpdate() {
-        // 카드를 나눠줌
-        unoGame.dealCards();
+    private void gameStartUp() {
+        unoGame.startGame();
 
         // 플레이어들의 카드 표시
         updateGamePanel();
@@ -223,9 +222,9 @@ public class UnoGameServerGUI extends JPanel {
     
     private JPanel displayTurnPanel() {
         JPanel turnPanel = new JPanel();
-        turnPanel.setLayout(new GridLayout(unoGame.getTurn().length + 1, 1));  // 각 플레이어를 세로로 나열
+        turnPanel.setLayout(new GridLayout(unoGame.getTurn().size() + 1, 1));  // 각 플레이어를 세로로 나열
         
-        JLabel nowTurn = new JLabel("현제 차례 : " + unoGame.getTurn()[0]);
+        JLabel nowTurn = new JLabel("현제 차례 : " + unoGame.getTurn().getFirst());
         turnPanel.add(nowTurn);
         
 

@@ -12,19 +12,17 @@ public class UnoGameServer extends JFrame {
         setLocationRelativeTo(null);
 
         setLayout(new BorderLayout());
-        
-        // 방 접속 패널
-        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();
-        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
-        
+
         // 채팅 패널을 오른쪽에 추가
         ServerGUI serverGUI = new ServerGUI(port);
         add(serverGUI, BorderLayout.EAST);  // 채팅 패널 추가
+        
+//        // 우노 게임 패널
+//        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();
+//        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+        
 
         setVisible(true);
     }
 
-    public static void main(String[] args) {
-        new UnoGameServer();
-    }
 }
