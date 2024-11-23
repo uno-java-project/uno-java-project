@@ -284,6 +284,8 @@ public class ServerGameGUI extends JFrame {
                             add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
                             unoGameServerGUI.gameStartUp();
 
+                            broadcastingUnoData();
+
                             revalidate(); // 레이아웃을 갱신
                             repaint(); // 화면을 새로 그리기
                         }
@@ -336,9 +338,19 @@ public class ServerGameGUI extends JFrame {
             send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
         }
 
+        private void sendUnoData() {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_DATA, unoGame));
+        }
+
         private void broadcasting(ChatMsg msg) {
             for (ClientHandler c : users) {
                 c.send(msg);
+            }
+        }
+
+        private void broadcastingUnoData() {
+            for (ClientHandler c : users) {
+                c.sendUnoData();
             }
         }
 

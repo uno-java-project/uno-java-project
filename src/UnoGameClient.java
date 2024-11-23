@@ -21,6 +21,8 @@ public class UnoGameClient extends JFrame {
     private Thread receiveThread = null;
     private String uid;
 
+    JPanel leftPanel;
+
     public UnoGameClient(String uid, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
@@ -84,7 +86,7 @@ public class UnoGameClient extends JFrame {
     }
 
     private JPanel createLeftPanel() {
-        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel = new JPanel(new BorderLayout());
 
 
         return leftPanel;
@@ -222,6 +224,12 @@ public class UnoGameClient extends JFrame {
                         case ChatMsg.MODE_TX_IMAGE:
                             printDisplay(inMsg.userID + ":" + inMsg.message);
                             printDisplay(inMsg.image);
+                            break;
+                        case ChatMsg.MODE_UNO_DATA:
+                            printDisplay("게임이 시작됩니다.");
+                            remove(leftPanel);
+                            add(new ClientGameGUI(inMsg.uno), BorderLayout.CENTER);
+
                             break;
                     }
                 } catch (IOException e) {

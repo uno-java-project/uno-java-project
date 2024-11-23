@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientGameGUI extends JPanel {
@@ -18,56 +19,49 @@ public class ClientGameGUI extends JPanel {
         gamePanel.setLayout(new BorderLayout());  // 전체 화면을 BorderLayout으로 설정
         add(gamePanel, BorderLayout.CENTER);
 
-        // 덱에 남은 카드 수를 표시할 레이블 추가
-        remainingCardsLabel = new JLabel("남은 카드 수 : 0");
-        remainingCardsLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        add(remainingCardsLabel, BorderLayout.NORTH);
-
         this.unoGame = unoGame;
 
         updateGamePanel();
 
-        // 게임 시작 버튼
-        JButton startButton = new JButton("게임 시작");
-        startButton.addActionListener(e -> gameStartUp());
-        add(startButton, BorderLayout.SOUTH);
-
         setVisible(true);
     }
 
-    public void gameStartUp() {
-        unoGame.startGame();
-
-        // 플레이어들의 카드 표시
-        updateGamePanel();
-    }
-
-    private void updateRemainingCardsLabel() {
-        // 덱에 남은 카드 수 표시
-        remainingCardsLabel.setText("남은 카드 수 : " + unoGame.getDeck().size());
-    }
+//    private void updateRemainingCardsLabel() {
+//        // 덱에 남은 카드 수 표시
+//        remainingCardsLabel.setText("남은 카드 수 : " + unoGame.getDeck().size());
+//    }
 
     private void updateGamePanel() {
-        // 남은 카드 수 업데이트
-        updateRemainingCardsLabel();
-
         gamePanel.removeAll();  // 기존 내용 제거
 
-        // 상단에 플레이어 덱 (Player 1, 2, 3, 4) 배치
-        JPanel playersPanel = new JPanel();
-        playersPanel.setLayout(new BorderLayout());  // 전체 게임 화면을 BorderLayout으로 배치
-        playersPanel.add(displayPlayerCards(unoGame.getPlayerCards(1), 1), BorderLayout.NORTH); // Player 1 덱
-        playersPanel.add(displayPlayerCards(unoGame.getPlayerCards(2), 2), BorderLayout.SOUTH); // Player 2 덱
-        playersPanel.add(displayPlayerCards(unoGame.getPlayerCards(3), 3), BorderLayout.WEST);  // Player 3 덱
-        playersPanel.add(displayPlayerCards(unoGame.getPlayerCards(4), 4), BorderLayout.EAST);  // Player 4 덱
+        JPanel player1Panel = new JPanel(new BorderLayout());
 
-        gamePanel.add(playersPanel, BorderLayout.CENTER);  // 플레이어 덱을 게임 패널 중앙에 배치
+        // 상단에 플레이어 덱 (Player 1, 2, 3, 4) 배치
+        JPanel playersPanel = new JPanel(new BorderLayout());
+        player1Panel.add(displayPlayerCards(unoGame.getPlayerCards(1), 1), BorderLayout.CENTER); // Player 1 덱
+        player1Panel.add(displayActionButtons(), BorderLayout.EAST);  // 플레이어 1 버튼은 오른쪽에 배치
+        player1Panel.setPreferredSize(new Dimension(0, 150));  // 서쪽 패널 크기 고정
+
+        // 동쪽(WEST)과 서쪽(EAST) 패널의 크기 고정
+        JPanel player2Panel = displayPlayerCards(unoGame.getPlayerCards(2), 2);
+        player2Panel.setPreferredSize(new Dimension(120, 0));  // 서쪽 패널 크기 고정
+        playersPanel.add(player2Panel, BorderLayout.WEST); // Player 2 덱
+
+        JPanel player3Panel = displayPlayerCards(unoGame.getPlayerCards(3), 3);
+        player3Panel.setPreferredSize(new Dimension(120, 0));  // 동쪽 패널 크기 고정
+        playersPanel.add(player3Panel, BorderLayout.EAST);  // Player 3 덱
+
+        JPanel player4Panel = displayPlayerCards(unoGame.getPlayerCards(4), 4);
+        player4Panel.setPreferredSize(new Dimension(0, 150));  // 동쪽 패널 크기 고정
+        playersPanel.add(player4Panel, BorderLayout.NORTH);  // Player 3 덱
+
+        playersPanel.add(player1Panel, BorderLayout.SOUTH); // Player 1 덱
+
 
         // Top Card 표시 (중앙)
-        gamePanel.add(displayTopCardPanel(), BorderLayout.CENTER);
+        playersPanel.add(displayTopCardPanel(), BorderLayout.CENTER);
 
-        // 플레이어 1의 버튼들
-        gamePanel.add(displayActionButtons(), BorderLayout.EAST);  // 플레이어 1 버튼은 오른쪽에 배치
+        gamePanel.add(playersPanel, BorderLayout.CENTER);  // 플레이어 덱을 게임 패널 중앙에 배치
 
         // 게임 패널 재배치
         gamePanel.revalidate();
@@ -209,6 +203,14 @@ public class ClientGameGUI extends JPanel {
         gameFrame.setSize(615, 830);
         gameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         UnoGame uno = new UnoGame();
+        ArrayList<String> players = new ArrayList<>();
+        players.add("Player1");
+        players.add("Player2");
+        players.add("Player3");
+        players.add("Player4");
+
+        uno.setPlayers(players);
+        uno.startGame();
         gameFrame.add(new ClientGameGUI(uno));
 
         gameFrame.setVisible(true);
