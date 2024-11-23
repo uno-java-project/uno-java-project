@@ -6,22 +6,24 @@ import java.io.*;
 import java.net.*;
 import java.util.Vector;
 
-public class ServerGUI extends JFrame {
+public class ServerGUI extends JPanel {
     private int port;
     private ServerSocket serverSocket;
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
+    private int maxPlayers = 4;  // 최대 플레이어 수 설정
 
     public ServerGUI(int port) {
-        super("WithCharServer");
+//        super("WithCharServer");
         this.port = port;
+        this.setLayout(new BorderLayout());
         buildGUI();
         this.setBounds(100, 200, 400, 300);
 
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setVisible(true); //this는 전부 필수 아니지만 있는 게 나음
+//        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        this.setVisible(true); //this는 전부 필수 아니지만 있는 게 나음
     } // 생성자
 
     private void buildGUI() {
@@ -189,6 +191,16 @@ public class ServerGUI extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(cs.getInputStream()));
                 out = new ObjectOutputStream(new BufferedOutputStream(cs.getOutputStream()));
 
+                // 접속할 때마다 현재 유저 수 확인
+                if (users.size() >= maxPlayers) {
+                    // 최대 인원 초과 시, 클라이언트에게 메시지 전송하고 연결 종료
+                    ChatMsg msg = new ChatMsg("Server", ChatMsg.MODE_TX_STRING, "최대 인원 수 초과. 접속을 종료합니다.");
+                    out.writeObject(msg);
+                    out.flush();
+                    cs.close();
+                    return; // 클라이언트 접속 종료
+                }
+
                 String message;
                 ChatMsg msg;
                 while ((msg = (ChatMsg) in.readObject()) != null) {
@@ -257,10 +269,8 @@ public class ServerGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        int port = 54321;
-        ServerGUI server = new ServerGUI(port);
-
-
-    }
+//    public static void main(String[] args) {
+//        int port = 54321;
+//        ServerGUI server = new ServerGUI(port);
+//    }
 }
