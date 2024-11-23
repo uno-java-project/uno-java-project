@@ -6,19 +6,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class UnoGameGUI extends JPanel {
-
-    private static final String[] COLORS = {"Red", "Green", "Blue", "Yellow"};
-    private static final String[] VALUES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw2"};
-    
-    private List<String> deck;
-    private List<String> player1List, player2List, player3List, player4List;  // 각 플레이어의 카드 리스트
-    private String topCard;  // 덱에서 뽑은 top card
+public class UnoGameServerGUI extends JPanel {
+    private UnoGame unoGame;
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
-    private String[] turn = {"Player 1", "Player 2", "Player 3", "Player 4"};  // 플레이어 순서 배열
 
-    public UnoGameGUI() {
+    public UnoGameServerGUI() {
     	setLayout(new BorderLayout()); // 기존의 레이아웃 설정
     	setPreferredSize(new Dimension(615, 830));
     	
@@ -31,64 +24,22 @@ public class UnoGameGUI extends JPanel {
         remainingCardsLabel = new JLabel("남은 카드 수 : 0");
         remainingCardsLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(remainingCardsLabel, BorderLayout.NORTH);
-        
-        // 덱을 초기화하고 카드 섞기
-        deck = new ArrayList<>();
-        
-        // 각 플레이어 카드 리스트 초기화
-        player1List = new ArrayList<>();
-        player2List = new ArrayList<>();
-        player3List = new ArrayList<>();
-        player4List = new ArrayList<>();
-        
-        updateRemainingCardsLabel();
-        // 플레이어들의 카드 표시
+
+        unoGame = new UnoGame();
+
         updateGamePanel();
 
         // 게임 시작 버튼
         JButton startButton = new JButton("게임 시작");
-        startButton.addActionListener(e -> dealCards());
+        startButton.addActionListener(e -> dealCardsUpdate());
         add(startButton, BorderLayout.SOUTH);
 
         setVisible(true);
     }
 
-    private void dealCards() {
-        // 덱을 초기화하고 카드 섞기
-        deck = new ArrayList<>();
-        
-        // 각 플레이어 카드 리스트 초기화
-        player1List = new ArrayList<>();
-        player2List = new ArrayList<>();
-        player3List = new ArrayList<>();
-        player4List = new ArrayList<>();
-        
-        // 덱 생성
-        for (String color : COLORS) {
-            for (String value : VALUES) {
-                deck.add(color + " " + value);
-                deck.add(color + " " + value);  // 각 카드는 2번씩 존재
-            }
-        }
-        
-        // 덱 섞기
-        Collections.shuffle(deck);
-
-        // 4명의 플레이어에게 7장씩 나누어 주기
-        for (int i = 0; i < 7; i++) {  // 각 플레이어에게 7장
-            player1List.add(deck.remove(0));
-            player2List.add(deck.remove(0));
-            player3List.add(deck.remove(0));
-            player4List.add(deck.remove(0));
-        }
-
-        // 덱에서 한 장의 카드를 뽑아서 topCard 설정
-        if (!deck.isEmpty()) {
-            topCard = deck.remove(0);
-        }
-
-        // 남은 카드 수 업데이트
-        updateRemainingCardsLabel();
+    private void dealCardsUpdate() {
+        // 카드를 나눠줌
+        unoGame.dealCards();
 
         // 플레이어들의 카드 표시
         updateGamePanel();
@@ -96,17 +47,20 @@ public class UnoGameGUI extends JPanel {
 
     private void updateRemainingCardsLabel() {
         // 덱에 남은 카드 수 표시
-        remainingCardsLabel.setText("남은 카드 수 : " + deck.size());
+        remainingCardsLabel.setText("남은 카드 수 : " + unoGame.getDeck().size());
     }
 
     private void updateGamePanel() {
+        // 남은 카드 수 업데이트
+        updateRemainingCardsLabel();
+
         gamePanel.removeAll();  // 기존 내용 제거
         
         // 각 플레이어의 카드 표시        
-        gamePanel.add(displayPlayerCards(player1List, 1));
-        gamePanel.add(displayPlayerCards(player2List, 2));
-        gamePanel.add(displayPlayerCards(player3List, 3));
-        gamePanel.add(displayPlayerCards(player4List, 4));
+        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(1), 1));
+        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(2), 2));
+        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(3), 3));
+        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(4), 4));
         
         // 턴 패널 생성 및 중앙에 배치
         JPanel borderPanel = new JPanel(new BorderLayout());
@@ -138,16 +92,13 @@ public class UnoGameGUI extends JPanel {
         JButton reverseButton = new JButton("Reverse");
 
         // 각 버튼에 액션 리스너 추가
-        nextButton.addActionListener(e -> nextTurn());
+        nextButton.addActionListener(e -> nextTurnUpdate());
         
         // 스킵
-        skipButton.addActionListener(e -> {
-            nextTurn();  // 첫 번째 턴 건너뛰기
-            nextTurn();  // 두 번째 턴 건너뛰기
-        });
+        skipButton.addActionListener(e -> jumpTurnUpdate());
         
         // Reverse 버튼의 기능 구현 (turn 배열을 뒤집음)
-        reverseButton.addActionListener(e -> reverseTurn());
+        reverseButton.addActionListener(e -> reverseTurnUpdate());
         
         
         // 버튼을 버튼 패널에 추가
@@ -191,7 +142,7 @@ public class UnoGameGUI extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // 카드 클릭 시 처리할 코드
-                    playCard(currentCard, playerIndex - 1);  // playerIndex를 0부터 시작하는 인덱스로 변경
+                    playCardUpdate(currentCard, playerIndex);
                 }
             });
 
@@ -209,7 +160,7 @@ public class UnoGameGUI extends JPanel {
         JButton unoButton = new JButton("UNO");
 
         // 버튼에 액션 리스너 추가 (기본적인 처리 방식)
-        drawButton.addActionListener(e -> drawCard(playerIndex - 1));
+        drawButton.addActionListener(e -> drawCardUpdate(playerIndex));
         nextButton.addActionListener(e -> System.out.println("player next action"));
         unoButton.addActionListener(e -> System.out.println("UNO action"));
 
@@ -227,12 +178,12 @@ public class UnoGameGUI extends JPanel {
     
 
     private JPanel displayTopCardPanel() {
-        if (topCard != null) {
+        if (unoGame.getTopCard() != null) {
             JPanel topCardPanel = new JPanel();
             topCardPanel.setBorder(BorderFactory.createTitledBorder("Top Card"));
             
             // topCard를 JButton으로 만들기
-            String[] topCardParts = topCard.split(" ");
+            String[] topCardParts = unoGame.getTopCard().split(" ");
             String topColor = topCardParts[0];
             String topValue = topCardParts[1];
 
@@ -255,69 +206,30 @@ public class UnoGameGUI extends JPanel {
         return new JPanel();
     }
 
-    private void playCard(String card, int playerIndex) {
-        String[] cardParts = card.split(" ");
-        String color = cardParts[0];
-        String value = cardParts[1];
-
-        // topCard와 비교: 색상 또는 숫자가 일치하면 카드 플레이
-        String[] topCardParts = topCard.split(" ");
-        String topColor = topCardParts[0];
-        String topValue = topCardParts[1];
-
-        if (color.equals(topColor) || value.equals(topValue)) {
-            // 카드가 일치하면 플레이하고, 해당 카드 삭제
-            if (playerIndex == 0) {
-                player1List.remove(card);
-            } else if (playerIndex == 1) {
-                player2List.remove(card);
-            } else if (playerIndex == 2) {
-                player3List.remove(card);
-            } else {
-                player4List.remove(card);
-            }
-
-            // topCard를 현재 플레이된 카드로 교체
-            topCard = card;
-
-            // 게임 화면 갱신
-            updateGamePanel();
-        } else {
+    private void playCardUpdate(String card, int playerIndex) {
+        if(!unoGame.playCard(card, playerIndex)){
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
         }
+        updateGamePanel();
     }
 
-    private void drawCard(int playerIndex) {
+    private void drawCardUpdate(int playerIndex) {
         // 덱에서 한 장의 카드를 뽑아 해당 플레이어에게 추가
-        if (!deck.isEmpty()) {
-            String drawnCard = deck.remove(0);
-            if (playerIndex == 0) {
-                player1List.add(drawnCard);
-            } else if (playerIndex == 1) {
-                player2List.add(drawnCard);
-            } else if (playerIndex == 2) {
-                player3List.add(drawnCard);
-            } else {
-                player4List.add(drawnCard);
-            }
+        unoGame.drawCard(playerIndex);
 
-            // 남은 카드 수 업데이트
-            updateRemainingCardsLabel();
-
-            // 게임 화면 갱신
-            updateGamePanel();
-        }
+        // 게임 화면 갱신
+        updateGamePanel();
     }
     
     private JPanel displayTurnPanel() {
         JPanel turnPanel = new JPanel();
-        turnPanel.setLayout(new GridLayout(turn.length + 1, 1));  // 각 플레이어를 세로로 나열
+        turnPanel.setLayout(new GridLayout(unoGame.getTurn().length + 1, 1));  // 각 플레이어를 세로로 나열
         
-        JLabel nowTurn = new JLabel("현제 차례 : " + turn[0]);
+        JLabel nowTurn = new JLabel("현제 차례 : " + unoGame.getTurn()[0]);
         turnPanel.add(nowTurn);
         
 
-        for (String player : turn) {
+        for (String player : unoGame.getTurn()) {
             JLabel playerLabel = new JLabel(player);
             playerLabel.setHorizontalAlignment(SwingConstants.CENTER);
             turnPanel.add(playerLabel);
@@ -326,21 +238,22 @@ public class UnoGameGUI extends JPanel {
         return turnPanel;
     }
 
-    private void nextTurn() {
-        // 턴 변경: turn 배열에서 첫 번째 아이템을 맨 뒤로 보냄
-        String firstPlayer = turn[0];
-        System.arraycopy(turn, 1, turn, 0, turn.length - 1);  // 배열에서 첫 번째 요소를 뺀 나머지를 한 칸씩 앞으로
-        turn[turn.length - 1] = firstPlayer;  // 첫 번째 플레이어를 배열의 마지막에 넣기
+    private void nextTurnUpdate() {
+        unoGame.nextTurn();
 
         // 게임 화면 업데이트
         updateGamePanel();
     }
     
-    private void reverseTurn() {
-        // turn 배열을 뒤집음
-        List<String> turnList = new ArrayList<>(List.of(turn));
-        Collections.reverse(turnList);
-        turn = turnList.toArray(new String[0]);  // 배열로 다시 변환
+    private void reverseTurnUpdate() {
+        unoGame.reverseTurn();
+
+        // 게임 화면 업데이트
+        updateGamePanel();
+    }
+
+    private void jumpTurnUpdate() {
+        unoGame.jumpTurn();
 
         // 게임 화면 업데이트
         updateGamePanel();
@@ -351,10 +264,10 @@ public class UnoGameGUI extends JPanel {
         numberOfCardsPanel.setBorder(BorderFactory.createTitledBorder("Number of Cards"));
 
         // 각 플레이어의 남은 카드 수를 표시하는 레이블 생성
-        JLabel player1CardsLabel = new JLabel("Player 1: " + player1List.size() + " cards");
-        JLabel player2CardsLabel = new JLabel("Player 2: " + player2List.size() + " cards");
-        JLabel player3CardsLabel = new JLabel("Player 3: " + player3List.size() + " cards");
-        JLabel player4CardsLabel = new JLabel("Player 4: " + player4List.size() + " cards");
+        JLabel player1CardsLabel = new JLabel("Player 1: " + unoGame.getPlayerCards(1).size() + " cards");
+        JLabel player2CardsLabel = new JLabel("Player 2: " + unoGame.getPlayerCards(2).size() + " cards");
+        JLabel player3CardsLabel = new JLabel("Player 3: " + unoGame.getPlayerCards(3).size() + " cards");
+        JLabel player4CardsLabel = new JLabel("Player 4: " + unoGame.getPlayerCards(4).size() + " cards");
 
         // 레이블들을 numberOfCardsPanel에 추가
         numberOfCardsPanel.add(player1CardsLabel);
