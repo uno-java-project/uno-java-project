@@ -366,22 +366,22 @@ public class WithTalk extends JFrame {
 		t_input.setText("");
 	}
 	
-	private void sendFile(File file) {
-	    if (!file.exists()) {
-	        printDisplay("파일이 존재하지 않습니다: " + file.getAbsolutePath());
-	        return;
-	    }
-
-	    try {
-	    	long fileSize = file.length();
-	        byte[] fileData = Files.readAllBytes(file.toPath());
-	        send(new ChatMsg(uid, ChatMsg.MODE_TX_FILE, file.getName(),null, fileSize));
-	        
-	        printDisplay("파일 전송: " + file.getName());
-	    } catch (IOException e) {
-	        printDisplay("파일 읽기 오류: " + e.getMessage());
-	    }
-	}
+//	private void sendFile(File file) {
+//	    if (!file.exists()) {
+//	        printDisplay("파일이 존재하지 않습니다: " + file.getAbsolutePath());
+//	        return;
+//	    }
+//
+//	    try {
+//	    	long fileSize = file.length();
+//	        byte[] fileData = Files.readAllBytes(file.toPath());
+//	        send(new ChatMsg(uid, ChatMsg.MODE_TX_FILE, file.getName(),null, fileSize));
+//
+//	        printDisplay("파일 전송: " + file.getName());
+//	    } catch (IOException e) {
+//	        printDisplay("파일 읽기 오류: " + e.getMessage());
+//	    }
+//	}
 	
 
 	public static void main(String[] args) {

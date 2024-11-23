@@ -1,35 +1,66 @@
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.*;
 
 public class LoginGUI extends JFrame {
     private String serverAddress;
     private int serverPort;
-    private JTextField t_userID;
-    private JTextField t_hostAddr;
-    private JButton b_start, b_exit, b_login;
-    private JTextPane t_display;
-    private JTextField t_input;
-    private DefaultStyledDocument document;
+    JTextField t_userID;
+    JTextField t_hostAddr;
+    JTextField t_portNum;
+
+    private JButton b_start, b_exit;
+    private String uid;
 
     public LoginGUI(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         buildGUI();
         this.setBounds(0, 0, 800, 800);
-        this.setTitle("WithTalk");
+        this.setTitle("UNO Login");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setVisible(true);
     }
 
     private void buildGUI() {
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
+        this.add(createLeftPanel(), BorderLayout.CENTER);
+    }
 
-        splitPane.setResizeWeight(0.7); // 비율: 왼쪽 70%, 오른쪽 30%
+    private String getLocalAddr() {
+        InetAddress local = null;
+        String addr = "";
+        try {
+            local = InetAddress.getLocalHost();
+            addr = local.getHostAddress();
+            System.out.println(addr);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return addr;
+    }
 
-        this.add(splitPane, BorderLayout.CENTER);
+    private JPanel createInfoPanel() {
+        // GridLayout을 사용하여 세로로 정렬
+        JPanel p = new JPanel(new GridLayout(3, 2, 5, 5)); // 3행 2열, 컴포넌트 간 여백 설정
+
+        t_userID = new JTextField(7);
+        t_hostAddr = new JTextField(12);
+        t_portNum = new JTextField(5);
+        t_userID.setText("guest" + getLocalAddr().split("\\.")[3]);
+        t_hostAddr.setText(this.serverAddress);
+        t_portNum.setText(String.valueOf(this.serverPort));
+
+        p.add(new JLabel("아이디:"));
+        p.add(t_userID);
+        p.add(new JLabel("서버주소:"));
+        p.add(t_hostAddr);
+        p.add(new JLabel("포트번호:"));
+        p.add(t_portNum);
+
+        return p;
     }
 
     private JPanel createLeftPanel() {
@@ -45,99 +76,57 @@ public class LoginGUI extends JFrame {
 
         // 이미지 패널 추가 및 여백 포함
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBorder(BorderFactory.createEmptyBorder(200, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(200, 0, 100, 0)); // 상단과 하단에 여백 추가
         imagePanel.add(imageLabel, BorderLayout.CENTER);
 
         leftPanel.add(imagePanel, BorderLayout.NORTH); // 이미지 패널 추가
 
-        // 하단 영역: 로그인 및 버튼
-        JPanel lowerPanel = new JPanel(new GridLayout(1, 2, 10, 10)); // 좌우로 나눔
+        // 하단 패널: InfoPanel과 ControlPanel을 좌우로 배치
+        JPanel lowerPanel = new JPanel(new GridLayout(1, 2, 10, 10)); // 좌우로 나누는 레이아웃
+        lowerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // 패딩 추가
 
-        // 로그인 정보 입력 영역
-        JPanel loginPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        loginPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10)); // 패딩 추가
+        // InfoPanel과 ControlPanel 추가
+        lowerPanel.add(createInfoPanel());  // 왼쪽: InfoPanel
+        lowerPanel.add(createControlPanel()); // 오른쪽: ControlPanel
 
-        loginPanel.add(new JLabel("User Name:"));
-        t_userID = new JTextField();
-        loginPanel.add(t_userID);
-
-        loginPanel.add(new JLabel("IP Address:"));
-        t_hostAddr = new JTextField();
-        loginPanel.add(t_hostAddr);
-
-        // 버튼 패널
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 5, 5)); // 세로로 나눔
-
-        b_start = new JButton("게임 접속");
-        b_start.addActionListener(this::onStartClicked);
-
-        b_exit = new JButton("게임 종료");
-        b_exit.addActionListener(e -> System.exit(0));
-
-        buttonPanel.add(b_start);
-        buttonPanel.add(b_exit);
-
-        // 하단 패널에 좌측: 로그인, 우측: 버튼 패널 추가
-        lowerPanel.add(loginPanel);
-        lowerPanel.add(buttonPanel);
-
-        // 하단 패널을 전체 레이아웃의 남쪽에 추가
+        // 하단 패널을 LeftPanel의 남쪽에 추가
         leftPanel.add(lowerPanel, BorderLayout.SOUTH);
+
         return leftPanel;
     }
 
+    private JPanel createControlPanel() {
+        b_start = new JButton("접속하기");
 
+        b_start.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                LoginGUI.this.serverAddress = t_hostAddr.getText();
+                LoginGUI.this.serverPort = Integer.parseInt(t_portNum.getText());
+                LoginGUI.this.uid = t_userID.getText();
 
-    private JPanel createRightPanel() {
-        JPanel rightPanel = new JPanel(new BorderLayout());
+                System.out.println(uid + serverAddress + serverPort);
 
-        // 텍스트 표시 영역
-        document = new DefaultStyledDocument();
-        t_display = new JTextPane(document);
-        t_display.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(t_display);
-        rightPanel.add(scrollPane, BorderLayout.CENTER);
+                SwingUtilities.invokeLater(() -> new UnoGameClient(uid, serverAddress, serverPort));
 
-        // 입력 패널
-        JPanel inputPanel = new JPanel(new BorderLayout());
-        t_input = new JTextField();
-        inputPanel.add(t_input, BorderLayout.CENTER);
+                // 현재 LoginGUI 닫기
+                LoginGUI.this.dispose();
+            }
+        });
 
-        JButton b_send = new JButton("보내기");
-        b_send.addActionListener(e -> sendMessage());
-        inputPanel.add(b_send, BorderLayout.EAST);
+        b_exit = new JButton("종료하기");
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
 
-        rightPanel.add(inputPanel, BorderLayout.SOUTH);
-        return rightPanel;
-    }
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(b_start);
+        panel.add(b_exit);
 
-    private void onLoginClicked(ActionEvent e) {
-        String username = t_userID.getText();
-        String ipAddress = t_hostAddr.getText();
-        try {
-            document.insertString(document.getLength(), "로그인: " + username + " / IP: " + ipAddress + "\n", null);
-        } catch (BadLocationException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void onStartClicked(ActionEvent e) {
-        try {
-            document.insertString(document.getLength(), "게임 접속 시도...\n", null);
-        } catch (BadLocationException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void sendMessage() {
-        String message = t_input.getText();
-        if (message.isEmpty()) return;
-        try {
-            document.insertString(document.getLength(), "You: " + message + "\n", null);
-        } catch (BadLocationException e) {
-            e.printStackTrace();
-        }
-        t_input.setText("");
+        return panel;
     }
 
     public static void main(String[] args) {

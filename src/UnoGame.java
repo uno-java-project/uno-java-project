@@ -1,6 +1,7 @@
+import java.io.Serializable;
 import java.util.*;
 
-public class UnoGame {
+public class UnoGame implements Serializable {
 
     private static final String[] COLORS = {"Red", "Green", "Blue", "Yellow"};
     private static final String[] VALUES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw2"};
@@ -8,6 +9,7 @@ public class UnoGame {
     private List<String> deck;
     private List<String> player1List, player2List, player3List, player4List;
     private String topCard;
+    private String[] playerNum;
     private List<String> turn;
 
     public UnoGame() {
@@ -23,6 +25,10 @@ public class UnoGame {
 
     public void setPlayers(List<String> players) {
         turn = players;
+        playerNum = new String[players.size()];
+        for (int i = 0; i < players.size(); i++) {
+            playerNum[i] = players.get(i);
+        }
     }
 
     public boolean startGame(){
