@@ -11,6 +11,8 @@ public class ServerGameGUI extends JFrame {
     private UnoGame unoGame;
     private int port;
     private JPanel serverPanel;
+    private JPanel participantsPanel;
+    private JPanel imagePanel;
     private ServerSocket serverSocket;
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
@@ -29,10 +31,11 @@ public class ServerGameGUI extends JFrame {
         serverPanel = new JPanel(new BorderLayout());
         buildGUI();
 
+        updateParticipantsPanel();
+
         setLayout(new BorderLayout());
         // 채팅 패널을 오른쪽에 추가
         add(serverPanel, BorderLayout.EAST);  // 채팅 패널 추가
-
 
         // 상단 이미지 영역: 비율 증가 및 중앙 정렬
         JLabel imageLabel = new JLabel();
@@ -43,23 +46,62 @@ public class ServerGameGUI extends JFrame {
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
 
         // 이미지 패널 추가 및 여백 포함
-        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel = new JPanel(new BorderLayout());
         imagePanel.setBorder(BorderFactory.createEmptyBorder(80, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
         imagePanel.add(imageLabel, BorderLayout.CENTER);
 
         add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
 
-//        // 우노 게임 패널
-//        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI();
-//        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
-
-
         setVisible(true);
     }
 
     private void buildGUI() {
+        // 참가자 패널을 북쪽에 추가
+        participantsPanel = new JPanel(new GridLayout(0, 1)); // 세로로 리스트가 쌓이도록 설정
+        participantsPanel.setBorder(BorderFactory.createTitledBorder("참가자 리스트"));
+        serverPanel.add(participantsPanel, BorderLayout.NORTH);
+
         serverPanel.add(createDisplayPanel(), BorderLayout.CENTER);
         serverPanel.add(createControlPanel(), BorderLayout.SOUTH);
+    }
+
+    // 참가자 목록에 추가할 메서드
+    private void updateParticipantsPanel() {
+        participantsPanel.removeAll(); // 기존 참가자 목록을 삭제
+
+        // 최대 4명의 플레이어를 위한 패널을 설정
+        for (int i = 0; i < maxPlayers; i++) {
+            JPanel playerPanel = new JPanel(new BorderLayout());
+            //playerPanel.setPreferredSize(new Dimension(350, 60)); // 패널 크기 조정 (너비 350, 높이 60)
+
+            // 플레이어 이름을 위한 라벨 설정
+            JLabel playerLabel = new JLabel();
+            playerLabel.setFont(new Font("Arial", Font.BOLD, 18)); // 폰트 크기와 스타일 설정
+            playerLabel.setVerticalAlignment(SwingConstants.CENTER); // 세로 중앙 정렬
+
+            // UID가 있을 경우, 초록색 배경으로 변경하고 UID를 표시
+            if (i < playersUid.size()) {
+                playerLabel.setText("Player " + (i + 1) + ": " + playersUid.get(i));
+                playerLabel.setForeground(Color.WHITE); // 텍스트 색상은 흰색
+                playerPanel.setBackground(Color.GREEN); // 참가자가 있으면 초록색으로 변경
+            } else {
+                playerLabel.setText("Player " + (i + 1) + ": ");
+                playerLabel.setForeground(Color.BLACK); // 참가자가 없다면 텍스트 색상은 검정
+            }
+
+            // 패널에 라벨 추가
+            playerPanel.add(playerLabel, BorderLayout.CENTER);
+
+            // 각 playerPanel에 상단 마진 추가 (예: 10px)
+            playerPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));  // 상단에만 10px 마진
+
+
+            // 참가자 패널에 패널 추가
+            participantsPanel.add(playerPanel);
+        }
+
+        revalidate(); // 패널을 갱신하여 최신 상태 반영
+        repaint(); // 화면을 새로 그리기
     }
 
     private String getLocalAddr() {
@@ -225,23 +267,26 @@ public class ServerGameGUI extends JFrame {
                 String message;
                 ChatMsg msg;
                 while ((msg = (ChatMsg) in.readObject()) != null) {
-                    // 현재 유저 수 확인후 실행
-                    if (users.size() == maxPlayers && unoGame == null) {
-                        unoGame = new UnoGame();
-                        unoGame.setPlayers(playersUid);
-                        // 우노 게임 패널
-                        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
-                        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
-
-                        revalidate(); // 레이아웃을 갱신
-                        repaint(); // 화면을 새로 그리기
-                    }
-
                     if (msg.mode == ChatMsg.MODE_LOGIN) {
                         uid = msg.userID;
                         playersUid.add(uid);
                         printDisplay("새 참가자: " + uid);
                         printDisplay("현재 참가자 수: " + users.size());
+                        updateParticipantsPanel(); // 참가자 목록 갱신
+
+                        // 현재 유저 수 확인후 실행
+                        if (users.size() == maxPlayers && unoGame == null) {
+                            remove(imagePanel);
+                            unoGame = new UnoGame();
+                            unoGame.setPlayers(playersUid);
+                            // 우노 게임 패널
+                            UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
+                            add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+                            unoGameServerGUI.gameStartUp();
+
+                            revalidate(); // 레이아웃을 갱신
+                            repaint(); // 화면을 새로 그리기
+                        }
                         continue;
                     }
                     else if (msg.mode == ChatMsg.MODE_LOGOUT) {
@@ -259,6 +304,8 @@ public class ServerGameGUI extends JFrame {
                     }
                 }
 
+                playersUid.remove(uid);
+                updateParticipantsPanel(); // 참가자 목록 갱신
                 users.removeElement(this);
                 printDisplay(uid + " 퇴장. 현재 참가자 수: " + users.size());
             } catch (IOException e) {

@@ -37,7 +37,7 @@ public class UnoGameServerGUI extends JPanel {
         setVisible(true);
     }
 
-    private void gameStartUp() {
+    public void gameStartUp() {
         unoGame.startGame();
 
         // 플레이어들의 카드 표시
