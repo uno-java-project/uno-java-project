@@ -22,6 +22,7 @@ public class ServerRoomGUI extends JFrame {
     private String serverAddress;
     private int serverPort;
     private JLabel[] roomLabels = new JLabel[8]; // 각 방의 라벨을 저장
+    private JTextField t_input;
 
     public ServerRoomGUI(String serverAddress, int serverPort, String uid) {
         super("Server Room GUI");
@@ -82,6 +83,9 @@ public class ServerRoomGUI extends JFrame {
     private void connectToServer(String serverAddress, int serverPort) {
         new Thread(() -> {
             try {
+                if (socket != null && !socket.isClosed()) {
+                    socket.close(); // 기존 소켓 닫기
+                }
                 socket = new Socket(serverAddress, serverPort);
                 out = new ObjectOutputStream(socket.getOutputStream());
                 in = new ObjectInputStream(socket.getInputStream());
@@ -89,17 +93,78 @@ public class ServerRoomGUI extends JFrame {
                 send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, "로그인"));
                 ReceiveThread();
             } catch (IOException e) {
-                SwingUtilities.invokeLater(() -> printDisplay("서버에 연결할 수 없습니다: " + e.getMessage()));
+                printDisplay("서버에 연결할 수 없습니다: " + e.getMessage());
             }
         }).start();
     }
+    private JPanel createRightPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
 
+        // 메시지 표시
+        document = new DefaultStyledDocument(); // DefaultStyledDocument 초기화
+        t_display = new JTextPane(document);    // JTextPane에 문서 연결
+        t_display.setEditable(false);           // 편집 불가능 설정
+        panel.add(new JScrollPane(t_display), BorderLayout.CENTER); // 스크롤 추가
 
+        // 입력 및 버튼 구성
+        JPanel inputPanel = new JPanel(new BorderLayout());
+        JTextField inputField = new JTextField();
+        JButton sendButton = new JButton("보내기");
+        sendButton.addActionListener(e -> {
+            String message = inputField.getText().trim();
+            if (!message.isEmpty()) {
+                send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+                inputField.setText("");
+            }
+        });
 
+        JButton fileButton = new JButton("파일 전송");
+        fileButton.addActionListener(e -> selectFile());
+
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 5, 5));
+        buttonPanel.add(sendButton);
+        buttonPanel.add(fileButton);
+
+        inputPanel.add(inputField, BorderLayout.CENTER);
+        inputPanel.add(buttonPanel, BorderLayout.EAST);
+
+        panel.add(inputPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+    private void sendMessage() {
+        String message = t_input.getText();
+        if (message.isEmpty()) return;
+
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+
+        t_input.setText(""); // 보낸 후 입력창은 비우기
+
+    }
 
 
     private int getPortForRoom(int roomNumber) {
         return 54321 + roomNumber; // 방 번호에 따라 포트 설정
+    }
+
+
+
+    private void handleIncomingMessage(ChatMsg msg) {
+        SwingUtilities.invokeLater(() -> {
+            switch (msg.mode) {
+                case ChatMsg.MODE_ROOM_STATUS:
+                    printDisplay("방 상태 업데이트 수신: " + msg.message);
+                    updateRoomLabels(msg.message); // 방 상태 업데이트
+                    break;
+                case ChatMsg.MODE_ROOM_JOIN:
+                    // 입장 거부 메시지 처리
+                    if (msg.message.contains("입장이 거부")) {
+                        printDisplay("서버 응답: " + msg.message);
+                    }
+                    break;
+                default:
+                    printDisplay("알 수 없는 메시지: " + msg.message);
+            }
+        });
     }
 
 
@@ -110,18 +175,6 @@ public class ServerRoomGUI extends JFrame {
         SwingUtilities.invokeLater(() -> roomLabels[roomNumber].setText(message)); // 해당 방의 라벨 업데이트
     }
 
-
-    private void handleIncomingMessage(ChatMsg msg) {
-        SwingUtilities.invokeLater(() -> {
-            switch (msg.mode) {
-                case ChatMsg.MODE_ROOM_STATUS:
-                    updateRoomLabels(msg.message); // 서버로부터 받은 방 상태 업데이트
-                    break;
-                default:
-                    printDisplay("알 수 없는 메시지: " + msg.message);
-            }
-        });
-    }
 
 
     private void printDisplay(String msg) {
@@ -199,48 +252,12 @@ public class ServerRoomGUI extends JFrame {
     }
 
 
-    private void requestRoomStatus() {
-        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_STATUS, "방 상태 요청"));
-    }
 
 
 
 
 
-    private JPanel createRightPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
 
-        // 메시지 표시
-        document = new DefaultStyledDocument(); // DefaultStyledDocument 초기화
-        t_display = new JTextPane(document);    // JTextPane에 문서 연결
-        t_display.setEditable(false);           // 편집 불가능 설정
-        panel.add(new JScrollPane(t_display), BorderLayout.CENTER); // 스크롤 추가
-
-        // 입력 및 버튼 구성
-        JPanel inputPanel = new JPanel(new BorderLayout());
-        JTextField inputField = new JTextField();
-        JButton sendButton = new JButton("보내기");
-        sendButton.addActionListener(e -> {
-            String message = inputField.getText().trim();
-            if (!message.isEmpty()) {
-                send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
-                inputField.setText("");
-            }
-        });
-
-        JButton fileButton = new JButton("파일 전송");
-        fileButton.addActionListener(e -> selectFile());
-
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 5, 5));
-        buttonPanel.add(sendButton);
-        buttonPanel.add(fileButton);
-
-        inputPanel.add(inputField, BorderLayout.CENTER);
-        inputPanel.add(buttonPanel, BorderLayout.EAST);
-
-        panel.add(inputPanel, BorderLayout.SOUTH);
-        return panel;
-    }
 
     private void selectFile() {
         JFileChooser chooser = new JFileChooser();

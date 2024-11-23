@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.io.Serializable;
 
 public class ChatMsg implements Serializable {
-    private static final long serialVersionUID = 1L; // 고정된 UID 설정
+    //private static final long serialVersionUID = 1L; // 고정된 UID 설정
     public final static int MODE_LOGIN = 0x1;
     public final static int MODE_LOGOUT = 0x2;
     public final static int MODE_TX_STRING = 0x10;
