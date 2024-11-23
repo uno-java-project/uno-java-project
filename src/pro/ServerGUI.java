@@ -106,6 +106,7 @@ public class ServerGUI extends JFrame {
 
 
     private void startServer() {
+        Socket clientSocket = null;
         try {
             serverSocket = new ServerSocket(port);
             printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
@@ -116,14 +117,27 @@ public class ServerGUI extends JFrame {
             }
 
             while (acceptThread == Thread.currentThread()) {
-                Socket clientSocket = serverSocket.accept();
+                 clientSocket = serverSocket.accept();
+                String cAddr = clientSocket.getInetAddress().getHostAddress();
                 printDisplay("클라이언트 연결됨: " + clientSocket.getInetAddress().getHostAddress());
                 ClientHandler cHandler = new ClientHandler(clientSocket);
                 users.add(cHandler);
                 cHandler.start();
             }
-        } catch (IOException e) {
-            printDisplay("서버 시작 오류: " + e.getMessage());
+        }
+        catch (SocketException e) {
+            printDisplay("서버 소캣 종료");
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if (clientSocket != null) clientSocket.close();
+                if (serverSocket != null) serverSocket.close();
+            } catch (IOException e) {
+                System.err.println("서버 닫기 오류 > " + e.getMessage());
+                System.exit(-1);
+            }
         }
     }
 
@@ -254,6 +268,12 @@ public class ServerGUI extends JFrame {
                     } else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
+                    } else if (msg.mode == ChatMsg.MODE_TX_STRING) {
+                        message = uid + ": " + msg.message;
+
+                        printDisplay(message);
+                        broadcasting(msg);
+                        ;
                     }
                 }
 

@@ -220,7 +220,13 @@ public class LoginGUI extends JFrame {
                     sendUserID();
 
                     // ServerRoomGUI 실행 (uid 전달)
-                    SwingUtilities.invokeLater(() -> new ServerRoomGUI(serverAddress, serverPort, uid));
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            new ServerRoomGUI(serverAddress, serverPort, uid);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
 
                     // 현재 LoginGUI 닫기
                     LoginGUI.this.dispose();

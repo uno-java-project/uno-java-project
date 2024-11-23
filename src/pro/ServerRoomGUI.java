@@ -5,11 +5,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 
 public class ServerRoomGUI extends JFrame {
     private ObjectOutputStream out;
@@ -23,8 +25,9 @@ public class ServerRoomGUI extends JFrame {
     private int serverPort;
     private JLabel[] roomLabels = new JLabel[8]; // 각 방의 라벨을 저장
     private JTextField t_input;
+    JButton b_select, b_send;
 
-    public ServerRoomGUI(String serverAddress, int serverPort, String uid) {
+    public ServerRoomGUI(String serverAddress, int serverPort, String uid) throws IOException {
         super("Server Room GUI");
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
@@ -39,6 +42,19 @@ public class ServerRoomGUI extends JFrame {
         connectToServer(serverAddress, serverPort);
     }
 
+    private void sendImage() {
+        String filename = t_input.getText().strip();
+        if (filename.isEmpty()) return;
+
+        File file = new File(filename);
+        if (!file.exists()) {
+            printDisplay(">> 파일이 존재하지 않습니다 : " + filename);
+            return;
+        }
+        ImageIcon icon = new ImageIcon(filename);
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        t_input.setText("");
+    }
     private void buildGUI() {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, createLeftPanel(), createRightPanel());
         splitPane.setDividerLocation(300);
@@ -79,8 +95,60 @@ public class ServerRoomGUI extends JFrame {
         }
     }
 
+    private void connectToServer(String serverAddress, int serverPort) throws UnknownHostException, IOException {
+        socket = new Socket();
+        SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
+        socket.connect(sa, 3000);
+        out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+        //in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        receiveThread = new Thread(new Runnable() {
+            private ObjectInputStream in;
 
-    private void connectToServer(String serverAddress, int serverPort) {
+            private void receiveMessage() {
+                try {
+                    if (socket != null && !socket.isClosed()) {
+                        socket.close(); // 기존 소켓 닫기
+                    }
+                    ChatMsg inMsg = (ChatMsg) in.readObject();
+                    if (inMsg == null) {
+                        disconnect();
+                        printDisplay("서버 연결 끊김");
+                        return;
+                    }
+                    switch (inMsg.mode) {
+                        case ChatMsg.MODE_TX_STRING:
+                            printDisplay(inMsg.userID + ":" + inMsg.message);
+                            break;
+                        case ChatMsg.MODE_TX_IMAGE:
+                            printDisplay(inMsg.userID + ":" + inMsg.message);
+                            printDisplay(inMsg.image);
+                            break;
+                    }
+                } catch (IOException e) {
+                    printDisplay("연결 종류");
+                } catch (ClassNotFoundException e) {
+                    printDisplay("잘못된 객체가 전달되었습니다");
+                }
+            }
+
+            @Override
+            public void run() {
+                try {
+                    in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+
+                } catch (IOException e) {
+                    printDisplay("입력 스트림이 열리지 않음");
+                }
+                while (receiveThread == Thread.currentThread()) {
+                    receiveMessage();
+                }
+            }
+        });
+        receiveThread.start();
+
+    }
+
+/*    private void connectToServer(String serverAddress, int serverPort) {
         new Thread(() -> {
             try {
                 if (socket != null && !socket.isClosed()) {
@@ -96,50 +164,83 @@ public class ServerRoomGUI extends JFrame {
                 printDisplay("서버에 연결할 수 없습니다: " + e.getMessage());
             }
         }).start();
-    }
+    }*/
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
-        // 메시지 표시
-        document = new DefaultStyledDocument(); // DefaultStyledDocument 초기화
-        t_display = new JTextPane(document);    // JTextPane에 문서 연결
-        t_display.setEditable(false);           // 편집 불가능 설정
-        panel.add(new JScrollPane(t_display), BorderLayout.CENTER); // 스크롤 추가
+        // Message display area (from WithTalk)
+        document = new DefaultStyledDocument();
+        t_display = new JTextPane(document);
+        t_display.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(t_display);
 
-        // 입력 및 버튼 구성
-        JPanel inputPanel = new JPanel(new BorderLayout());
-        JTextField inputField = new JTextField();
-        JButton sendButton = new JButton("보내기");
-        sendButton.addActionListener(e -> {
-            String message = inputField.getText().trim();
-            if (!message.isEmpty()) {
-                send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
-                inputField.setText("");
+        // Add the message display area to the top
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Create the input panel (use a separate method)
+        JPanel inputPanel = createInputPanel();
+
+        // Add the input panel to the bottom
+        panel.add(inputPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createInputPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        t_input = new JTextField(30);
+
+        // Add action for pressing Enter
+        t_input.addActionListener(e -> sendMessage());
+
+        b_send = new JButton("보내기");
+        b_send.addActionListener(e -> sendMessage());
+
+        b_select = new JButton("선택하기");
+        b_select.addActionListener(new ActionListener() {
+            JFileChooser chooser = new JFileChooser();
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                        "JPG & GIF & PNG Images",
+                        "jpg", "gif", "png");
+                chooser.setFileFilter(filter);
+
+                int ret = chooser.showOpenDialog(ServerRoomGUI.this); // Adjusted to use ServerRoomGUI context
+                if (ret != JFileChooser.APPROVE_OPTION) {
+                    JOptionPane.showMessageDialog(ServerRoomGUI.this, "파일을 선택하지 않았습니다");
+                    return;
+                }
+                t_input.setText(chooser.getSelectedFile().getAbsolutePath());
+                sendImage();
             }
         });
 
-        JButton fileButton = new JButton("파일 전송");
-        fileButton.addActionListener(e -> selectFile());
+        panel.add(t_input, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2, 5, 5));
-        buttonPanel.add(sendButton);
-        buttonPanel.add(fileButton);
+        JPanel p_button = new JPanel(new GridLayout(1, 0));
+        p_button.add(b_select);
+        p_button.add(b_send);
 
-        inputPanel.add(inputField, BorderLayout.CENTER);
-        inputPanel.add(buttonPanel, BorderLayout.EAST);
+        panel.add(p_button, BorderLayout.EAST);
 
-        panel.add(inputPanel, BorderLayout.SOUTH);
+        t_input.setEnabled(true);
+        b_select.setEnabled(true);
+        b_send.setEnabled(true);
+
         return panel;
     }
+
+
     private void sendMessage() {
-        String message = t_input.getText();
+        String message = t_input.getText().trim();
         if (message.isEmpty()) return;
 
         send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
-
-        t_input.setText(""); // 보낸 후 입력창은 비우기
-
+        t_input.setText(""); // Clear input field after sending
     }
+
 
 
     private int getPortForRoom(int roomNumber) {
@@ -176,17 +277,30 @@ public class ServerRoomGUI extends JFrame {
     }
 
 
+    private void printDisplay(ImageIcon icon) {
+        t_display.setCaretPosition(t_display.getDocument().getLength());
 
-    private void printDisplay(String msg) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                document.insertString(document.getLength(), msg + "\n", null);
-                t_display.setCaretPosition(t_display.getDocument().getLength());
-            } catch (BadLocationException e) {
-                e.printStackTrace();
-            }
-        });
+        if (icon.getIconWidth() > 400) {
+            Image img = icon.getImage();
+            Image changeImg = img.getScaledInstance(400, -1, Image.SCALE_SMOOTH);
+            icon = new ImageIcon(changeImg);
+        }
+        t_display.insertIcon(icon);
+        printDisplay("");
+        t_input.setText("");
     }
+    private void printDisplay(String msg) {
+        t_display.setCaretPosition(t_display.getDocument().getLength());
+        int len = t_display.getDocument().getLength();
+        try {
+            document.insertString(len, msg + "\n", null);
+        } catch (BadLocationException e) {
+            e.printStackTrace();
+        }
+        t_display.setCaretPosition(len);
+    }
+
+
 
     private void send(ChatMsg msg) {
         try {
@@ -254,7 +368,17 @@ public class ServerRoomGUI extends JFrame {
 
 
 
+    private void disconnect() {
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        try {
+            receiveThread = null;
+            socket.close();
+        } catch (IOException e) {
+            System.err.println("클라이언트 닫기 오류 > " + e.getMessage());
+            System.exit(-1);
+        }
 
+    }
 
 
 
