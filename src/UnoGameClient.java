@@ -13,7 +13,7 @@ public class UnoGameClient extends JFrame {
     private int serverPort;
     private ObjectOutputStream out;
 
-    private JButton b_send, b_select;
+    private JButton b_exit, b_select, b_disconnect;;
     private JTextPane t_display;
     private JTextField t_input;
     private DefaultStyledDocument document;
@@ -104,6 +104,7 @@ public class UnoGameClient extends JFrame {
 
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
+        panel.setPreferredSize(new Dimension(270, 800));
 
         JPanel displayPanel = createDisplayPanel();
         panel.add(displayPanel, BorderLayout.CENTER); // 중앙에 배치해 가장 큰 영역 할당
@@ -112,7 +113,7 @@ public class UnoGameClient extends JFrame {
         JPanel inputPanel = new JPanel(new BorderLayout());
 
         // 텍스트 입력 필드
-        t_input = new JTextField(30);
+        t_input = new JTextField(15);
         t_input.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 sendMessage();
@@ -122,10 +123,19 @@ public class UnoGameClient extends JFrame {
 
         // 버튼 패널 (보내기, 선택하기 버튼)
         JPanel p_button = new JPanel(new GridLayout(1, 3, 5, 5)); // 가로로 두 개 버튼 배치
-        b_send = new JButton("보내기");
-        b_send.addActionListener(new ActionListener() {
+        b_exit = new JButton("종료하기");
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.exit(0);
+            }
+        });
+
+        b_disconnect = new JButton("접속 끊기");
+        b_disconnect.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                disconnect();
             }
         });
 
@@ -152,7 +162,8 @@ public class UnoGameClient extends JFrame {
 
         // 버튼들을 버튼 패널에 추가
         p_button.add(b_select);
-        p_button.add(b_send);
+        p_button.add(b_disconnect);
+        p_button.add(b_exit);
 
         inputPanel.add(p_button, BorderLayout.SOUTH); // 버튼 패널은 입력 필드 아래에 배치
 
@@ -235,7 +246,7 @@ public class UnoGameClient extends JFrame {
         });
         receiveThread.start();
         b_select.setEnabled(true);
-        b_send.setEnabled(true);
+        b_exit.setEnabled(true);
     }
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
