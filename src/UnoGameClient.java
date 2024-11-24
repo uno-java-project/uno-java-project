@@ -190,6 +190,10 @@ public class UnoGameClient extends JFrame {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
     }
 
+    public void sendUnoUpdate(String uid, UnoGame unoGame){
+        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+    }
+
     private void printDisplay(ImageIcon icon) {
         t_display.setCaretPosition(t_display.getDocument().getLength());
 
@@ -211,42 +215,6 @@ public class UnoGameClient extends JFrame {
         receiveThread = new Thread(new Runnable() {
             private ObjectInputStream in;
 
-            private void receiveMessage() {
-                try {
-                    ChatMsg inMsg = (ChatMsg) in.readObject();
-                    if (inMsg == null) {
-                        disconnect();
-                        printDisplay("서버 연결 끊김");
-                        return;
-                    }
-                    switch (inMsg.mode) {
-                        case ChatMsg.MODE_TX_STRING:
-                            printDisplay(inMsg.userID + ":" + inMsg.message);
-                            break;
-                        case ChatMsg.MODE_TX_IMAGE:
-                            printDisplay(inMsg.userID + ":" + inMsg.message);
-                            printDisplay(inMsg.image);
-                            break;
-                        case ChatMsg.MODE_UNO_START:
-                            printDisplay("게임이 시작됩니다.");
-                            remove(leftPanel);
-                            currentUNOGUI = new ClientGameGUI(inMsg.uno, uid);
-                            add(currentUNOGUI, BorderLayout.CENTER);
-                            break;
-                        case ChatMsg.MODE_UNO_UPDATE:
-                            printDisplay("다음 턴");
-                            remove(currentUNOGUI);
-                            currentUNOGUI = new ClientGameGUI(inMsg.uno, uid);
-                            add(currentUNOGUI, BorderLayout.CENTER);
-                            break;
-                    }
-                } catch (IOException e) {
-                    printDisplay("연결 종류");
-                } catch (ClassNotFoundException e) {
-                    printDisplay("잘못된 객체가 전달되었습니다");
-                }
-            }
-
             @Override
             public void run() {
                 try {
@@ -256,7 +224,7 @@ public class UnoGameClient extends JFrame {
                     printDisplay("입력 스트림이 열리지 않음");
                 }
                 while (receiveThread == Thread.currentThread()) {
-                    receiveMessage();
+                    receiveMessage(in);
                 }
             }
         });
@@ -264,6 +232,42 @@ public class UnoGameClient extends JFrame {
         b_select.setEnabled(true);
         b_exit.setEnabled(true);
     }
+    private void receiveMessage(ObjectInputStream in) {
+        try {
+            ChatMsg inMsg = (ChatMsg) in.readObject();
+            if (inMsg == null) {
+                disconnect();
+                printDisplay("서버 연결 끊김");
+                return;
+            }
+            switch (inMsg.mode) {
+                case ChatMsg.MODE_TX_STRING:
+                    printDisplay(inMsg.userID + ":" + inMsg.message);
+                    break;
+                case ChatMsg.MODE_TX_IMAGE:
+                    printDisplay(inMsg.userID + ":" + inMsg.message);
+                    printDisplay(inMsg.image);
+                    break;
+                case ChatMsg.MODE_UNO_START:
+                    printDisplay("게임이 시작됩니다.");
+                    remove(leftPanel);
+                    currentUNOGUI = new ClientGameGUI(inMsg.uno, uid, this);
+                    add(currentUNOGUI, BorderLayout.CENTER);
+                    break;
+                case ChatMsg.MODE_UNO_UPDATE:
+                    printDisplay(uid + "턴 종료");
+                    remove(currentUNOGUI);
+                    currentUNOGUI = new ClientGameGUI(inMsg.uno, uid, this);
+                    add(currentUNOGUI, BorderLayout.CENTER);
+                    break;
+            }
+        } catch (IOException e) {
+            printDisplay("연결 종류");
+        } catch (ClassNotFoundException e) {
+            printDisplay("잘못된 객체가 전달되었습니다");
+        }
+    }
+
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
         try {

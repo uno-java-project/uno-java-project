@@ -20,6 +20,7 @@ public class ServerGameGUI extends JFrame {
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
     private List<String> playersUid = new ArrayList<>();
     private int maxPlayers = 4;  // 최대 플레이어 수 설정
+    private UnoGameServerGUI unoGameServerGUI;
 
     public ServerGameGUI(int port) {
         super("Uno Game");
@@ -249,8 +250,10 @@ public class ServerGameGUI extends JFrame {
     }
 
     private void UnoGameUpdate() {
+        remove(unoGameServerGUI);
+
         // 우노 게임 패널
-        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        unoGameServerGUI = new UnoGameServerGUI(unoGame);
         add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
 
         revalidate(); // 레이아웃을 갱신
@@ -289,7 +292,7 @@ public class ServerGameGUI extends JFrame {
                             unoGame = new UnoGame();
                             unoGame.setPlayers(playersUid);
                             // 우노 게임 패널
-                            UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
+                            unoGameServerGUI = new UnoGameServerGUI(unoGame);
                             add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
                             unoGameServerGUI.gameStartUp();
 
@@ -315,6 +318,9 @@ public class ServerGameGUI extends JFrame {
                     }
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
+                        unoGame = msg.uno;
+
+                        UnoGameUpdate();
                         broadcastingUnoUpdate();
                     }
                 }

@@ -15,7 +15,6 @@ public class ChatMsg implements Serializable {
     int mode;
     String message;
     ImageIcon image;
-    long size;
     UnoGame uno;
 
     public ChatMsg(String userID, int code, String message, ImageIcon image, UnoGame uno) {

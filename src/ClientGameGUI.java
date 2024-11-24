@@ -13,8 +13,9 @@ public class ClientGameGUI extends JPanel {
     private String uid;
     private int myNum;
     private HashMap<Integer, String> userMap;
+    private UnoGameClient uc;
 
-    public ClientGameGUI(UnoGame unoGame, String uid) {
+    public ClientGameGUI(UnoGame unoGame, String uid, UnoGameClient uc) {
         setLayout(new BorderLayout()); // 기존의 레이아웃 설정
         setPreferredSize(new Dimension(615, 830));
 
@@ -25,6 +26,7 @@ public class ClientGameGUI extends JPanel {
 
         this.uid = uid;
         this.unoGame = unoGame;
+        this.uc = uc;
         setMyNum();
 
         updateGamePanel();
@@ -173,6 +175,7 @@ public class ClientGameGUI extends JPanel {
                 public void actionPerformed(ActionEvent e) {
                     // 카드 클릭 시 처리할 코드
                     playCardUpdate(currentCard, playerIndex);
+                    uc.sendUnoUpdate(uid, unoGame);
                 }
             });
 
@@ -260,7 +263,7 @@ public class ClientGameGUI extends JPanel {
 
         uno.setPlayers(players);
         uno.startGame();
-        gameFrame.add(new ClientGameGUI(uno, uid));
+        //gameFrame.add(new ClientGameGUI(uno, uid, ));
 
         gameFrame.setVisible(true);
     }
