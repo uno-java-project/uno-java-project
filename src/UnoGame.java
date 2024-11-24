@@ -11,6 +11,7 @@ public class UnoGame implements Serializable {
     private String topCard;
     private HashMap<Integer, String> playerNum;
     private List<String> turn;
+    private HashMap<String, Boolean> isUNO;
 
     public UnoGame() {
         // 초기화
@@ -28,6 +29,18 @@ public class UnoGame implements Serializable {
         playerNum = new HashMap<Integer, String>();
         for (int i = 0; i < players.size(); i++) {
             playerNum.put(i, players.get(i));
+        }
+        initializeIsUNO();
+    }
+
+    // 우노 플레그 초기화
+    public void initializeIsUNO() {
+        isUNO = new HashMap<>(); // 새로운 HashMap 생성
+
+        // playerNum의 모든 엔트리를 순회하면서 isUNO에 초기값 false 설정
+        for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
+            String playerUid = entry.getValue();  // playerNum의 값(플레이어 UID)
+            isUNO.put(playerUid, false); // isUNO에서 해당 UID에 대해 false로 설정
         }
     }
 
@@ -95,6 +108,7 @@ public class UnoGame implements Serializable {
     public List<String> getTurn() {
         return turn;
     }
+    public HashMap<String, Boolean> getIsUNO() {return isUNO;}
 
     public boolean playCard(String card, int playerIndex) {
         String[] cardParts = card.split(" ");

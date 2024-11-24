@@ -54,7 +54,7 @@ public class UnoGameClient extends JFrame {
         this.add(createLeftPanel(), BorderLayout.CENTER);
     }
 
-    private void printDisplay(String msg) {
+    public void printDisplay(String msg) {
         t_display.setCaretPosition(t_display.getDocument().getLength());
         int len = t_display.getDocument().getLength();
         try {
@@ -78,7 +78,7 @@ public class UnoGameClient extends JFrame {
         t_input.setText("");
     }
 
-    private void send(ChatMsg msg) {
+    public void send(ChatMsg msg) {
         try {
             out.writeObject(msg);
             out.flush();

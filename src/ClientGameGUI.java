@@ -90,22 +90,59 @@ public class ClientGameGUI extends JPanel {
 
     private JPanel displayActionButtons() {
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(3, 1));  // 3개의 버튼을 세로로 배치 (3행, 1열)
+        buttonPanel.setLayout(new GridLayout(2, 1));  // 3개의 버튼을 세로로 배치 (3행, 1열)
         buttonPanel.setPreferredSize(new Dimension(200, 100)); // 패널 크기 설정
 
         // Draw, Next, UNO 버튼들 생성
         JButton drawButton = new JButton("Draw");
-        JButton nextButton = new JButton("Next");
         JButton unoButton = new JButton("UNO");
 
         // 각 버튼에 액션 리스너 추가
-        drawButton.addActionListener(e -> drawCardUpdate(1));  // 플레이어 1이 Draw 버튼을 클릭한 경우
-        nextButton.addActionListener(e -> nextTurnUpdate());  // 턴을 넘기는 버튼
-        unoButton.addActionListener(e -> System.out.println("UNO action"));  // UNO 버튼 처리
+        drawButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                drawCardUpdate(myNum);
+                unoGame.nextTurn();
+                uc.sendUnoUpdate(uid, unoGame);
+            }
+        });
+        if(!(Objects.equals(unoGame.getTurn().getFirst(), uid))){
+            drawButton.setEnabled(false);
+        }
+
+        unoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<String> currentPlayerList = unoGame.getPlayerCards(myNum);
+
+                if (currentPlayerList.size() == 1) {
+                    // 카드가 하나 남았으면 UNO 버튼을 눌러야 함
+                    unoGame.getIsUNO().put(uid, true);  // UNO를 외쳤다고 설정
+                    uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!!"));
+                    uc.sendUnoUpdate(uid, unoGame);
+                } else {
+                    // 카드가 하나 남지 않으면 UNO 버튼을 눌러도 플래그 변경 없음
+                    uc.printDisplay( "UNO를 외칠 수 없습니다.");
+                }
+
+                // 모든 플레이어의 덱을 확인하고, UNO를 외쳤는지 판단
+                for (Map.Entry<Integer, String> entry : userMap.entrySet()) {
+                    int playerNumber = entry.getKey();
+                    String playerUid = entry.getValue();
+                    List<String> playerList = unoGame.getPlayerCards(playerNumber);
+
+                    if (playerList.size() == 1 && !unoGame.getIsUNO().get(playerUid)) {
+                        // 플레이어가 카드 1장을 남겼고 UNO를 외치지 않았다면, 한 장 더 뽑아야 함
+                        uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!"));
+                        drawCardUpdate(playerNumber);  // 한 장 더 뽑기
+                        uc.sendUnoUpdate(uid, unoGame);
+                    }
+                }
+            }
+        });
 
         // 버튼을 버튼 패널에 추가
         buttonPanel.add(drawButton);
-        buttonPanel.add(nextButton);
         buttonPanel.add(unoButton);
 
         return buttonPanel;
@@ -178,10 +215,11 @@ public class ClientGameGUI extends JPanel {
                     uc.sendUnoUpdate(uid, unoGame);
                 }
             });
-
+            if(!(Objects.equals(unoGame.getTurn().getFirst(), uid))){
+                cardButton.setEnabled(false);
+            }
             cardPanel.add(cardButton);
         }
-
         playerPanel.add(cardPanel, BorderLayout.CENTER);  // 카드 패널을 중앙에 배치
 
         return playerPanel;
@@ -219,6 +257,8 @@ public class ClientGameGUI extends JPanel {
     private void playCardUpdate(String card, int playerIndex) {
         if (!unoGame.playCard(card, playerIndex)) {
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
+        }else {
+            unoGame.nextTurn();
         }
         updateGamePanel();
     }
