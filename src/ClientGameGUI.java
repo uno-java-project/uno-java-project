@@ -257,8 +257,6 @@ public class ClientGameGUI extends JPanel {
     private void playCardUpdate(String card, int playerIndex) {
         if (!unoGame.playCard(card, playerIndex)) {
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
-        }else {
-            unoGame.nextTurn();
         }
         updateGamePanel();
     }

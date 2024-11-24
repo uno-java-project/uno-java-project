@@ -128,6 +128,36 @@ public class UnoGame implements Serializable {
                 case 3: player4List.remove(card); break;
             }
 
+            if (value.equals("Skip")) {
+                jumpTurn();  // 턴 반전 호출
+            }
+            else if (value.equals("Reverse")) {
+                reverseTurn();  // 턴 반전 호출
+            }
+            else if (value.equals("Draw2")) {
+                switch ((playerIndex + 1)%4) {
+                    case 0:
+                        player1List.add(deck.remove(0));
+                        player1List.add(deck.remove(0));
+                        break;
+                    case 1:
+                        player2List.add(deck.remove(0));
+                        player2List.add(deck.remove(0));
+                        break;
+                    case 2:
+                        player3List.add(deck.remove(0));
+                        player3List.add(deck.remove(0));
+                        break;
+                    case 3:
+                        player4List.add(deck.remove(0));
+                        player4List.add(deck.remove(0));
+                        break;
+                }
+                nextTurn();
+            }else {
+                nextTurn();
+            }
+
             // topCard 갱신
             topCard = card;
             return true;
