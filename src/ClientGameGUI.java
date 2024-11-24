@@ -1,16 +1,20 @@
+import javax.smartcardio.Card;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 
 public class ClientGameGUI extends JPanel {
     private UnoGame unoGame;
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
+    private String uid;
+    private int myNum;
+    private HashMap<Integer, String> userMap;
 
-    public ClientGameGUI(UnoGame unoGame) {
+    public ClientGameGUI(UnoGame unoGame, String uid) {
         setLayout(new BorderLayout()); // 기존의 레이아웃 설정
         setPreferredSize(new Dimension(615, 830));
 
@@ -19,11 +23,25 @@ public class ClientGameGUI extends JPanel {
         gamePanel.setLayout(new BorderLayout());  // 전체 화면을 BorderLayout으로 설정
         add(gamePanel, BorderLayout.CENTER);
 
+        this.uid = uid;
         this.unoGame = unoGame;
+        setMyNum();
 
         updateGamePanel();
 
         setVisible(true);
+    }
+
+    public void setMyNum(){
+        userMap = unoGame.getPlayerNumMap();
+        for (Map.Entry<Integer, String> entry : userMap.entrySet()) {
+            Integer key = entry.getKey();
+            String value = entry.getValue();
+
+            if (Objects.equals(value, uid)) {
+                myNum = key;
+            }
+        }
     }
 
 //    private void updateRemainingCardsLabel() {
@@ -38,20 +56,20 @@ public class ClientGameGUI extends JPanel {
 
         // 상단에 플레이어 덱 (Player 1, 2, 3, 4) 배치
         JPanel playersPanel = new JPanel(new BorderLayout());
-        player1Panel.add(displayPlayerCards(unoGame.getPlayerCards(1), 1), BorderLayout.CENTER); // Player 1 덱
+        player1Panel.add(displayMyCards(unoGame.getPlayerCards(myNum), myNum), BorderLayout.CENTER); // Player 1 덱
         player1Panel.add(displayActionButtons(), BorderLayout.EAST);  // 플레이어 1 버튼은 오른쪽에 배치
         player1Panel.setPreferredSize(new Dimension(0, 150));  // 서쪽 패널 크기 고정
 
         // 동쪽(WEST)과 서쪽(EAST) 패널의 크기 고정
-        JPanel player2Panel = displayPlayerCards(unoGame.getPlayerCards(2), 2);
+        JPanel player2Panel = displayPlayerCards(unoGame.getPlayerCards((myNum+1)%4), (myNum+1)%4);
         player2Panel.setPreferredSize(new Dimension(120, 0));  // 서쪽 패널 크기 고정
         playersPanel.add(player2Panel, BorderLayout.WEST); // Player 2 덱
 
-        JPanel player3Panel = displayPlayerCards(unoGame.getPlayerCards(3), 3);
+        JPanel player3Panel = displayPlayerCards(unoGame.getPlayerCards((myNum+2)%4), (myNum+2)%4);
         player3Panel.setPreferredSize(new Dimension(120, 0));  // 동쪽 패널 크기 고정
         playersPanel.add(player3Panel, BorderLayout.EAST);  // Player 3 덱
 
-        JPanel player4Panel = displayPlayerCards(unoGame.getPlayerCards(4), 4);
+        JPanel player4Panel = displayPlayerCards(unoGame.getPlayerCards((myNum+3)%4), (myNum+3)%4);
         player4Panel.setPreferredSize(new Dimension(0, 150));  // 동쪽 패널 크기 고정
         playersPanel.add(player4Panel, BorderLayout.NORTH);  // Player 3 덱
 
@@ -94,6 +112,36 @@ public class ClientGameGUI extends JPanel {
     private JPanel displayPlayerCards(List<String> playerList, int playerIndex) {
         JPanel playerPanel = new JPanel();
         playerPanel.setBorder(BorderFactory.createTitledBorder("Player " + playerIndex));
+        playerPanel.setLayout(new BorderLayout());
+
+        JPanel cardPanel = new JPanel();
+        cardPanel.setLayout(new FlowLayout(FlowLayout.LEFT));  // 카드 버튼들을 왼쪽에 배치
+        for (String card : playerList) {
+            // JButton 생성하여 카드로 표시
+            JButton cardButton = new JButton();  // 카드 값만 텍스트로 표시
+            cardButton.setPreferredSize(new Dimension(90, 30));  // 버튼 크기 조정
+
+            // 카드 색상에 맞게 배경색 설정
+            cardButton.setBackground(Color.black);
+
+
+            cardButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                }
+            });
+
+            cardPanel.add(cardButton);
+        }
+
+        playerPanel.add(cardPanel, BorderLayout.CENTER);  // 카드 패널을 중앙에 배치
+
+        return playerPanel;
+    }
+
+    private JPanel displayMyCards(List<String> playerList, int playerIndex) {
+        JPanel playerPanel = new JPanel();
+        playerPanel.setBorder(BorderFactory.createTitledBorder("Player: " + playerIndex));
         playerPanel.setLayout(new BorderLayout());
 
         JPanel cardPanel = new JPanel();
@@ -200,18 +248,19 @@ public class ClientGameGUI extends JPanel {
 
         public static void main(String[] args) {
         JFrame gameFrame = new JFrame();
+        String uid = "guest33";
         gameFrame.setSize(615, 830);
         gameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         UnoGame uno = new UnoGame();
         ArrayList<String> players = new ArrayList<>();
         players.add("Player1");
         players.add("Player2");
-        players.add("Player3");
+        players.add("guest33");
         players.add("Player4");
 
         uno.setPlayers(players);
         uno.startGame();
-        gameFrame.add(new ClientGameGUI(uno));
+        gameFrame.add(new ClientGameGUI(uno, uid));
 
         gameFrame.setVisible(true);
     }

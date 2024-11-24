@@ -56,10 +56,10 @@ public class UnoGameServerGUI extends JPanel {
         gamePanel.removeAll();  // 기존 내용 제거
         
         // 각 플레이어의 카드 표시        
+        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(0), 0));
         gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(1), 1));
         gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(2), 2));
         gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(3), 3));
-        gamePanel.add(displayPlayerCards(unoGame.getPlayerCards(4), 4));
         
         // 턴 패널 생성 및 중앙에 배치
         JPanel borderPanel = new JPanel(new BorderLayout());
@@ -263,10 +263,10 @@ public class UnoGameServerGUI extends JPanel {
         numberOfCardsPanel.setBorder(BorderFactory.createTitledBorder("Number of Cards"));
 
         // 각 플레이어의 남은 카드 수를 표시하는 레이블 생성
-        JLabel player1CardsLabel = new JLabel("Player 1: " + unoGame.getPlayerCards(1).size() + " cards");
-        JLabel player2CardsLabel = new JLabel("Player 2: " + unoGame.getPlayerCards(2).size() + " cards");
-        JLabel player3CardsLabel = new JLabel("Player 3: " + unoGame.getPlayerCards(3).size() + " cards");
-        JLabel player4CardsLabel = new JLabel("Player 4: " + unoGame.getPlayerCards(4).size() + " cards");
+        JLabel player1CardsLabel = new JLabel("Player 1: " + unoGame.getPlayerCards(0).size() + " cards");
+        JLabel player2CardsLabel = new JLabel("Player 2: " + unoGame.getPlayerCards(1).size() + " cards");
+        JLabel player3CardsLabel = new JLabel("Player 3: " + unoGame.getPlayerCards(2).size() + " cards");
+        JLabel player4CardsLabel = new JLabel("Player 4: " + unoGame.getPlayerCards(3).size() + " cards");
 
         // 레이블들을 numberOfCardsPanel에 추가
         numberOfCardsPanel.add(player1CardsLabel);

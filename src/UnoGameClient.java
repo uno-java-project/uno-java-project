@@ -21,6 +21,7 @@ public class UnoGameClient extends JFrame {
     private Thread receiveThread = null;
     private String uid;
 
+
     JPanel leftPanel;
 
     public UnoGameClient(String uid, String serverAddress, int serverPort) {
@@ -228,7 +229,7 @@ public class UnoGameClient extends JFrame {
                         case ChatMsg.MODE_UNO_DATA:
                             printDisplay("게임이 시작됩니다.");
                             remove(leftPanel);
-                            add(new ClientGameGUI(inMsg.uno), BorderLayout.CENTER);
+                            add(new ClientGameGUI(inMsg.uno, uid), BorderLayout.CENTER);
 
                             break;
                     }

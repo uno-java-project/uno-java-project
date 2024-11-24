@@ -9,7 +9,7 @@ public class UnoGame implements Serializable {
     private List<String> deck;
     private List<String> player1List, player2List, player3List, player4List;
     private String topCard;
-    private String[] playerNum;
+    private HashMap<Integer, String> playerNum;
     private List<String> turn;
 
     public UnoGame() {
@@ -25,9 +25,9 @@ public class UnoGame implements Serializable {
 
     public void setPlayers(List<String> players) {
         turn = players;
-        playerNum = new String[players.size()];
+        playerNum = new HashMap<Integer, String>();
         for (int i = 0; i < players.size(); i++) {
-            playerNum[i] = players.get(i);
+            playerNum.put(i, players.get(i));
         }
     }
 
@@ -84,10 +84,10 @@ public class UnoGame implements Serializable {
 
     public List<String> getPlayerCards(int playerIndex) {
         switch (playerIndex) {
-            case 1: return player1List;
-            case 2: return player2List;
-            case 3: return player3List;
-            case 4: return player4List;
+            case 0: return player1List;
+            case 1: return player2List;
+            case 2: return player3List;
+            case 3: return player4List;
             default: return new ArrayList<>();
         }
     }
@@ -108,10 +108,10 @@ public class UnoGame implements Serializable {
         if (color.equals(topColor) || value.equals(topValue)) {
             // 카드가 일치하면 플레이하고, 해당 카드 삭제
             switch (playerIndex) {
-                case 1: player1List.remove(card); break;
-                case 2: player2List.remove(card); break;
-                case 3: player3List.remove(card); break;
-                case 4: player4List.remove(card); break;
+                case 0: player1List.remove(card); break;
+                case 1: player2List.remove(card); break;
+                case 2: player3List.remove(card); break;
+                case 3: player4List.remove(card); break;
             }
 
             // topCard 갱신
@@ -122,14 +122,18 @@ public class UnoGame implements Serializable {
         }
     }
 
+    public HashMap<Integer, String> getPlayerNumMap(){
+        return playerNum;
+    }
+
     public void drawCard(int playerIndex) {
         if (!deck.isEmpty()) {
             String drawnCard = deck.removeFirst();
             switch (playerIndex) {
-                case 1: player1List.add(drawnCard); break;
-                case 2: player2List.add(drawnCard); break;
-                case 3: player3List.add(drawnCard); break;
-                case 4: player4List.add(drawnCard); break;
+                case 0: player1List.add(drawnCard); break;
+                case 1: player2List.add(drawnCard); break;
+                case 2: player3List.add(drawnCard); break;
+                case 3: player4List.add(drawnCard); break;
             }
         }
     }
