@@ -248,6 +248,15 @@ public class ServerGameGUI extends JFrame {
         }
     }
 
+    private void UnoGameUpdate() {
+        // 우노 게임 패널
+        UnoGameServerGUI unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+
+        revalidate(); // 레이아웃을 갱신
+        repaint(); // 화면을 새로 그리기
+    }
+
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
         private ObjectOutputStream out;
@@ -284,7 +293,7 @@ public class ServerGameGUI extends JFrame {
                             add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
                             unoGameServerGUI.gameStartUp();
 
-                            broadcastingUnoData();
+                            broadcastingUnoStart();
 
                             revalidate(); // 레이아웃을 갱신
                             repaint(); // 화면을 새로 그리기
@@ -303,6 +312,10 @@ public class ServerGameGUI extends JFrame {
                     else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
+                    }
+                    else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
+                        printDisplay(uid + ": 플레이 완료");
+                        broadcastingUnoUpdate();
                     }
                 }
 
@@ -338,8 +351,11 @@ public class ServerGameGUI extends JFrame {
             send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
         }
 
-        private void sendUnoData() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_DATA, unoGame));
+        private void sendUnoStart() {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
+        }
+        private void sendUnoUpdate() {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
         }
 
         private void broadcasting(ChatMsg msg) {
@@ -348,9 +364,15 @@ public class ServerGameGUI extends JFrame {
             }
         }
 
-        private void broadcastingUnoData() {
+        private void broadcastingUnoUpdate() {
             for (ClientHandler c : users) {
-                c.sendUnoData();
+                c.sendUnoUpdate();
+            }
+        }
+
+        private void broadcastingUnoStart() {
+            for (ClientHandler c : users) {
+                c.sendUnoStart();
             }
         }
 

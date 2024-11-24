@@ -20,6 +20,7 @@ public class UnoGameClient extends JFrame {
     Socket socket;
     private Thread receiveThread = null;
     private String uid;
+    private JPanel currentUNOGUI;
 
 
     JPanel leftPanel;
@@ -226,11 +227,17 @@ public class UnoGameClient extends JFrame {
                             printDisplay(inMsg.userID + ":" + inMsg.message);
                             printDisplay(inMsg.image);
                             break;
-                        case ChatMsg.MODE_UNO_DATA:
+                        case ChatMsg.MODE_UNO_START:
                             printDisplay("게임이 시작됩니다.");
                             remove(leftPanel);
-                            add(new ClientGameGUI(inMsg.uno, uid), BorderLayout.CENTER);
-
+                            currentUNOGUI = new ClientGameGUI(inMsg.uno, uid);
+                            add(currentUNOGUI, BorderLayout.CENTER);
+                            break;
+                        case ChatMsg.MODE_UNO_UPDATE:
+                            printDisplay("다음 턴");
+                            remove(currentUNOGUI);
+                            currentUNOGUI = new ClientGameGUI(inMsg.uno, uid);
+                            add(currentUNOGUI, BorderLayout.CENTER);
                             break;
                     }
                 } catch (IOException e) {
