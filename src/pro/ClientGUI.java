@@ -61,6 +61,7 @@ public class ClientGUI extends JFrame {
         p.add(t_hostAddr);
         p.add(new JLabel("포트번호:"));
         p.add(t_portNum);
+        t_portNum.setEditable(false);
 
         return p;
     }
@@ -109,7 +110,8 @@ public class ClientGUI extends JFrame {
 
                 System.out.println(uid + serverAddress + serverPort);
 
-                SwingUtilities.invokeLater(() -> new UnoGameClient(uid, serverAddress, serverPort));
+                //SwingUtilities.invokeLater(() -> new UnoGameClient(uid, serverAddress, serverPort));
+                SwingUtilities.invokeLater(() -> new ClientRoomGUI(uid, serverAddress, serverPort));
 
                 // 현재 LoginGUI 닫기
                 ClientGUI.this.dispose();
