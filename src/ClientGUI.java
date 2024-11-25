@@ -2,10 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.*;
 import java.net.*;
 
-public class LoginGUI extends JFrame {
+public class ClientGUI extends JFrame {
     private String serverAddress;
     private int serverPort;
     JTextField t_userID;
@@ -15,7 +14,7 @@ public class LoginGUI extends JFrame {
     private JButton b_start, b_exit;
     private String uid;
 
-    public LoginGUI(String serverAddress, int serverPort) {
+    public ClientGUI(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         buildGUI();
@@ -101,16 +100,16 @@ public class LoginGUI extends JFrame {
         b_start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                LoginGUI.this.serverAddress = t_hostAddr.getText();
-                LoginGUI.this.serverPort = Integer.parseInt(t_portNum.getText());
-                LoginGUI.this.uid = t_userID.getText();
+                ClientGUI.this.serverAddress = t_hostAddr.getText();
+                ClientGUI.this.serverPort = Integer.parseInt(t_portNum.getText());
+                ClientGUI.this.uid = t_userID.getText();
 
                 System.out.println(uid + serverAddress + serverPort);
 
                 SwingUtilities.invokeLater(() -> new UnoGameClient(uid, serverAddress, serverPort));
 
                 // 현재 LoginGUI 닫기
-                LoginGUI.this.dispose();
+                ClientGUI.this.dispose();
             }
         });
 
@@ -133,6 +132,6 @@ public class LoginGUI extends JFrame {
         String serverAddress = "localhost";
         int serverPort = 54321;
 
-        LoginGUI client = new LoginGUI(serverAddress, serverPort);
+        ClientGUI client = new ClientGUI(serverAddress, serverPort);
     }
 }

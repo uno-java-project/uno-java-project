@@ -1,4 +1,3 @@
-import javax.smartcardio.Card;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -6,7 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 
-public class ClientGameGUI extends JPanel {
+public class UnoGameClientGUI extends JPanel {
     private UnoGame unoGame;
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
@@ -15,7 +14,7 @@ public class ClientGameGUI extends JPanel {
     private HashMap<Integer, String> userMap;
     private UnoGameClient uc;
 
-    public ClientGameGUI(UnoGame unoGame, String uid, UnoGameClient uc) {
+    public UnoGameClientGUI(UnoGame unoGame, String uid, UnoGameClient uc) {
         setLayout(new BorderLayout()); // 기존의 레이아웃 설정
         setPreferredSize(new Dimension(615, 830));
 
@@ -118,7 +117,7 @@ public class ClientGameGUI extends JPanel {
                 if (currentPlayerList.size() == 1) {
                     // 카드가 하나 남았으면 UNO 버튼을 눌러야 함
                     unoGame.getIsUNO().put(uid, true);  // UNO를 외쳤다고 설정
-                    uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!!"));
+                    uc.send(new NetworkPacket(uid, NetworkPacket.MODE_TX_STRING, "UNO!!!"));
                     uc.sendUnoUpdate(uid, unoGame);
                 } else {
                     // 카드가 하나 남지 않으면 UNO 버튼을 눌러도 플래그 변경 없음
@@ -133,7 +132,7 @@ public class ClientGameGUI extends JPanel {
 
                     if (playerList.size() == 1 && !unoGame.getIsUNO().get(playerUid)) {
                         // 플레이어가 카드 1장을 남겼고 UNO를 외치지 않았다면, 한 장 더 뽑아야 함
-                        uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!"));
+                        uc.send(new NetworkPacket(uid, NetworkPacket.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!"));
                         drawCardUpdate(playerNumber);  // 한 장 더 뽑기
                         uc.sendUnoUpdate(uid, unoGame);
                     }
@@ -285,25 +284,6 @@ public class ClientGameGUI extends JPanel {
             case "Yellow": return Color.YELLOW;
             default: return Color.GRAY;  // 기본 색상
         }
-    }
-
-        public static void main(String[] args) {
-        JFrame gameFrame = new JFrame();
-        String uid = "guest33";
-        gameFrame.setSize(615, 830);
-        gameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        UnoGame uno = new UnoGame();
-        ArrayList<String> players = new ArrayList<>();
-        players.add("Player1");
-        players.add("Player2");
-        players.add("guest33");
-        players.add("Player4");
-
-        uno.setPlayers(players);
-        uno.startGame();
-        //gameFrame.add(new ClientGameGUI(uno, uid, ));
-
-        gameFrame.setVisible(true);
     }
 }
 

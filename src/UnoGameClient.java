@@ -74,11 +74,11 @@ public class UnoGameClient extends JFrame {
             return;
         }
         ImageIcon icon = new ImageIcon(filename);
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        send(new NetworkPacket(uid, NetworkPacket.MODE_TX_IMAGE, file.getName(), icon));
         t_input.setText("");
     }
 
-    public void send(ChatMsg msg) {
+    public void send(NetworkPacket msg) {
         try {
             out.writeObject(msg);
             out.flush();
@@ -181,17 +181,17 @@ public class UnoGameClient extends JFrame {
         String message = t_input.getText();
         if (message.isEmpty()) return;
 
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+        send(new NetworkPacket(uid, NetworkPacket.MODE_TX_STRING, message));
 
         t_input.setText(""); // 보낸 후 입력창은 비우기
     }
 
     private void sendUserID() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
+        send(new NetworkPacket(uid, NetworkPacket.MODE_LOGIN));
     }
 
     public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+        send(new NetworkPacket(uid, NetworkPacket.MODE_UNO_UPDATE, unoGame));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -234,30 +234,30 @@ public class UnoGameClient extends JFrame {
     }
     private void receiveMessage(ObjectInputStream in) {
         try {
-            ChatMsg inMsg = (ChatMsg) in.readObject();
+            NetworkPacket inMsg = (NetworkPacket) in.readObject();
             if (inMsg == null) {
                 disconnect();
                 printDisplay("서버 연결 끊김");
                 return;
             }
             switch (inMsg.mode) {
-                case ChatMsg.MODE_TX_STRING:
+                case NetworkPacket.MODE_TX_STRING:
                     printDisplay(inMsg.userID + ":" + inMsg.message);
                     break;
-                case ChatMsg.MODE_TX_IMAGE:
+                case NetworkPacket.MODE_TX_IMAGE:
                     printDisplay(inMsg.userID + ":" + inMsg.message);
                     printDisplay(inMsg.image);
                     break;
-                case ChatMsg.MODE_UNO_START:
+                case NetworkPacket.MODE_UNO_START:
                     printDisplay("게임이 시작됩니다.");
                     remove(leftPanel);
-                    currentUNOGUI = new ClientGameGUI(inMsg.uno, uid, this);
+                    currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
                     add(currentUNOGUI, BorderLayout.CENTER);
                     break;
-                case ChatMsg.MODE_UNO_UPDATE:
+                case NetworkPacket.MODE_UNO_UPDATE:
                     printDisplay(uid + "턴 종료");
                     remove(currentUNOGUI);
-                    currentUNOGUI = new ClientGameGUI(inMsg.uno, uid, this);
+                    currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
                     add(currentUNOGUI, BorderLayout.CENTER);
                     break;
             }
@@ -269,7 +269,7 @@ public class UnoGameClient extends JFrame {
     }
 
     private void disconnect() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        send(new NetworkPacket(uid, NetworkPacket.MODE_LOGOUT));
         try {
             receiveThread = null;
             socket.close();

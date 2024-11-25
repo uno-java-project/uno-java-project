@@ -290,15 +290,6 @@ public class UnoGameServerGUI extends JPanel {
             default: return Color.GRAY;  // 기본 색상
         }
     }
-
-//    public static void main(String[] args) {
-//        JFrame gameFrame = new JFrame();
-//        gameFrame.setSize(615, 830);
-//        gameFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-//        gameFrame.add(new UnoGameGUI());
-//
-//        gameFrame.setVisible(true);
-//    }
 }
 
 

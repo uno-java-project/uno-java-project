@@ -6,12 +6,12 @@ public class UnoGame implements Serializable {
     private static final String[] COLORS = {"Red", "Green", "Blue", "Yellow"};
     private static final String[] VALUES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw2"};
 
-    private List<String> deck;
-    private List<String> player1List, player2List, player3List, player4List;
-    private String topCard;
-    private HashMap<Integer, String> playerNum;
-    private List<String> turn;
-    private HashMap<String, Boolean> isUNO;
+    private List<String> deck; // 전체 덱
+    private List<String> player1List, player2List, player3List, player4List; // 플레이어 덱
+    private String topCard; // 탑카드
+    private HashMap<Integer, String> playerNum; // 플레이어 넘버 ex < 1 , guest123 >
+    private List<String> turn; // turn 0번 인덱스가 현제 차례
+    private HashMap<String, Boolean> isUNO; // 우노 플래그 ex < guest123, false >, 1장 남았을 떄 눌러야함
 
     public UnoGame() {
         // 초기화

@@ -7,7 +7,7 @@ import java.net.*;
 import java.util.*;
 import java.util.List;
 
-public class ServerGameGUI extends JFrame {
+public class ServerGUI extends JFrame {
     private UnoGame unoGame;
     private int port;
     private JPanel serverPanel;
@@ -22,7 +22,7 @@ public class ServerGameGUI extends JFrame {
     private int maxPlayers = 4;  // 최대 플레이어 수 설정
     private UnoGameServerGUI unoGameServerGUI;
 
-    public ServerGameGUI(int port) {
+    public ServerGUI(int port) {
         super("Uno Game");
         this.port = port;
         this.setSize(870, 830);
@@ -277,9 +277,9 @@ public class ServerGameGUI extends JFrame {
 
 
                 String message;
-                ChatMsg msg;
-                while ((msg = (ChatMsg) in.readObject()) != null) {
-                    if (msg.mode == ChatMsg.MODE_LOGIN) {
+                NetworkPacket msg;
+                while ((msg = (NetworkPacket) in.readObject()) != null) {
+                    if (msg.mode == NetworkPacket.MODE_LOGIN) {
                         uid = msg.userID;
                         playersUid.add(uid);
                         printDisplay("새 참가자: " + uid);
@@ -303,20 +303,20 @@ public class ServerGameGUI extends JFrame {
                         }
                         continue;
                     }
-                    else if (msg.mode == ChatMsg.MODE_LOGOUT) {
+                    else if (msg.mode == NetworkPacket.MODE_LOGOUT) {
                         break;
                     }
-                    else if (msg.mode == ChatMsg.MODE_TX_STRING) {
+                    else if (msg.mode == NetworkPacket.MODE_TX_STRING) {
                         message = uid + ": " + msg.message;
 
                         printDisplay(message);
                         broadcasting(msg);
                     }
-                    else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
+                    else if (msg.mode == NetworkPacket.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
                     }
-                    else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
+                    else if (msg.mode == NetworkPacket.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
                         unoGame = msg.uno;
 
@@ -344,7 +344,7 @@ public class ServerGameGUI extends JFrame {
             }
         }
 
-        private void send(ChatMsg msg) {
+        private void send(NetworkPacket msg) {
             try {
                 out.writeObject(msg);
                 out.flush();
@@ -354,17 +354,17 @@ public class ServerGameGUI extends JFrame {
         }
 
         private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
+            send(new NetworkPacket(uid, NetworkPacket.MODE_LOGIN, msg));
         }
 
         private void sendUnoStart() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
+            send(new NetworkPacket(uid, NetworkPacket.MODE_UNO_START, unoGame));
         }
         private void sendUnoUpdate() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+            send(new NetworkPacket(uid, NetworkPacket.MODE_UNO_UPDATE, unoGame));
         }
 
-        private void broadcasting(ChatMsg msg) {
+        private void broadcasting(NetworkPacket msg) {
             for (ClientHandler c : users) {
                 c.send(msg);
             }
@@ -391,6 +391,6 @@ public class ServerGameGUI extends JFrame {
 
     public static void main(String[] args) {
         int port = 54321;
-        ServerGameGUI server = new ServerGameGUI(port);
+        ServerGUI server = new ServerGUI(port);
     }
 }
