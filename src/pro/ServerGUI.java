@@ -22,7 +22,7 @@ public class ServerGUI extends JFrame {
     }
 
     public ServerGUI(int port) {
-        super("WithCharServer");
+        super("ServerGUI");
         this.port = port;
         buildGUI();
         this.setBounds(100, 200, 400, 300);
