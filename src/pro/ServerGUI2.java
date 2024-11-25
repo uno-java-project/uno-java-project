@@ -9,7 +9,7 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Vector;
 
-public class ServerGUI extends JFrame {
+public class ServerGUI2 extends JFrame {
     private HashMap<Integer, Vector<String>> roomUsers = new HashMap<>();
     private int port;
     private ServerSocket serverSocket;
@@ -21,7 +21,7 @@ public class ServerGUI extends JFrame {
         return 54321 + roomNumber; // 방 번호에 따라 포트를 설정
     }
 
-    public ServerGUI(int port) {
+    public ServerGUI2(int port) {
         super("WithCharServer");
         this.port = port;
         buildGUI();
@@ -321,10 +321,5 @@ public class ServerGUI extends JFrame {
             // 특정 소캣에 대해서 receiveMessages
             receiveMessages(clientSocket);
         }
-    }
-
-    public static void main(String[] args) {
-        int port = 54321;
-        ServerGUI server = new ServerGUI(port);
     }
 }
