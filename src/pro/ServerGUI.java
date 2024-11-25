@@ -1,40 +1,108 @@
-package pro;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
-import java.util.HashMap;
-import java.util.Vector;
+import java.util.*;
+import java.util.List;
 
 public class ServerGUI extends JFrame {
-    private HashMap<Integer, Vector<String>> roomUsers = new HashMap<>();
+    private UnoGame unoGame;
     private int port;
+    private JPanel serverPanel;
+    private JPanel participantsPanel;
+    private JPanel imagePanel;
     private ServerSocket serverSocket;
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
-    private int getPortForRoom(int roomNumber) {
-        return 54321 + roomNumber; // 방 번호에 따라 포트를 설정
-    }
+    private List<String> playersUid = new ArrayList<>();
+    private int maxPlayers = 4;  // 최대 플레이어 수 설정
+    private UnoGameServerGUI unoGameServerGUI;
 
     public ServerGUI(int port) {
-        super("ServerGUI");
+        super("Uno Game");
         this.port = port;
-        buildGUI();
-        this.setBounds(100, 200, 400, 300);
-
+        this.setSize(870, 830);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setVisible(true); //this는 전부 필수 아니지만 있는 게 나음
-    } // 생성자
+        this.setLocationRelativeTo(null);
+
+        serverPanel = new JPanel(new BorderLayout());
+        buildGUI();
+
+        updateParticipantsPanel();
+
+        setLayout(new BorderLayout());
+        // 채팅 패널을 오른쪽에 추가
+        add(serverPanel, BorderLayout.EAST);  // 채팅 패널 추가
+
+        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
+        JLabel imageLabel = new JLabel();
+        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        Image scaledImage = imageIcon.getImage().getScaledInstance(400, -1, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
+        imageLabel.setIcon(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+
+        // 이미지 패널 추가 및 여백 포함
+        imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(80, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
+        imagePanel.add(imageLabel, BorderLayout.CENTER);
+
+        add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
+
+        setVisible(true);
+    }
 
     private void buildGUI() {
-        add(createDisplayPanel(), BorderLayout.CENTER);
-        add(createControlPanel(), BorderLayout.SOUTH);
+        // 참가자 패널을 북쪽에 추가
+        participantsPanel = new JPanel(new GridLayout(0, 1)); // 세로로 리스트가 쌓이도록 설정
+        participantsPanel.setBorder(BorderFactory.createTitledBorder("참가자 리스트"));
+        serverPanel.add(participantsPanel, BorderLayout.NORTH);
 
+        serverPanel.add(createDisplayPanel(), BorderLayout.CENTER);
+        serverPanel.add(createControlPanel(), BorderLayout.SOUTH);
+    }
+
+    // 참가자 목록에 추가할 메서드
+    private void updateParticipantsPanel() {
+        participantsPanel.removeAll(); // 기존 참가자 목록을 삭제
+
+        // 최대 4명의 플레이어를 위한 패널을 설정
+        for (int i = 0; i < maxPlayers; i++) {
+            JPanel playerPanel = new JPanel(new BorderLayout());
+            //playerPanel.setPreferredSize(new Dimension(350, 60)); // 패널 크기 조정 (너비 350, 높이 60)
+
+            // 플레이어 이름을 위한 라벨 설정
+            JLabel playerLabel = new JLabel();
+            playerLabel.setFont(new Font("Arial", Font.BOLD, 18)); // 폰트 크기와 스타일 설정
+            playerLabel.setVerticalAlignment(SwingConstants.CENTER); // 세로 중앙 정렬
+
+            // UID가 있을 경우, 초록색 배경으로 변경하고 UID를 표시
+            if (i < playersUid.size()) {
+                playerLabel.setText("Player " + (i + 1) + ": " + playersUid.get(i));
+                playerLabel.setForeground(Color.WHITE); // 텍스트 색상은 흰색
+                playerPanel.setBackground(Color.GREEN); // 참가자가 있으면 초록색으로 변경
+            } else {
+                playerLabel.setText("Player " + (i + 1) + ": ");
+                playerLabel.setForeground(Color.BLACK); // 참가자가 없다면 텍스트 색상은 검정
+            }
+
+            // 패널에 라벨 추가
+            playerPanel.add(playerLabel, BorderLayout.CENTER);
+
+            // 각 playerPanel에 상단 마진 추가 (예: 10px)
+            playerPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));  // 상단에만 10px 마진
+
+
+            // 참가자 패널에 패널 추가
+            participantsPanel.add(playerPanel);
+        }
+
+        revalidate(); // 패널을 갱신하여 최신 상태 반영
+        repaint(); // 화면을 새로 그리기
     }
 
     private String getLocalAddr() {
@@ -49,88 +117,26 @@ public class ServerGUI extends JFrame {
         }
         return addr;
     }
-    public void startRoomServer(int roomNumber) {
-        new Thread(() -> {
-            int roomPort = getPortForRoom(roomNumber);
-            try (ServerSocket roomServerSocket = new ServerSocket(roomPort)) {
-                printDisplay("방 " + roomNumber + " 서버 시작. 포트: " + roomPort);
-
-                while (true) {
-                    printDisplay("방 " + roomNumber + " 클라이언트 연결 대기 중...");
-                    Socket roomClient = roomServerSocket.accept();
-                    printDisplay("방 " + roomNumber + "에 클라이언트 연결됨");
-                    // 클라이언트 처리
-                    handleClientInRoom(roomClient, roomNumber);
-                }
-            } catch (IOException e) {
-                printDisplay("방 서버 오류: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    private void handleClientInRoom(Socket clientSocket, int roomNumber) {
-        try (ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())) {
-
-            ChatMsg msg = (ChatMsg) in.readObject();
-            if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
-                // 방 사용자 목록 업데이트
-                Vector<String> roomUserList = roomUsers.computeIfAbsent(roomNumber, k -> new Vector<>());
-                roomUserList.add(msg.userID);
-
-                // 현재 방 상태 메시지 생성
-                int currentCount = roomUserList.size();
-                String roomStatus = "방 " + roomNumber + " (" + currentCount + "/4)";
-
-                printDisplay("방 " + roomNumber + " 상태: " + roomStatus);
-
-                // 클라이언트에게 방 상태 전송
-                out.writeObject(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
-                out.flush();
-
-                // 모든 클라이언트에 방 상태 업데이트 브로드캐스트
-                broadcastRoomStatus(roomNumber, roomStatus);
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            printDisplay("방 " + roomNumber + " 클라이언트 처리 오류: " + e.getMessage());
-        }
-    }
-
-    private void broadcastRoomStatus(int roomNumber, String roomStatus) {
-        for (ClientHandler c : users) {
-            c.send(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
-        }
-    }
-
-
-
 
     private void startServer() {
         Socket clientSocket = null;
         try {
             serverSocket = new ServerSocket(port);
-            printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
-
-            for (int roomNumber = 1; roomNumber <= 4; roomNumber++) {
-                printDisplay("방 " + roomNumber + " 서버 준비 중...");
-                startRoomServer(roomNumber);
-            }
-
-            while (acceptThread == Thread.currentThread()) {
-                 clientSocket = serverSocket.accept();
+            printDisplay("서버가 시작됐습니다." + getLocalAddr());
+            while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
+                clientSocket = serverSocket.accept();
                 String cAddr = clientSocket.getInetAddress().getHostAddress();
-                printDisplay("클라이언트 연결됨: " + clientSocket.getInetAddress().getHostAddress());
+                t_display.append("클라이언트 연결:" + cAddr + "\n");
                 ClientHandler cHandler = new ClientHandler(clientSocket);
                 users.add(cHandler);
                 cHandler.start();
             }
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
             printDisplay("서버 소캣 종료");
 
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 if (clientSocket != null) clientSocket.close();
                 if (serverSocket != null) serverSocket.close();
@@ -140,8 +146,6 @@ public class ServerGUI extends JFrame {
             }
         }
     }
-
-
 
     private JPanel createDisplayPanel() { // 최상단 JTextArea
         t_display = new JTextArea();
@@ -216,6 +220,25 @@ public class ServerGUI extends JFrame {
         t_display.setCaretPosition(t_display.getDocument().getLength());
     }
 
+    /*private void sendMessage(String inputText) {
+        if (inputText.isEmpty()) return; // 입력창 비었으면 아무것도 안 함
+
+        else {
+            try {
+                ((BufferedWriter) out).write(inputText + '\n');
+                out.flush();
+            } catch (NumberFormatException e) { // 정수 아니면 오류
+                System.err.println("정수가 아님! " + e.getMessage());
+                return;
+            } catch (IOException e) {
+                System.err.println("클라이언트 쓰기 오류 > " + e.getMessage());
+                System.exit(-1);
+            }
+            t_display.append("나: " + inputText + "\n");
+            //t_input.setText(""); // 보낸 후 입력창은 비우기
+        }
+    }*/
+
     private void disconnect() {
         try {
             acceptThread = null;
@@ -224,6 +247,17 @@ public class ServerGUI extends JFrame {
             System.err.println("서버 닫기 오류 > " + e.getMessage());
             System.exit(-1);
         }
+    }
+
+    private void UnoGameUpdate() {
+        remove(unoGameServerGUI);
+
+        // 우노 게임 패널
+        unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+
+        revalidate(); // 레이아웃을 갱신
+        repaint(); // 화면을 새로 그리기
     }
 
     private class ClientHandler extends Thread {
@@ -241,44 +275,60 @@ public class ServerGUI extends JFrame {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(cs.getInputStream()));
                 out = new ObjectOutputStream(new BufferedOutputStream(cs.getOutputStream()));
 
+
                 String message;
                 ChatMsg msg;
-
-                // 사용자 목록 저장
-                Vector<String> currentUsers = new Vector<>();
-
                 while ((msg = (ChatMsg) in.readObject()) != null) {
                     if (msg.mode == ChatMsg.MODE_LOGIN) {
                         uid = msg.userID;
-                        currentUsers.add(uid); // 현재 사용자를 추가
+                        playersUid.add(uid);
                         printDisplay("새 참가자: " + uid);
-                        printDisplay("현재 참가자: " + currentUsers);
-                        printDisplay("현재 참가자 수: " + currentUsers.size());
+                        printDisplay("현재 참가자 수: " + users.size());
+                        updateParticipantsPanel(); // 참가자 목록 갱신
+
+                        // 현재 유저 수 확인후 실행
+                        if (users.size() == maxPlayers && unoGame == null) {
+                            remove(imagePanel);
+                            unoGame = new UnoGame();
+                            unoGame.setPlayers(playersUid);
+                            // 우노 게임 패널
+                            unoGameServerGUI = new UnoGameServerGUI(unoGame);
+                            add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
+                            unoGameServerGUI.gameStartUp();
+
+                            broadcastingUnoStart();
+
+                            revalidate(); // 레이아웃을 갱신
+                            repaint(); // 화면을 새로 그리기
+                        }
                         continue;
-                    } else if (msg.mode == ChatMsg.MODE_LOGOUT) {
-                        currentUsers.remove(uid); // 퇴장 시 사용자 제거
-                        printDisplay(uid + " 퇴장.");
-                        printDisplay("현재 참가자: " + currentUsers);
-                        printDisplay("현재 참가자 수: " + currentUsers.size());
+                    }
+                    else if (msg.mode == ChatMsg.MODE_LOGOUT) {
                         break;
-                    } else if (msg.mode == ChatMsg.MODE_TX_STRING) {
-                        message = uid + ": " + msg.message;
-                        printDisplay(message);
-                        broadcasting(msg);
-                    } else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
-                        printDisplay(uid + ": " + msg.message);
-                        broadcasting(msg);
-                    } else if (msg.mode == ChatMsg.MODE_TX_STRING) {
+                    }
+                    else if (msg.mode == ChatMsg.MODE_TX_STRING) {
                         message = uid + ": " + msg.message;
 
                         printDisplay(message);
                         broadcasting(msg);
-                        ;
+                    }
+                    else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
+                        printDisplay(uid + ": " + msg.message);
+                        broadcasting(msg);
+                    }
+                    else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
+                        printDisplay(uid + ": 플레이 완료");
+                        unoGame = msg.uno;
+
+                        UnoGameUpdate();
+                        broadcastingUnoUpdate();
                     }
                 }
 
+                playersUid.remove(uid);
+                updateParticipantsPanel(); // 참가자 목록 갱신
                 users.removeElement(this);
-                printDisplay(uid + " 연결 종료. 현재 총 연결된 사용자 수: " + users.size());
+                printDisplay(uid + " 퇴장. 현재 참가자 수: " + users.size());
             } catch (IOException e) {
                 users.removeElement(this);
                 System.err.println("서버 읽기 오류: " + e.getMessage());
@@ -294,9 +344,6 @@ public class ServerGUI extends JFrame {
             }
         }
 
-
-
-
         private void send(ChatMsg msg) {
             try {
                 out.writeObject(msg);
@@ -310,9 +357,28 @@ public class ServerGUI extends JFrame {
             send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
         }
 
+        private void sendUnoStart() {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
+        }
+        private void sendUnoUpdate() {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+        }
+
         private void broadcasting(ChatMsg msg) {
             for (ClientHandler c : users) {
                 c.send(msg);
+            }
+        }
+
+        private void broadcastingUnoUpdate() {
+            for (ClientHandler c : users) {
+                c.sendUnoUpdate();
+            }
+        }
+
+        private void broadcastingUnoStart() {
+            for (ClientHandler c : users) {
+                c.sendUnoStart();
             }
         }
 
