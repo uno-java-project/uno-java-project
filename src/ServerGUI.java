@@ -277,9 +277,9 @@ public class ServerGUI extends JFrame {
 
 
                 String message;
-                NetworkPacket msg;
-                while ((msg = (NetworkPacket) in.readObject()) != null) {
-                    if (msg.mode == NetworkPacket.MODE_LOGIN) {
+                ChatMsg msg;
+                while ((msg = (ChatMsg) in.readObject()) != null) {
+                    if (msg.mode == ChatMsg.MODE_LOGIN) {
                         uid = msg.userID;
                         playersUid.add(uid);
                         printDisplay("새 참가자: " + uid);
@@ -303,20 +303,20 @@ public class ServerGUI extends JFrame {
                         }
                         continue;
                     }
-                    else if (msg.mode == NetworkPacket.MODE_LOGOUT) {
+                    else if (msg.mode == ChatMsg.MODE_LOGOUT) {
                         break;
                     }
-                    else if (msg.mode == NetworkPacket.MODE_TX_STRING) {
+                    else if (msg.mode == ChatMsg.MODE_TX_STRING) {
                         message = uid + ": " + msg.message;
 
                         printDisplay(message);
                         broadcasting(msg);
                     }
-                    else if (msg.mode == NetworkPacket.MODE_TX_IMAGE) {
+                    else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
                     }
-                    else if (msg.mode == NetworkPacket.MODE_UNO_UPDATE){
+                    else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
                         unoGame = msg.uno;
 
@@ -344,7 +344,7 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void send(NetworkPacket msg) {
+        private void send(ChatMsg msg) {
             try {
                 out.writeObject(msg);
                 out.flush();
@@ -354,17 +354,17 @@ public class ServerGUI extends JFrame {
         }
 
         private void sendMessage(String msg) {
-            send(new NetworkPacket(uid, NetworkPacket.MODE_LOGIN, msg));
+            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
         }
 
         private void sendUnoStart() {
-            send(new NetworkPacket(uid, NetworkPacket.MODE_UNO_START, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
         }
         private void sendUnoUpdate() {
-            send(new NetworkPacket(uid, NetworkPacket.MODE_UNO_UPDATE, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
         }
 
-        private void broadcasting(NetworkPacket msg) {
+        private void broadcasting(ChatMsg msg) {
             for (ClientHandler c : users) {
                 c.send(msg);
             }
