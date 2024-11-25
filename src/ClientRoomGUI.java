@@ -322,6 +322,7 @@ public class ClientRoomGUI extends JFrame {
 
     private void joinRoom(int roomNumber) {
         new UnoGameClient(uid, serverAddress, serverPort + roomNumber);
+        this.setVisible(false);
     }
 
     private void disconnect() {
