@@ -1,8 +1,11 @@
+package pro;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class ClientGUI extends JFrame {
     private String serverAddress;

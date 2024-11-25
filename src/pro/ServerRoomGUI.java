@@ -25,7 +25,7 @@ public class ServerRoomGUI extends JFrame {
     private int serverPort;
     private JLabel[] roomLabels = new JLabel[8]; // 각 방의 라벨을 저장
     private JTextField t_input;
-    JButton b_select, b_send;
+    JButton b_select, b_send,joinButton;
 
     public ServerRoomGUI(String serverAddress, int serverPort, String uid) throws IOException {
         super("Server Room GUI");
@@ -100,71 +100,22 @@ public class ServerRoomGUI extends JFrame {
         SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
         socket.connect(sa, 3000);
         out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-        //in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-        receiveThread = new Thread(new Runnable() {
-            private ObjectInputStream in;
-
-            private void receiveMessage() {
-                try {
-                    if (socket != null && !socket.isClosed()) {
-                        socket.close(); // 기존 소켓 닫기
-                    }
+        receiveThread = new Thread(() -> {
+            try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()))) {
+                while (true) {
                     ChatMsg inMsg = (ChatMsg) in.readObject();
-                    if (inMsg == null) {
-                        disconnect();
-                        printDisplay("서버 연결 끊김");
-                        return;
+                    if (inMsg != null) {
+                        handleIncomingMessage(inMsg);
                     }
-                    switch (inMsg.mode) {
-                        case ChatMsg.MODE_TX_STRING:
-                            printDisplay(inMsg.userID + ":" + inMsg.message);
-                            break;
-                        case ChatMsg.MODE_TX_IMAGE:
-                            printDisplay(inMsg.userID + ":" + inMsg.message);
-                            printDisplay(inMsg.image);
-                            break;
-                    }
-                } catch (IOException e) {
-                    printDisplay("연결 종류");
-                } catch (ClassNotFoundException e) {
-                    printDisplay("잘못된 객체가 전달되었습니다");
                 }
-            }
-
-            @Override
-            public void run() {
-                try {
-                    in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-
-                } catch (IOException e) {
-                    printDisplay("입력 스트림이 열리지 않음");
-                }
-                while (receiveThread == Thread.currentThread()) {
-                    receiveMessage();
-                }
+            } catch (IOException | ClassNotFoundException e) {
+                printDisplay("연결 종료: " + e.getMessage());
             }
         });
         receiveThread.start();
-
     }
 
-/*    private void connectToServer(String serverAddress, int serverPort) {
-        new Thread(() -> {
-            try {
-                if (socket != null && !socket.isClosed()) {
-                    socket.close(); // 기존 소켓 닫기
-                }
-                socket = new Socket(serverAddress, serverPort);
-                out = new ObjectOutputStream(socket.getOutputStream());
-                in = new ObjectInputStream(socket.getInputStream());
 
-                send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, "로그인"));
-                ReceiveThread();
-            } catch (IOException e) {
-                printDisplay("서버에 연결할 수 없습니다: " + e.getMessage());
-            }
-        }).start();
-    }*/
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -325,7 +276,7 @@ public class ServerRoomGUI extends JFrame {
 
             JLabel roomLabel = new JLabel("방 " + roomNumber + " (0/4)", SwingConstants.CENTER);
             roomLabels[i] = roomLabel; // 배열에 라벨 저장
-            JButton joinButton = new JButton("참가");
+            joinButton = new JButton("참가");
             joinButton.addActionListener(e -> joinRoom(roomNumber, roomLabel));
 
             singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
@@ -336,7 +287,6 @@ public class ServerRoomGUI extends JFrame {
         leftPanel.add(roomPanel, BorderLayout.CENTER);
         return leftPanel;
     }
-
 
     private void joinRoom(int roomNumber, JLabel roomLabel) {
         new Thread(() -> {
@@ -354,16 +304,22 @@ public class ServerRoomGUI extends JFrame {
                 printDisplay("방 " + roomNumber + "에 메시지 전송 완료");
 
                 // 서버로부터 응답 수신
-                ChatMsg response = (ChatMsg) in.readObject();
-                if (response != null && response.mode == ChatMsg.MODE_ROOM_STATUS) {
-                    printDisplay("서버 응답: " + response.message);
-                    updateRoomLabels(response.message); // 방 상태 업데이트
+                while (true) {
+                    ChatMsg response = (ChatMsg) in.readObject();
+                    if (response != null) {
+                        SwingUtilities.invokeLater(() -> {
+                            printDisplay("서버 응답: " + response.message);
+                            updateRoomLabels(response.message); // 방 상태 업데이트
+                        });
+                    }
                 }
             } catch (IOException | ClassNotFoundException e) {
-                printDisplay("방 입장 오류: " + e.getMessage());
+                SwingUtilities.invokeLater(() -> printDisplay("방 입장 오류: " + e.getMessage()));
             }
         }).start();
     }
+
+
 
 
 
