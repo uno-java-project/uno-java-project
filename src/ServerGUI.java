@@ -53,7 +53,19 @@ public class ServerGUI extends JFrame {
 
         add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
 
-        setVisible(true);
+        acceptThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                startServer();
+            }
+        });
+        acceptThread.start();
+
+        setVisible(false);
+    }
+
+    public void openOrCloseServerGUI(){
+        this.setVisible(!this.isVisible());
     }
 
     private void buildGUI() {
@@ -160,6 +172,7 @@ public class ServerGUI extends JFrame {
     private JPanel createControlPanel() { // 제일 밑단 종료 버튼
 
         b_connect = new JButton("서버 시작");
+        b_connect.setEnabled(false); // 처음엔 비활성화
         b_connect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -179,19 +192,18 @@ public class ServerGUI extends JFrame {
         });
 
         b_disconnect = new JButton("서버 종료");
-        b_disconnect.setEnabled(false); // 처음엔 비활성화
         b_disconnect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 disconnect();
                 b_connect.setEnabled(true);
                 b_disconnect.setEnabled(false);
-
                 b_exit.setEnabled(true);
             }
         });
 
         b_exit = new JButton("종료하기");
+        b_exit.setEnabled(false); // 처음엔 비활성화
         b_exit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -389,8 +401,8 @@ public class ServerGUI extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        int port = 54321;
-        ServerGUI server = new ServerGUI(port);
-    }
+//    public static void main(String[] args) {
+//        int port = 54321;
+//        ServerGUI server = new ServerGUI(port);
+//    }
 }
