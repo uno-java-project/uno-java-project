@@ -11,7 +11,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 
-public class ClientRoomGUI extends JFrame {
+public class ClientReadyRoomGUI extends JFrame {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Socket socket;
@@ -25,7 +25,7 @@ public class ClientRoomGUI extends JFrame {
     private JTextField t_input;
     JButton b_select, b_send;
 
-    public ClientRoomGUI(String uid, String serverAddress, int serverPort){
+    public ClientReadyRoomGUI(String uid, String serverAddress, int serverPort){
         super("Server Room GUI");
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
@@ -33,7 +33,7 @@ public class ClientRoomGUI extends JFrame {
 
         buildGUI(); // GUI 초기화
 
-        try {
+  /*      try {
             connectToServer();
             sendUserID();
         } catch (UnknownHostException e1) {
@@ -42,7 +42,7 @@ public class ClientRoomGUI extends JFrame {
         } catch (IOException e1) {
             printDisplay("서버와 연결 오류: "+ e1.getMessage());
             return;
-        }
+        }*/
 
         setBounds(100, 100, 800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -192,9 +192,9 @@ public class ClientRoomGUI extends JFrame {
                         "jpg", "gif", "png");
                 chooser.setFileFilter(filter);
 
-                int ret = chooser.showOpenDialog(ClientRoomGUI.this); // Adjusted to use ServerRoomGUI context
+                int ret = chooser.showOpenDialog(ClientReadyRoomGUI.this); // Adjusted to use ServerRoomGUI context
                 if (ret != JFileChooser.APPROVE_OPTION) {
-                    JOptionPane.showMessageDialog(ClientRoomGUI.this, "파일을 선택하지 않았습니다");
+                    JOptionPane.showMessageDialog(ClientReadyRoomGUI.this, "파일을 선택하지 않았습니다");
                     return;
                 }
                 t_input.setText(chooser.getSelectedFile().getAbsolutePath());
@@ -295,34 +295,42 @@ public class ClientRoomGUI extends JFrame {
     }
 
 
-    private JPanel createLeftPanel() {
+    private static JPanel createLeftPanel() {
+        // BorderLayout을 사용한 기본 패널
         JPanel leftPanel = new JPanel(new BorderLayout());
-        JPanel roomPanel = new JPanel(new GridLayout(8, 1, 5, 5));
-        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
 
-        for (int i = 0; i < 8; i++) {
-            int roomNumber = i + 1; // 방 번호는 1부터 시작
-            JPanel singleRoomPanel = new JPanel(new BorderLayout());
-            singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        // 네모와 버튼을 가로로 배치하는 패널
+        JPanel boxesPanel = new JPanel(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
+        for (int i = 0; i < 4; i++) {
+            // 개별 네모와 버튼을 포함하는 패널 생성
+            JPanel boxPanel = new JPanel(new BorderLayout());
 
-            JLabel roomLabel = new JLabel("방 " + roomNumber + " (0/4)", SwingConstants.CENTER);
-            roomLabels[i] = roomLabel; // 배열에 라벨 저장
-            JButton joinButton = new JButton("참가");
-            joinButton.addActionListener(e -> new ClientReadyRoomGUI(uid, serverAddress, serverPort));
+            // 네모 생성
+            JPanel box = new JPanel();
+            box.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+            box.setPreferredSize(new Dimension(100, 100));
+            boxPanel.add(box, BorderLayout.CENTER);
 
-            singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
-            singleRoomPanel.add(joinButton, BorderLayout.EAST);
-            roomPanel.add(singleRoomPanel);
+            // 버튼 생성
+            JButton readyButton = new JButton("READY " );
+            readyButton.setPreferredSize(new Dimension(100, 40));
+            boxPanel.add(readyButton, BorderLayout.SOUTH);
+
+            // 메인 패널에 추가
+            boxesPanel.add(boxPanel);
         }
+        leftPanel.add(boxesPanel, BorderLayout.CENTER);
 
-        leftPanel.add(roomPanel, BorderLayout.CENTER);
+
+
         return leftPanel;
     }
 
 
-/*
 
-*/
+    private void joinRoom(int roomNumber) {
+        new UnoGameClient(uid, serverAddress, serverPort + roomNumber);
+    }
 
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
@@ -344,5 +352,9 @@ public class ClientRoomGUI extends JFrame {
             send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), new ImageIcon(file.getAbsolutePath())));
         }
     }
+/*    public static void main(String[] args) {
 
+
+        int port = 54321;
+        new ClientReadyRoomGUI(port);    }*/
 }

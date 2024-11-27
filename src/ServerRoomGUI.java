@@ -90,39 +90,7 @@ public class ServerRoomGUI extends JFrame {
         return addr;
     }
 
-//    private void handleClientInRoom(Socket clientSocket, int roomNumber) {
-//        try (ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-//             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())) {
-//
-//            ChatMsg msg = (ChatMsg) in.readObject();
-//            if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
-//                // 방 사용자 목록 업데이트
-//                Vector<String> roomUserList = roomUsers.computeIfAbsent(roomNumber, k -> new Vector<>());
-//                roomUserList.add(msg.userID);
-//
-//                // 현재 방 상태 메시지 생성
-//                int currentCount = roomUserList.size();
-//                String roomStatus = "방 " + roomNumber + " (" + currentCount + "/4)";
-//
-//                printDisplay("방 " + roomNumber + " 상태: " + roomStatus);
-//
-//                // 클라이언트에게 방 상태 전송
-//                out.writeObject(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
-//                out.flush();
-//
-//                // 모든 클라이언트에 방 상태 업데이트 브로드캐스트
-//                broadcastRoomStatus(roomNumber, roomStatus);
-//            }
-//        } catch (IOException | ClassNotFoundException e) {
-//            printDisplay("방 " + roomNumber + " 클라이언트 처리 오류: " + e.getMessage());
-//        }
-//    }
 
-//    private void broadcastRoomStatus(int roomNumber, String roomStatus) {
-//        for (ClientHandler c : users) {
-//            c.send(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
-//        }
-//    }
 
     private void startServer() {
         printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
