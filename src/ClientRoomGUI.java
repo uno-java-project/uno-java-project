@@ -48,7 +48,6 @@ public class ClientRoomGUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
-
     private void sendImage() {
         String filename = t_input.getText().strip();
         if (filename.isEmpty()) return;
@@ -88,7 +87,6 @@ public class ClientRoomGUI extends JFrame {
         });
         receiveThread.start();
     }
-
     private void cleanupResources() {
         try {
             if (socket != null && !socket.isClosed()) {
@@ -308,8 +306,13 @@ public class ClientRoomGUI extends JFrame {
             JLabel roomLabel = new JLabel("방 " + roomNumber + " (0/4)", SwingConstants.CENTER);
             roomLabels[i] = roomLabel; // 배열에 라벨 저장
             JButton joinButton = new JButton("참가");
-            joinButton.addActionListener(e -> new ClientReadyRoomGUI(uid, serverAddress, serverPort));
+            joinButton.addActionListener(e -> {
+                // 새 창 생성
+                new ClientReadyRoomGUI(uid, serverAddress, serverPort + roomNumber);
+                // 현재 창 종료
+                ClientRoomGUI.this.dispose();
 
+            });
             singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
             singleRoomPanel.add(joinButton, BorderLayout.EAST);
             roomPanel.add(singleRoomPanel);
@@ -320,9 +323,10 @@ public class ClientRoomGUI extends JFrame {
     }
 
 
-/*
-
-*/
+    /*private void joinRoom(int roomNumber) {
+        new ClientReadyRoomGUI(uid, serverAddress, serverPort + roomNumber);
+        this.setVisible(false);
+    }*/
 
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));

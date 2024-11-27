@@ -90,15 +90,75 @@ public class ServerRoomGUI extends JFrame {
         return addr;
     }
 
+//    private void handleClientInRoom(Socket clientSocket, int roomNumber) {
+//        try (ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+//             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream())) {
+//
+//            ChatMsg msg = (ChatMsg) in.readObject();
+//            if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
+//                // 방 사용자 목록 업데이트
+//                Vector<String> roomUserList = roomUsers.computeIfAbsent(roomNumber, k -> new Vector<>());
+//                roomUserList.add(msg.userID);
+//
+//                // 현재 방 상태 메시지 생성
+//                int currentCount = roomUserList.size();
+//                String roomStatus = "방 " + roomNumber + " (" + currentCount + "/4)";
+//
+//                printDisplay("방 " + roomNumber + " 상태: " + roomStatus);
+//
+//                // 클라이언트에게 방 상태 전송
+//                out.writeObject(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
+//                out.flush();
+//
+//                // 모든 클라이언트에 방 상태 업데이트 브로드캐스트
+//                broadcastRoomStatus(roomNumber, roomStatus);
+//            }
+//        } catch (IOException | ClassNotFoundException e) {
+//            printDisplay("방 " + roomNumber + " 클라이언트 처리 오류: " + e.getMessage());
+//        }
+//    }
 
+//    private void broadcastRoomStatus(int roomNumber, String roomStatus) {
+//        for (ClientHandler c : users) {
+//            c.send(new ChatMsg("SERVER", ChatMsg.MODE_ROOM_STATUS, roomStatus));
+//        }
+//    }
 
     private void startServer() {
-        printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
 
-        for (int roomNumber = 1; roomNumber <= 8; roomNumber++) {
-            servers[roomNumber-1] = new ServerGUI(getPortForRoom(roomNumber));
-            printDisplay("방 " + roomNumber + " 서버 시작.");
-            //printDisplay("방 " + roomNumber + " 서버 시작. 포트: " + getPortForRoom(roomNumber));
+        Socket clientSocket = null;
+        try {
+            serverSocket = new ServerSocket(port);
+            printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
+
+            for (int roomNumber = 1; roomNumber <= 8; roomNumber++) {
+                servers[roomNumber-1] = new ServerGUI(getPortForRoom(roomNumber));
+                printDisplay("방 " + roomNumber + " 서버 시작.");
+                //printDisplay("방 " + roomNumber + " 서버 시작. 포트: " + getPortForRoom(roomNumber));
+            }
+
+            while (acceptThread == Thread.currentThread()) {
+                clientSocket = serverSocket.accept();
+                String cAddr = clientSocket.getInetAddress().getHostAddress();
+                printDisplay("클라이언트 연결됨: " + clientSocket.getInetAddress().getHostAddress());
+                ClientHandler cHandler = new ClientHandler(clientSocket);
+                users.add(cHandler);
+                cHandler.start();
+            }
+        }
+        catch (SocketException e) {
+            printDisplay("서버 소캣 종료");
+
+        }catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            try {
+                if (clientSocket != null) clientSocket.close();
+                if (serverSocket != null) serverSocket.close();
+            } catch (IOException e) {
+                System.err.println("서버 닫기 오류 > " + e.getMessage());
+                System.exit(-1);
+            }
         }
     }
 

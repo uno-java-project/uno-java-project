@@ -33,7 +33,7 @@ public class ClientReadyRoomGUI extends JFrame {
 
         buildGUI(); // GUI 초기화
 
-  /*      try {
+        try {
             connectToServer();
             sendUserID();
         } catch (UnknownHostException e1) {
@@ -42,7 +42,7 @@ public class ClientReadyRoomGUI extends JFrame {
         } catch (IOException e1) {
             printDisplay("서버와 연결 오류: "+ e1.getMessage());
             return;
-        }*/
+        }
 
         setBounds(100, 100, 800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -295,7 +295,7 @@ public class ClientReadyRoomGUI extends JFrame {
     }
 
 
-    private static JPanel createLeftPanel() {
+    private  JPanel createLeftPanel() {
         // BorderLayout을 사용한 기본 패널
         JPanel leftPanel = new JPanel(new BorderLayout());
 
@@ -312,9 +312,10 @@ public class ClientReadyRoomGUI extends JFrame {
             boxPanel.add(box, BorderLayout.CENTER);
 
             // 버튼 생성
-            JButton readyButton = new JButton("READY " );
+            JButton readyButton = new JButton("READY");
             readyButton.setPreferredSize(new Dimension(100, 40));
             boxPanel.add(readyButton, BorderLayout.SOUTH);
+            readyButton.addActionListener(e -> joinRoom());
 
             // 메인 패널에 추가
             boxesPanel.add(boxPanel);
@@ -328,10 +329,10 @@ public class ClientReadyRoomGUI extends JFrame {
 
 
 
-    private void joinRoom(int roomNumber) {
-        new UnoGameClient(uid, serverAddress, serverPort + roomNumber);
+    private void joinRoom() {
+        new UnoGameClient(uid, serverAddress, serverPort);
+        this.setVisible(false); // this는 클래스의 JFrame 또는 JPanel에서 작동
     }
-
     private void disconnect() {
         send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
         try {
