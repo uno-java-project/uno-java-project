@@ -1,5 +1,3 @@
-package pro;
-
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.BadLocationException;
@@ -8,10 +6,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 
 public class UnoGameClient extends JFrame {
     private String serverAddress;
@@ -196,7 +191,7 @@ public class UnoGameClient extends JFrame {
     }
 
     public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, String.valueOf(unoGame)));
+        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
     }
 
     private void printDisplay(ImageIcon icon) {
