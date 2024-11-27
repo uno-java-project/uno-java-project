@@ -22,12 +22,15 @@ public class UnoGameClient extends JFrame {
     private String uid;
     private JPanel currentUNOGUI;
 
+    public int roomNumber;
+
 
     JPanel leftPanel;
 
-    public UnoGameClient(String uid, String serverAddress, int serverPort) {
-        this.serverAddress = serverAddress;
-        this.serverPort = serverPort;
+    public UnoGameClient(String uid, int roomNumber) {
+//        this.serverAddress = serverAddress;
+//        this.serverPort = serverPort;
+        this.roomNumber = roomNumber;
         this.uid = uid;
 
         buildGUI();
@@ -74,7 +77,7 @@ public class UnoGameClient extends JFrame {
             return;
         }
         ImageIcon icon = new ImageIcon(filename);
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon, roomNumber));
         t_input.setText("");
     }
 
@@ -181,17 +184,17 @@ public class UnoGameClient extends JFrame {
         String message = t_input.getText();
         if (message.isEmpty()) return;
 
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message, roomNumber));
 
         t_input.setText(""); // 보낸 후 입력창은 비우기
     }
 
     private void sendUserID() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, roomNumber));
     }
 
     public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, roomNumber));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -269,7 +272,7 @@ public class UnoGameClient extends JFrame {
     }
 
     private void disconnect() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT, 0));
         try {
             receiveThread = null;
             socket.close();

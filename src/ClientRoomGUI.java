@@ -59,7 +59,7 @@ public class ClientRoomGUI extends JFrame {
             return;
         }
         ImageIcon icon = new ImageIcon(filename);
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon, 0));
         t_input.setText("");
     }
     private void buildGUI() {
@@ -222,13 +222,13 @@ public class ClientRoomGUI extends JFrame {
         String message = t_input.getText().trim();
         if (message.isEmpty()) return;
 
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message, 0));
         t_input.setText(""); // Clear input field after sending
     }
 
-    private int getPortForRoom(int roomNumber) {
-        return 54321 + roomNumber; // 방 번호에 따라 포트 설정
-    }
+//    private int getPortForRoom(int roomNumber) {
+//        return 54321 + roomNumber; // 방 번호에 따라 포트 설정
+//    }
 
     private void handleIncomingMessage(ChatMsg msg) {
         SwingUtilities.invokeLater(() -> {
@@ -281,7 +281,7 @@ public class ClientRoomGUI extends JFrame {
     }
 
     private void sendUserID() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, 0));
     }
 
     private void send(ChatMsg msg) {
@@ -321,12 +321,12 @@ public class ClientRoomGUI extends JFrame {
 
 
     private void joinRoom(int roomNumber) {
-        new UnoGameClient(uid, serverAddress, serverPort + roomNumber);
+        new UnoGameClient(uid,roomNumber);
         this.setVisible(false);
     }
 
     private void disconnect() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT, 0));
         try {
             receiveThread = null;
             socket.close();
@@ -337,13 +337,13 @@ public class ClientRoomGUI extends JFrame {
 
     }
 
-    private void selectFile() {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "gif"));
-        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), new ImageIcon(file.getAbsolutePath())));
-        }
-    }
+//    private void selectFile() {
+//        JFileChooser chooser = new JFileChooser();
+//        chooser.setFileFilter(new FileNameExtensionFilter("Image Files", "jpg", "png", "gif"));
+//        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+//            File file = chooser.getSelectedFile();
+//            send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), new ImageIcon(file.getAbsolutePath())));
+//        }
+//    }
 
 }

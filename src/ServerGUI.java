@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ServerGUI extends JFrame {
     private UnoGame unoGame;
-    private int port;
+//    private int port;
     private JPanel serverPanel;
     private JPanel participantsPanel;
     private JPanel imagePanel;
@@ -22,9 +22,12 @@ public class ServerGUI extends JFrame {
     private int maxPlayers = 4;  // 최대 플레이어 수 설정
     private UnoGameServerGUI unoGameServerGUI;
 
-    public ServerGUI(int port) {
+    private int roomNum;
+
+    public ServerGUI(int roomNum) {
         super("Uno Game");
-        this.port = port;
+//        this.port = port;
+        this.roomNum = roomNum;
         this.setSize(870, 830);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setLocationRelativeTo(null);
@@ -53,13 +56,13 @@ public class ServerGUI extends JFrame {
 
         add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
 
-        acceptThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startServer();
-            }
-        });
-        acceptThread.start();
+//        acceptThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                startServer();
+//            }
+//        });
+//        acceptThread.start();
 
         setVisible(false);
     }
@@ -130,34 +133,34 @@ public class ServerGUI extends JFrame {
         return addr;
     }
 
-    private void startServer() {
-        Socket clientSocket = null;
-        try {
-            serverSocket = new ServerSocket(port);
-            printDisplay("서버가 시작됐습니다." + getLocalAddr());
-            while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
-                clientSocket = serverSocket.accept();
-                String cAddr = clientSocket.getInetAddress().getHostAddress();
-                t_display.append("클라이언트 연결:" + cAddr + "\n");
-                ClientHandler cHandler = new ClientHandler(clientSocket);
-                users.add(cHandler);
-                cHandler.start();
-            }
-        } catch (SocketException e) {
-            printDisplay("서버 소캣 종료");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (clientSocket != null) clientSocket.close();
-                if (serverSocket != null) serverSocket.close();
-            } catch (IOException e) {
-                System.err.println("서버 닫기 오류 > " + e.getMessage());
-                System.exit(-1);
-            }
-        }
-    }
+//    private void startServer() {
+//        Socket clientSocket = null;
+//        try {
+//            serverSocket = new ServerSocket(port);
+//            printDisplay("서버가 시작됐습니다." + getLocalAddr());
+//            while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
+//                clientSocket = serverSocket.accept();
+//                String cAddr = clientSocket.getInetAddress().getHostAddress();
+//                t_display.append("클라이언트 연결:" + cAddr + "\n");
+//                ClientHandler cHandler = new ClientHandler(clientSocket);
+//                users.add(cHandler);
+//                cHandler.start();
+//            }
+//        } catch (SocketException e) {
+//            printDisplay("서버 소캣 종료");
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                if (clientSocket != null) clientSocket.close();
+//                if (serverSocket != null) serverSocket.close();
+//            } catch (IOException e) {
+//                System.err.println("서버 닫기 오류 > " + e.getMessage());
+//                System.exit(-1);
+//            }
+//        }
+//    }
 
     private JPanel createDisplayPanel() { // 최상단 JTextArea
         t_display = new JTextArea();
@@ -176,12 +179,12 @@ public class ServerGUI extends JFrame {
         b_connect.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                acceptThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        startServer();
-                    }
-                });
+//                acceptThread = new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        startServer();
+//                    }
+//                });
                 acceptThread.start();
                 //접속 끊기 전에는 종료하거나 다시 접속하기 불가
                 b_connect.setEnabled(false);
@@ -365,15 +368,15 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
-        }
+//        private void sendMessage(String msg) {
+//            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
+//        }
 
         private void sendUnoStart() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame, roomNum));
         }
         private void sendUnoUpdate() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, roomNum));
         }
 
         private void broadcasting(ChatMsg msg) {
