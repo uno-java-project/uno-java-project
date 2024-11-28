@@ -115,6 +115,8 @@ public class ServerGUI extends JFrame {
                     printDisplay("현재 room " + (roomNumber + 1) + "에 유저가 없습니다.");
                 }else {
                     UnoGameViewing(roomNumber + 1);
+                    t_display.setText("");
+                    updateParticipantsPanel(); // 참가자 목록 갱신
                 }
             }
         });
@@ -379,11 +381,13 @@ public class ServerGUI extends JFrame {
                         broadcastingRoomUpdate();
                     }
                     else if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
-
-                        printDisplay(uid + ": " + msg.roomNum +"방 입장");
-                        broadcasting(msg);
-
-                        joinRoom(msg.userID, msg.roomNum);
+                        if(RoomNumUid.get(msg.roomNum).size() < 5){
+                            printDisplay(uid + ": " + msg.roomNum +"방 입장");
+                            joinRoom(msg.userID, msg.roomNum);
+                        }else{
+                            sendMessage("방이 가득 찼습니다.");
+                        }
+                        updateParticipantsPanel(); // 참가자 목록 갱신
                     }
 
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){

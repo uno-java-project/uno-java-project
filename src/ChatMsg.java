@@ -29,6 +29,7 @@ public class ChatMsg implements Serializable {
         this.image = image;
         this.uno = uno;
         this.roomCount = roomCount;
+        this.roomNum = roomNum;
     }
 
     public ChatMsg(String userID, int code, String message, ImageIcon image, int roomNum) {
