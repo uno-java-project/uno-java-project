@@ -111,8 +111,8 @@ public class ServerGUI extends JFrame {
         joinButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                if(RoomNumUid.get(roomNumber+1).isEmpty()){
-                    printDisplay("현재 room " + (roomNumber + 1) + "에 유저가 없습니다.");
+                if(RoomNumUid.get(roomNumber+1).isEmpty() || RoomNumUid.get(roomNumber+1).size() < 4){
+                    printDisplay("현재 room " + (roomNumber + 1) + "이 시작되지 않았습니다");
                 }else {
                     UnoGameViewing(roomNumber + 1);
                     t_display.setText("");
@@ -334,7 +334,6 @@ public class ServerGUI extends JFrame {
             try {
                 ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(cs.getInputStream()));
                 out = new ObjectOutputStream(new BufferedOutputStream(cs.getOutputStream()));
-
 
                 String message;
                 ChatMsg msg;

@@ -373,7 +373,17 @@ public class ClientGUI extends JFrame {
                 case ChatMsg.MODE_UNO_START:
                     if(inMsg.roomNum == myRoomNumber){
                         printDisplay("게임이 시작됩니다.");
-                        remove(waitingLabel);
+
+                        // waitingLabel이 null이 아닌지 체크 후 remove
+                        if (waitingLabel != null) {
+                            remove(waitingLabel);
+                        }
+
+                        // currentUNOGUI가 null이 아닌지 확인 후 제거
+                        if (currentUNOGUI != null) {
+                            remove(currentUNOGUI);
+                        }
+
                         currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
                         add(currentUNOGUI, BorderLayout.CENTER);
                         revalidate();
@@ -385,6 +395,8 @@ public class ClientGUI extends JFrame {
                     remove(currentUNOGUI);
                     currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
                     add(currentUNOGUI, BorderLayout.CENTER);
+                    revalidate();
+                    repaint();
                     break;
             }
         } catch (IOException e) {
