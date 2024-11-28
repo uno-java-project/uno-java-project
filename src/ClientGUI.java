@@ -17,6 +17,7 @@ public class ClientGUI extends JFrame {
     private ObjectOutputStream out;
     private JPanel leftWrapperPanel;
     private JPanel roomPanel;
+    private JLabel waitingLabel;
 
     private JButton b_exit, b_select, b_disconnect;;
     private JTextPane t_display;
@@ -132,6 +133,8 @@ public class ClientGUI extends JFrame {
                     myRoomNumber = roomNumber;
                     sendJoinRoom(uid, myRoomNumber);
                     remove(leftWrapperPanel);
+                    waitingLabel = waitingLabel();
+                    add(waitingLabel, BorderLayout.CENTER);
                     revalidate();
                     repaint();
                 }
@@ -150,6 +153,17 @@ public class ClientGUI extends JFrame {
         roomPanel.repaint();
     }
 
+    private JLabel waitingLabel(){
+        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
+        JLabel imageLabel = new JLabel();
+        ImageIcon imageIcon = new ImageIcon("assets/waiting.png");
+        Image scaledImage = imageIcon.getImage().getScaledInstance(710, 800, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
+        imageLabel.setIcon(new ImageIcon(scaledImage));
+//        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+//        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+
+        return imageLabel;
+    }
 
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -359,7 +373,7 @@ public class ClientGUI extends JFrame {
                 case ChatMsg.MODE_UNO_START:
                     if(inMsg.roomNum == myRoomNumber){
                         printDisplay("게임이 시작됩니다.");
-                        remove(leftWrapperPanel);
+                        remove(waitingLabel);
                         currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
                         add(currentUNOGUI, BorderLayout.CENTER);
                         revalidate();
