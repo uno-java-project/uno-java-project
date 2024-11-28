@@ -16,6 +16,7 @@ public class ClientGUI extends JFrame {
     private int serverPort;
     private ObjectOutputStream out;
     private JPanel leftWrapperPanel;
+    private JPanel roomPanel;
 
     private JButton b_exit, b_select, b_disconnect;;
     private JTextPane t_display;
@@ -26,6 +27,7 @@ public class ClientGUI extends JFrame {
     private String uid;
     private JPanel currentUNOGUI;
     private int myRoomNumber = 0;
+    private int roomCount = 0;
 
     private HashMap<Integer, java.util.List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
 
@@ -101,40 +103,52 @@ public class ClientGUI extends JFrame {
         }
     }
 
-    // 방을 동적으로 추가하는 메서드
-    private void addRoom(JPanel roomPanel) {
-        // 방 번호 계산 (현재 방 갯수 + 1)
-        int roomNumber = roomPanel.getComponentCount();  // 방 번호를 자동으로 증가시킴
+    private void updateRoom() {
+        // 기존 방 패널 초기화
+        roomPanel.removeAll(); // 기존 방 목록 삭제
 
-        JPanel singleRoomPanel = new JPanel(new BorderLayout());
-        singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+        // 방 생성 로직
+        for (int i = 0; i < roomCount; i++) {
+            JPanel singleRoomPanel = new JPanel(new BorderLayout());
+            singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
-        // 각 방의 크기를 고정 (예: 250x50 크기로 설정)
-        singleRoomPanel.setPreferredSize(new Dimension(550, 50));  // 방 크기 고정
+            // 각 방의 크기를 고정 (예: 550x50 크기로 설정)
+            singleRoomPanel.setPreferredSize(new Dimension(550, 50));  // 방 크기 고정
+            singleRoomPanel.setMaximumSize(new Dimension(550, 50));  // 방 크기 고정
 
-        // BoxLayout에서 크기 고정을 위해 강제로 레이아웃 갱신
-        singleRoomPanel.setMaximumSize(new Dimension(550, 50));  // 방 크기 고정
+            // 방 번호는 1부터 시작하도록
+            int roomNumber = i + 1;  // 1부터 시작하는 방 번호
 
-        RoomNumUid.put(roomNumber+1, new ArrayList<String>());
-        JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber+1).size() + "/4)", SwingConstants.CENTER);
-        JButton joinButton = new JButton("참가");
+            // 방의 UID 리스트를 RoomNumUid에 추가 (초기값은 빈 리스트)
+            RoomNumUid.put(roomNumber, new ArrayList<String>());
 
-        joinButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                myRoomNumber = roomNumber + 1;
-            }
-        });
+            // 방 이름을 레이블로 설정
+            JLabel roomLabel = new JLabel("방 " + roomNumber + " (" + RoomNumUid.get(roomNumber).size() + "/4)", SwingConstants.CENTER);
 
-        singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
-        singleRoomPanel.add(joinButton, BorderLayout.EAST);
+            // 참가 버튼 생성
+            JButton joinButton = new JButton("참가");
 
-        roomPanel.add(singleRoomPanel);  // 새 방 추가
+            // 참가 버튼 클릭 시 해당 방 번호로 이동 (myRoomNumber에 값 할당)
+            joinButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    myRoomNumber = roomNumber;
+                }
+            });
 
-        // 레이아웃 갱신 (패널에 새로 추가된 방을 반영)
+            // 방 레이블과 버튼을 방 패널에 추가
+            singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
+            singleRoomPanel.add(joinButton, BorderLayout.EAST);
+
+            // 새 방을 roomPanel에 추가
+            roomPanel.add(singleRoomPanel);
+        }
+
+        // 레이아웃 갱신 (새로 추가된 방을 반영)
         roomPanel.revalidate();
         roomPanel.repaint();
     }
+
 
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -156,11 +170,11 @@ public class ClientGUI extends JFrame {
         leftTopPanel.add(addRoomButton, BorderLayout.SOUTH);
 
         // BoxLayout을 사용하여 세로로 방 배치
-        JPanel roomPanel = new JPanel();
+        roomPanel = new JPanel();
         roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
         roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
 
-        addRoomButton.addActionListener(e -> addRoom(roomPanel));  // 버튼 클릭 시 방 추가
+        addRoomButton.addActionListener(e -> sendAddRoom(uid));  // 버튼 클릭 시 방 추가
 
 
         leftPanel.add(leftTopPanel, BorderLayout.NORTH); // 버튼 패널을 상단에 추가
@@ -269,6 +283,10 @@ public class ClientGUI extends JFrame {
         send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
     }
 
+    public void sendAddRoom(String uid){
+        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_ADD));
+    }
+
     private void printDisplay(ImageIcon icon) {
         t_display.setCaretPosition(t_display.getDocument().getLength());
 
@@ -322,6 +340,11 @@ public class ClientGUI extends JFrame {
                 case ChatMsg.MODE_TX_IMAGE:
                     printDisplay(inMsg.userID + ":" + inMsg.message);
                     printDisplay(inMsg.image);
+                    break;
+                case ChatMsg.MODE_ROOM_COUNT:
+                    printDisplay("방이 업데이트 되었습니다.");
+                    roomCount = inMsg.roomCount;
+                    updateRoom();
                     break;
                 case ChatMsg.MODE_UNO_START:
                     printDisplay("게임이 시작됩니다.");

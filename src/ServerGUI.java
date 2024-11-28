@@ -12,6 +12,7 @@ public class ServerGUI extends JFrame {
     private int port;
     private JPanel serverPanel;
     private JPanel participantsPanel;
+    private JPanel roomPanel;
     private JPanel leftWrapperPanel;
     private ServerSocket serverSocket;
     private JTextArea t_display;
@@ -75,16 +76,11 @@ public class ServerGUI extends JFrame {
         imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0)); // 여백 설정
         leftTopPanel.add(imageLabel, BorderLayout.CENTER);
 
-        // 방 추가 버튼
-        JButton addRoomButton = new JButton("방 추가");
-        leftTopPanel.add(addRoomButton, BorderLayout.SOUTH);
 
         // BoxLayout을 사용하여 세로로 방 배치
-        JPanel roomPanel = new JPanel();
+        roomPanel = new JPanel();
         roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
         roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
-
-        addRoomButton.addActionListener(e -> addRoom(roomPanel));  // 버튼 클릭 시 방 추가
 
 
         leftPanel.add(leftTopPanel, BorderLayout.NORTH); // 버튼 패널을 상단에 추가
@@ -94,7 +90,7 @@ public class ServerGUI extends JFrame {
     }
 
     // 방을 동적으로 추가하는 메서드
-    private void addRoom(JPanel roomPanel) {
+    private void addRoom() {
         // 방 번호 계산 (현재 방 갯수 + 1)
         int roomNumber = roomPanel.getComponentCount();  // 방 번호를 자동으로 증가시킴
 
@@ -346,6 +342,8 @@ public class ServerGUI extends JFrame {
                         List<String> playersUid = RoomNumUid.get(0);
                         playersUid.add(uid);
                         RoomNumUid.put(0,playersUid);
+                        sendRoomCount();
+
 
                         printDisplay("새 참가자: " + uid);
                         printDisplay("현재 참가자 수: " + users.size());
@@ -364,6 +362,14 @@ public class ServerGUI extends JFrame {
                     else if (msg.mode == ChatMsg.MODE_TX_IMAGE) {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
+                    }
+                    else if (msg.mode == ChatMsg.MODE_ROOM_ADD) {
+                        addRoom();
+
+                        printDisplay(uid + ": 방 추가 요청");
+                        printDisplay("[방 목록 업데이트]");
+                        broadcasting(msg);
+                        broadcastingRoomUpdate();
                     }
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
@@ -413,6 +419,10 @@ public class ServerGUI extends JFrame {
             send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
         }
 
+        private void sendRoomCount() {
+            send(new ChatMsg(uid, ChatMsg.MODE_ROOM_COUNT, roomPanel.getComponentCount()));
+        }
+
         private void broadcasting(ChatMsg msg) {
             for (ClientHandler c : users) {
                 c.send(msg);
@@ -428,6 +438,12 @@ public class ServerGUI extends JFrame {
         private void broadcastingUnoStart() {
             for (ClientHandler c : users) {
                 c.sendUnoStart();
+            }
+        }
+
+        private void broadcastingRoomUpdate() {
+            for (ClientHandler c : users) {
+                c.sendRoomCount();
             }
         }
 
