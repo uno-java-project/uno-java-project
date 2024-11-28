@@ -12,15 +12,17 @@ public class ServerGUI extends JFrame {
     private int port;
     private JPanel serverPanel;
     private JPanel participantsPanel;
-    private JPanel imagePanel;
+    private JPanel roomPanel;
+    private JPanel leftWrapperPanel;
     private ServerSocket serverSocket;
     private JTextArea t_display;
     private JButton b_connect, b_disconnect, b_exit;
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
-    private List<String> playersUid = new ArrayList<>();
-    private int maxPlayers = 4;  // 최대 플레이어 수 설정
+    private HashMap<Integer, List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
     private UnoGameServerGUI unoGameServerGUI;
+    private int viewingRoomNumber = 0;
+    private int roomCount = 0;
 
     public ServerGUI(int port) {
         super("Uno Game");
@@ -32,26 +34,22 @@ public class ServerGUI extends JFrame {
         serverPanel = new JPanel(new BorderLayout());
         buildGUI();
 
+        RoomNumUid.put(0, new ArrayList<String>());
+
         updateParticipantsPanel();
 
         setLayout(new BorderLayout());
         // 채팅 패널을 오른쪽에 추가
         add(serverPanel, BorderLayout.EAST);  // 채팅 패널 추가
 
-        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(400, -1, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+        // 왼쪽 패널을 감싸는 외부 패널 생성
+        leftWrapperPanel = new JPanel();
+        leftWrapperPanel.setLayout(new BoxLayout(leftWrapperPanel, BoxLayout.Y_AXIS));  // 세로로 배치
+        leftWrapperPanel.add(createLeftPanel());  // createLeftPanel()을 내부에 추가
 
-        // 이미지 패널 추가 및 여백 포함
-        imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBorder(BorderFactory.createEmptyBorder(80, 0, 100, 0)); // 상단과 하단에 20px 여백 추가
-        imagePanel.add(imageLabel, BorderLayout.CENTER);
+        add(leftWrapperPanel, BorderLayout.CENTER);  // leftWrapperPanel을 WEST에 추가
 
-        add(imagePanel, BorderLayout.CENTER); // 이미지 패널 추가
+
 
         acceptThread = new Thread(new Runnable() {
             @Override
@@ -61,18 +59,89 @@ public class ServerGUI extends JFrame {
         });
         acceptThread.start();
 
-        setVisible(false);
+        setVisible(true);
     }
 
-    public void openOrCloseServerGUI(){
-        this.setVisible(!this.isVisible());
+    private JPanel createLeftPanel() {
+        JPanel leftPanel = new JPanel(new BorderLayout());
+
+        JPanel leftTopPanel = new JPanel(new BorderLayout());
+
+        // 이미지 영역 추가
+        JLabel imageLabel = new JLabel();
+        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH); // 이미지 크기 조정
+        imageLabel.setIcon(new ImageIcon(scaledImage));
+        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+        imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0)); // 여백 설정
+        leftTopPanel.add(imageLabel, BorderLayout.CENTER);
+
+
+        // BoxLayout을 사용하여 세로로 방 배치
+        roomPanel = new JPanel();
+        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
+        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
+
+
+        leftPanel.add(leftTopPanel, BorderLayout.NORTH); // 버튼 패널을 상단에 추가
+        leftPanel.add(new JScrollPane(roomPanel), BorderLayout.CENTER); // 방 목록을 중앙에 추가
+
+        return leftPanel;
+    }
+
+    // 방을 동적으로 추가하는 메서드
+    private void addRoom() {
+        // 방 번호 계산 (현재 방 갯수 + 1)
+        int roomNumber = roomPanel.getComponentCount();  // 방 번호를 자동으로 증가시킴
+
+        JPanel singleRoomPanel = new JPanel(new BorderLayout());
+        singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
+
+        // 각 방의 크기를 고정 (예: 250x50 크기로 설정)
+        singleRoomPanel.setPreferredSize(new Dimension(550, 50));  // 방 크기 고정
+
+        // BoxLayout에서 크기 고정을 위해 강제로 레이아웃 갱신
+        singleRoomPanel.setMaximumSize(new Dimension(550, 50));  // 방 크기 고정
+
+        RoomNumUid.put(roomNumber+1, new ArrayList<String>());
+        JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber+1).size() + "/4)", SwingConstants.CENTER);
+        JButton joinButton = new JButton("관전");
+
+        joinButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                if(RoomNumUid.get(roomNumber+1).isEmpty()){
+                    printDisplay("현재 room " + (roomNumber + 1) + "에 유저가 없습니다.");
+                }else {
+                    UnoGameViewing(roomNumber + 1);
+                    t_display.setText("");
+                    updateParticipantsPanel(); // 참가자 목록 갱신
+                }
+            }
+        });
+
+        singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
+        singleRoomPanel.add(joinButton, BorderLayout.EAST);
+
+        roomPanel.add(singleRoomPanel);  // 새 방 추가
+
+        // 레이아웃 갱신 (패널에 새로 추가된 방을 반영)
+        roomPanel.revalidate();
+        roomPanel.repaint();
     }
 
     private void buildGUI() {
-        // 참가자 패널을 북쪽에 추가
+
+        // 참가자 패널을 생성하여 스크롤 패널로 감싸기
         participantsPanel = new JPanel(new GridLayout(0, 1)); // 세로로 리스트가 쌓이도록 설정
         participantsPanel.setBorder(BorderFactory.createTitledBorder("참가자 리스트"));
-        serverPanel.add(participantsPanel, BorderLayout.NORTH);
+
+        // 참가자 목록을 스크롤 가능한 패널로 변환
+        JScrollPane scrollPane = new JScrollPane(participantsPanel);
+        scrollPane.setPreferredSize(new Dimension(-1, 200)); // 스크롤 패널 크기 설정
+
+        serverPanel.add(scrollPane, BorderLayout.NORTH);
 
         serverPanel.add(createDisplayPanel(), BorderLayout.CENTER);
         serverPanel.add(createControlPanel(), BorderLayout.SOUTH);
@@ -82,41 +151,24 @@ public class ServerGUI extends JFrame {
     private void updateParticipantsPanel() {
         participantsPanel.removeAll(); // 기존 참가자 목록을 삭제
 
-        // 최대 4명의 플레이어를 위한 패널을 설정
-        for (int i = 0; i < maxPlayers; i++) {
-            JPanel playerPanel = new JPanel(new BorderLayout());
-            //playerPanel.setPreferredSize(new Dimension(350, 60)); // 패널 크기 조정 (너비 350, 높이 60)
+        // playersUid에 있는 모든 UID를 리스트에 표시
+        for (int i = 0; i < RoomNumUid.get(viewingRoomNumber).size(); i++) {
+            JLabel uidLabel = new JLabel();
 
-            // 플레이어 이름을 위한 라벨 설정
-            JLabel playerLabel = new JLabel();
-            playerLabel.setFont(new Font("Arial", Font.BOLD, 18)); // 폰트 크기와 스타일 설정
-            playerLabel.setVerticalAlignment(SwingConstants.CENTER); // 세로 중앙 정렬
+            // UID만 표시
+            uidLabel.setText("UID: " + RoomNumUid.get(viewingRoomNumber).get(i));
+            uidLabel.setForeground(Color.BLACK); // 텍스트 색상은 검정
 
-            // UID가 있을 경우, 초록색 배경으로 변경하고 UID를 표시
-            if (i < playersUid.size()) {
-                playerLabel.setText("Player " + (i + 1) + ": " + playersUid.get(i));
-                playerLabel.setForeground(Color.WHITE); // 텍스트 색상은 흰색
-                playerPanel.setBackground(Color.GREEN); // 참가자가 있으면 초록색으로 변경
-            } else {
-                playerLabel.setText("Player " + (i + 1) + ": ");
-                playerLabel.setForeground(Color.BLACK); // 참가자가 없다면 텍스트 색상은 검정
-            }
+            // UID 라벨의 크기 고정 (너비 350, 높이 40)
+            uidLabel.setPreferredSize(new Dimension(-1, 40));
 
-            // 패널에 라벨 추가
-            playerPanel.add(playerLabel, BorderLayout.CENTER);
-
-            // 각 playerPanel에 상단 마진 추가 (예: 10px)
-            playerPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));  // 상단에만 10px 마진
-
-
-            // 참가자 패널에 패널 추가
-            participantsPanel.add(playerPanel);
+            // 참가자 패널에 UID 추가
+            participantsPanel.add(uidLabel);
         }
 
         revalidate(); // 패널을 갱신하여 최신 상태 반영
         repaint(); // 화면을 새로 그리기
     }
-
     private String getLocalAddr() {
         InetAddress local = null;
         String addr = "";
@@ -221,7 +273,6 @@ public class ServerGUI extends JFrame {
         panel.add(b_connect);
         panel.add(b_disconnect);
         panel.add(b_exit);
-        b_disconnect.setEnabled(false);
 
         return panel;
     }
@@ -231,25 +282,6 @@ public class ServerGUI extends JFrame {
         t_display.append(message + "\n");
         t_display.setCaretPosition(t_display.getDocument().getLength());
     }
-
-    /*private void sendMessage(String inputText) {
-        if (inputText.isEmpty()) return; // 입력창 비었으면 아무것도 안 함
-
-        else {
-            try {
-                ((BufferedWriter) out).write(inputText + '\n');
-                out.flush();
-            } catch (NumberFormatException e) { // 정수 아니면 오류
-                System.err.println("정수가 아님! " + e.getMessage());
-                return;
-            } catch (IOException e) {
-                System.err.println("클라이언트 쓰기 오류 > " + e.getMessage());
-                System.exit(-1);
-            }
-            t_display.append("나: " + inputText + "\n");
-            //t_input.setText(""); // 보낸 후 입력창은 비우기
-        }
-    }*/
 
     private void disconnect() {
         try {
@@ -261,6 +293,17 @@ public class ServerGUI extends JFrame {
         }
     }
 
+    private void UnoGameViewing(int roomNumber) {
+        viewingRoomNumber = roomNumber;
+        remove(leftWrapperPanel);
+        // 우노 게임 패널
+        unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        add(unoGameServerGUI, BorderLayout.CENTER);
+
+        revalidate(); // 레이아웃을 갱신
+        repaint(); // 화면을 새로 그리기
+    }
+
     private void UnoGameUpdate() {
         remove(unoGameServerGUI);
 
@@ -270,6 +313,11 @@ public class ServerGUI extends JFrame {
 
         revalidate(); // 레이아웃을 갱신
         repaint(); // 화면을 새로 그리기
+    }
+
+    private void joinRoom(String uid, int roomNumber) {
+        RoomNumUid.get(0).remove(uid);
+        RoomNumUid.get(roomNumber).add(uid);
     }
 
     private class ClientHandler extends Thread {
@@ -293,26 +341,16 @@ public class ServerGUI extends JFrame {
                 while ((msg = (ChatMsg) in.readObject()) != null) {
                     if (msg.mode == ChatMsg.MODE_LOGIN) {
                         uid = msg.userID;
+
+                        List<String> playersUid = RoomNumUid.get(0);
                         playersUid.add(uid);
+                        RoomNumUid.put(0,playersUid);
+                        sendRoomCount();
+
+
                         printDisplay("새 참가자: " + uid);
                         printDisplay("현재 참가자 수: " + users.size());
                         updateParticipantsPanel(); // 참가자 목록 갱신
-
-                        // 현재 유저 수 확인후 실행
-                        if (users.size() == maxPlayers && unoGame == null) {
-                            remove(imagePanel);
-                            unoGame = new UnoGame();
-                            unoGame.setPlayers(playersUid);
-                            // 우노 게임 패널
-                            unoGameServerGUI = new UnoGameServerGUI(unoGame);
-                            add(unoGameServerGUI, BorderLayout.CENTER); // centerPanel을 중앙에 추가
-                            unoGameServerGUI.gameStartUp();
-
-                            broadcastingUnoStart();
-
-                            revalidate(); // 레이아웃을 갱신
-                            repaint(); // 화면을 새로 그리기
-                        }
                         continue;
                     }
                     else if (msg.mode == ChatMsg.MODE_LOGOUT) {
@@ -328,16 +366,37 @@ public class ServerGUI extends JFrame {
                         printDisplay(uid + ": " + msg.message);
                         broadcasting(msg);
                     }
+                    else if (msg.mode == ChatMsg.MODE_ROOM_ADD) {
+                        addRoom();
+                        roomCount++;
+
+                        printDisplay(uid + ": 방 추가 요청");
+                        printDisplay("[방 목록 업데이트]");
+                        broadcasting(msg);
+                        broadcastingRoomUpdate();
+                    }
+                    else if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
+                        printDisplay(uid + ": " + msg.roomNum +"방 입장");
+                        joinRoom(msg.userID, msg.roomNum);
+
+                        if(RoomNumUid.get(msg.roomNum).size() == 4){
+                            unoGame = new UnoGame();
+                            unoGame.setPlayers(RoomNumUid.get(msg.roomNum));
+                            unoGame.startGame();
+
+                            broadcastingUnoStart(msg.roomNum);
+                        }
+                        updateParticipantsPanel(); // 참가자 목록 갱신
+                    }
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
                         unoGame = msg.uno;
-
                         UnoGameUpdate();
-                        broadcastingUnoUpdate();
+                        broadcastingUnoUpdate(msg.roomNum);
                     }
                 }
 
-                playersUid.remove(uid);
+                RoomNumUid.get(0).remove(uid);
                 updateParticipantsPanel(); // 참가자 목록 갱신
                 users.removeElement(this);
                 printDisplay(uid + " 퇴장. 현재 참가자 수: " + users.size());
@@ -365,15 +424,15 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
+        private void sendUnoStart(int roomNum) {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame, roomNum));
+        }
+        private void sendUnoUpdate(int roomNum) {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, roomNum));
         }
 
-        private void sendUnoStart() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
-        }
-        private void sendUnoUpdate() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+        private void sendRoomCount() {
+            send(new ChatMsg(uid, ChatMsg.MODE_ROOM_COUNT,roomCount,0));
         }
 
         private void broadcasting(ChatMsg msg) {
@@ -382,15 +441,21 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void broadcastingUnoUpdate() {
+        private void broadcastingUnoUpdate(int roomNum) {
             for (ClientHandler c : users) {
-                c.sendUnoUpdate();
+                c.sendUnoUpdate(roomNum);
             }
         }
 
-        private void broadcastingUnoStart() {
+        private void broadcastingUnoStart(int roomNum) {
             for (ClientHandler c : users) {
-                c.sendUnoStart();
+                c.sendUnoStart(roomNum);
+            }
+        }
+
+        private void broadcastingRoomUpdate() {
+            for (ClientHandler c : users) {
+                c.sendRoomCount();
             }
         }
 
@@ -401,8 +466,8 @@ public class ServerGUI extends JFrame {
         }
     }
 
-//    public static void main(String[] args) {
-//        int port = 54321;
-//        ServerGUI server = new ServerGUI(port);
-//    }
+    public static void main(String[] args) {
+        int port = 54321;
+        ServerGUI server = new ServerGUI(port);
+    }
 }
