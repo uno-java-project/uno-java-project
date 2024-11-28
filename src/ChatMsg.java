@@ -8,8 +8,7 @@ public class ChatMsg implements Serializable {
     public final static int MODE_TX_IMAGE = 0x30;
     public final static int MODE_UNO_START = 0x50;
     public final static int MODE_UNO_UPDATE = 0x51;
-
-    public final static int MODE_ROOM_STATUS = 0x40;
+    
     public final static int MODE_ROOM_JOIN = 0x41; // 방 포트 정보 전달
 
 

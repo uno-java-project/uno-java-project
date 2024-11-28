@@ -12,9 +12,9 @@ public class UnoGameClientGUI extends JPanel {
     private String uid;
     private int myNum;
     private HashMap<Integer, String> userMap;
-    private UnoGameClient uc;
+    private ClientGUI uc;
 
-    public UnoGameClientGUI(UnoGame unoGame, String uid, UnoGameClient uc) {
+    public UnoGameClientGUI(UnoGame unoGame, String uid, ClientGUI uc) {
         setLayout(new BorderLayout()); // 기존의 레이아웃 설정
         setPreferredSize(new Dimension(615, 830));
 
