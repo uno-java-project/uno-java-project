@@ -296,14 +296,9 @@ public class ServerGUI extends JFrame {
     private void UnoGameViewing(int roomNumber) {
         viewingRoomNumber = roomNumber;
         remove(leftWrapperPanel);
-        unoGame = new UnoGame();
-        unoGame.setPlayers(RoomNumUid.get(viewingRoomNumber));
         // 우노 게임 패널
         unoGameServerGUI = new UnoGameServerGUI(unoGame);
         add(unoGameServerGUI, BorderLayout.CENTER);
-//        unoGameServerGUI.gameStartUp();
-
-//        broadcastingUnoStart();
 
         revalidate(); // 레이아웃을 갱신
         repaint(); // 화면을 새로 그리기
@@ -381,21 +376,23 @@ public class ServerGUI extends JFrame {
                         broadcastingRoomUpdate();
                     }
                     else if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
-                        if(RoomNumUid.get(msg.roomNum).size() < 5){
-                            printDisplay(uid + ": " + msg.roomNum +"방 입장");
-                            joinRoom(msg.userID, msg.roomNum);
-                        }else{
-                            sendMessage("방이 가득 찼습니다.");
+                        printDisplay(uid + ": " + msg.roomNum +"방 입장");
+                        joinRoom(msg.userID, msg.roomNum);
+
+                        if(RoomNumUid.get(msg.roomNum).size() == 4){
+                            unoGame = new UnoGame();
+                            unoGame.setPlayers(RoomNumUid.get(msg.roomNum));
+                            unoGame.startGame();
+
+                            broadcastingUnoStart(msg.roomNum);
                         }
                         updateParticipantsPanel(); // 참가자 목록 갱신
                     }
-
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
                         unoGame = msg.uno;
-
                         UnoGameUpdate();
-                        broadcastingUnoUpdate();
+                        broadcastingUnoUpdate(msg.roomNum);
                     }
                 }
 
@@ -427,15 +424,11 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg, viewingRoomNumber));
+        private void sendUnoStart(int roomNum) {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame, roomNum));
         }
-
-        private void sendUnoStart() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame, viewingRoomNumber));
-        }
-        private void sendUnoUpdate() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, viewingRoomNumber));
+        private void sendUnoUpdate(int roomNum) {
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, roomNum));
         }
 
         private void sendRoomCount() {
@@ -448,15 +441,15 @@ public class ServerGUI extends JFrame {
             }
         }
 
-        private void broadcastingUnoUpdate() {
+        private void broadcastingUnoUpdate(int roomNum) {
             for (ClientHandler c : users) {
-                c.sendUnoUpdate();
+                c.sendUnoUpdate(roomNum);
             }
         }
 
-        private void broadcastingUnoStart() {
+        private void broadcastingUnoStart(int roomNum) {
             for (ClientHandler c : users) {
-                c.sendUnoStart();
+                c.sendUnoStart(roomNum);
             }
         }
 

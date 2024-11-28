@@ -32,8 +32,6 @@ public class ClientGUI extends JFrame {
     private HashMap<Integer, java.util.List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
 
 
-    JPanel leftPanel;
-
     public ClientGUI(String uid, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
@@ -41,12 +39,6 @@ public class ClientGUI extends JFrame {
 
         buildGUI();
 
-        // 왼쪽 패널을 감싸는 외부 패널 생성
-        leftWrapperPanel = new JPanel();
-        leftWrapperPanel.setLayout(new BoxLayout(leftWrapperPanel, BoxLayout.Y_AXIS));  // 세로로 배치
-        leftWrapperPanel.add(createLeftPanel());  // createLeftPanel()을 내부에 추가
-
-        add(leftWrapperPanel, BorderLayout.CENTER);  // leftWrapperPanel을 WEST에 추가
 
         try {
             connectToServer();
@@ -66,8 +58,13 @@ public class ClientGUI extends JFrame {
     }
 
     private void buildGUI() {
+        // 왼쪽 패널을 감싸는 외부 패널 생성
+        leftWrapperPanel = new JPanel();
+        leftWrapperPanel.setLayout(new BoxLayout(leftWrapperPanel, BoxLayout.Y_AXIS));  // 세로로 배치
+        leftWrapperPanel.add(createLeftPanel());  // createLeftPanel()을 내부에 추가
+
+        this.add(leftWrapperPanel, BorderLayout.CENTER);  // leftWrapperPanel을 WEST에 추가
         this.add(createRightPanel(), BorderLayout.EAST);
-        this.add(createLeftPanel(), BorderLayout.CENTER);
     }
 
     public void printDisplay(String msg) {
@@ -134,6 +131,9 @@ public class ClientGUI extends JFrame {
                 public void actionPerformed(ActionEvent actionEvent) {
                     myRoomNumber = roomNumber;
                     sendJoinRoom(uid, myRoomNumber);
+                    remove(leftWrapperPanel);
+                    revalidate();
+                    repaint();
                 }
             });
 
@@ -357,10 +357,14 @@ public class ClientGUI extends JFrame {
                     updateRoom();
                     break;
                 case ChatMsg.MODE_UNO_START:
-                    printDisplay("게임이 시작됩니다.");
-                    remove(leftPanel);
-                    currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
-                    add(currentUNOGUI, BorderLayout.CENTER);
+                    if(inMsg.roomNum == myRoomNumber){
+                        printDisplay("게임이 시작됩니다.");
+                        remove(leftWrapperPanel);
+                        currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
+                        add(currentUNOGUI, BorderLayout.CENTER);
+                        revalidate();
+                        repaint();
+                    }
                     break;
                 case ChatMsg.MODE_UNO_UPDATE:
                     printDisplay(uid + "턴 종료");
