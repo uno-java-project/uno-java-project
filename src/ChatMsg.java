@@ -20,8 +20,9 @@ public class ChatMsg implements Serializable {
     ImageIcon image;
     UnoGame uno;
     int roomCount;
+    int roomNum;
 
-    public ChatMsg(String userID, int code, String message, ImageIcon image, UnoGame uno, int roomCount) {
+    public ChatMsg(String userID, int code, String message, ImageIcon image, UnoGame uno, int roomCount, int roomNum) {
         this.userID = userID;
         this.mode = code;
         this.message = message;
@@ -30,22 +31,22 @@ public class ChatMsg implements Serializable {
         this.roomCount = roomCount;
     }
 
-    public ChatMsg(String userID, int code, String message, ImageIcon image) {
-        this(userID, code, message, image, null, 0);
+    public ChatMsg(String userID, int code, String message, ImageIcon image, int roomNum) {
+        this(userID, code, message, image, null, 0, roomNum);
     }
-    public ChatMsg(String userID, int code) {
-        this(userID, code, null, null);
-    }
-
-    public ChatMsg(String userID, int code, int roomCount) {
-        this(userID, code, null, null, null, roomCount);
+    public ChatMsg(String userID, int code, int roomNum) {
+        this(userID, code, null, null, roomNum);
     }
 
-    public ChatMsg(String userID, int code, String message) {
-        this(userID, code, message, null);
+    public ChatMsg(String userID, int code, int roomCount, int roomNum) {
+        this(userID, code, null, null, null, roomCount, roomNum);
     }
-    public ChatMsg(String userID, int code, UnoGame uno) {
-        this(userID, code, null, null, uno, 0);
+
+    public ChatMsg(String userID, int code, String message, int roomNum) {
+        this(userID, code, message, null, roomNum);
+    }
+    public ChatMsg(String userID, int code, UnoGame uno,  int roomNum) {
+        this(userID, code, null, null, uno, 0, roomNum);
     }
 
 

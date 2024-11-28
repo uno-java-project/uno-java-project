@@ -22,6 +22,7 @@ public class ServerGUI extends JFrame {
     private HashMap<Integer, List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
     private UnoGameServerGUI unoGameServerGUI;
     private int viewingRoomNumber = 0;
+    private int roomCount = 0;
 
     public ServerGUI(int port) {
         super("Uno Game");
@@ -317,6 +318,11 @@ public class ServerGUI extends JFrame {
         repaint(); // 화면을 새로 그리기
     }
 
+    private void joinRoom(String uid, int roomNumber) {
+        RoomNumUid.get(0).remove(uid);
+        RoomNumUid.get(roomNumber).add(uid);
+    }
+
     private class ClientHandler extends Thread {
         private final Socket clientSocket;
         private ObjectOutputStream out;
@@ -365,12 +371,21 @@ public class ServerGUI extends JFrame {
                     }
                     else if (msg.mode == ChatMsg.MODE_ROOM_ADD) {
                         addRoom();
+                        roomCount++;
 
                         printDisplay(uid + ": 방 추가 요청");
                         printDisplay("[방 목록 업데이트]");
                         broadcasting(msg);
                         broadcastingRoomUpdate();
                     }
+                    else if (msg.mode == ChatMsg.MODE_ROOM_JOIN) {
+
+                        printDisplay(uid + ": " + msg.roomNum +"방 입장");
+                        broadcasting(msg);
+
+                        joinRoom(msg.userID, msg.roomNum);
+                    }
+
                     else if (msg.mode == ChatMsg.MODE_UNO_UPDATE){
                         printDisplay(uid + ": 플레이 완료");
                         unoGame = msg.uno;
@@ -409,18 +424,18 @@ public class ServerGUI extends JFrame {
         }
 
         private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
+            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg, viewingRoomNumber));
         }
 
         private void sendUnoStart() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_START, unoGame, viewingRoomNumber));
         }
         private void sendUnoUpdate() {
-            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+            send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, viewingRoomNumber));
         }
 
         private void sendRoomCount() {
-            send(new ChatMsg(uid, ChatMsg.MODE_ROOM_COUNT, roomPanel.getComponentCount()));
+            send(new ChatMsg(uid, ChatMsg.MODE_ROOM_COUNT,roomCount,0));
         }
 
         private void broadcasting(ChatMsg msg) {

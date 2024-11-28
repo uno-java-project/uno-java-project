@@ -26,7 +26,7 @@ public class ClientGUI extends JFrame {
     private Thread receiveThread = null;
     private String uid;
     private JPanel currentUNOGUI;
-    private int myRoomNumber = 0;
+    public int myRoomNumber = 0;
     private int roomCount = 0;
 
     private HashMap<Integer, java.util.List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
@@ -90,7 +90,7 @@ public class ClientGUI extends JFrame {
             return;
         }
         ImageIcon icon = new ImageIcon(filename);
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon, myRoomNumber));
         t_input.setText("");
     }
 
@@ -133,6 +133,7 @@ public class ClientGUI extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
                     myRoomNumber = roomNumber;
+                    sendJoinRoom(uid, myRoomNumber);
                 }
             });
 
@@ -174,8 +175,12 @@ public class ClientGUI extends JFrame {
         roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
         roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
 
-        addRoomButton.addActionListener(e -> sendAddRoom(uid));  // 버튼 클릭 시 방 추가
-
+        addRoomButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                sendAddRoom(uid);
+                updateRoom();
+            }
+        });
 
         leftPanel.add(leftTopPanel, BorderLayout.NORTH); // 버튼 패널을 상단에 추가
         leftPanel.add(new JScrollPane(roomPanel), BorderLayout.CENTER); // 방 목록을 중앙에 추가
@@ -270,21 +275,25 @@ public class ClientGUI extends JFrame {
         String message = t_input.getText();
         if (message.isEmpty()) return;
 
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message));
+        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message, myRoomNumber));
 
         t_input.setText(""); // 보낸 후 입력창은 비우기
     }
 
     private void sendUserID() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, myRoomNumber));
     }
 
     public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame));
+        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, myRoomNumber));
     }
 
     public void sendAddRoom(String uid){
-        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_ADD));
+        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_ADD, myRoomNumber));
+    }
+
+    public void sendJoinRoom(String uid, int joinRoomNum){
+        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_JOIN, joinRoomNum));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -343,6 +352,7 @@ public class ClientGUI extends JFrame {
                     break;
                 case ChatMsg.MODE_ROOM_COUNT:
                     printDisplay("방이 업데이트 되었습니다.");
+                    System.out.printf(roomCount + "");
                     roomCount = inMsg.roomCount;
                     updateRoom();
                     break;
@@ -367,7 +377,7 @@ public class ClientGUI extends JFrame {
     }
 
     private void disconnect() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT));
+        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT, 0));
         try {
             receiveThread = null;
             socket.close();
