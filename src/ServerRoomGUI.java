@@ -132,7 +132,7 @@ public class ServerRoomGUI extends JFrame {
             printDisplay("메인 서버가 시작됐습니다. " + getLocalAddr());
 
             for (int roomNumber = 1; roomNumber <= 8; roomNumber++) {
-                servers[roomNumber-1] = new ServerGUI(roomNumber);
+                servers[roomNumber-1] = new ServerGUI(getPortForRoom(roomNumber));
                 printDisplay("방 " + roomNumber + " 서버 시작.");
                 //printDisplay("방 " + roomNumber + " 서버 시작. 포트: " + getPortForRoom(roomNumber));
             }
@@ -323,7 +323,7 @@ public class ServerRoomGUI extends JFrame {
         }
 
         private void sendMessage(String msg) {
-            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg, 0));
+            send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, msg));
         }
 
         private void broadcasting(ChatMsg msg) {

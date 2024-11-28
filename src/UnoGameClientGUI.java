@@ -117,7 +117,7 @@ public class UnoGameClientGUI extends JPanel {
                 if (currentPlayerList.size() == 1) {
                     // 카드가 하나 남았으면 UNO 버튼을 눌러야 함
                     unoGame.getIsUNO().put(uid, true);  // UNO를 외쳤다고 설정
-                    uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!!", uc.roomNumber));
+                    uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!!"));
                     uc.sendUnoUpdate(uid, unoGame);
                 } else {
                     // 카드가 하나 남지 않으면 UNO 버튼을 눌러도 플래그 변경 없음
@@ -132,7 +132,7 @@ public class UnoGameClientGUI extends JPanel {
 
                     if (playerList.size() == 1 && !unoGame.getIsUNO().get(playerUid)) {
                         // 플레이어가 카드 1장을 남겼고 UNO를 외치지 않았다면, 한 장 더 뽑아야 함
-                        uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!", uc.roomNumber));
+                        uc.send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!"));
                         drawCardUpdate(playerNumber);  // 한 장 더 뽑기
                         uc.sendUnoUpdate(uid, unoGame);
                     }

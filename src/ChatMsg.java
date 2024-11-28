@@ -12,34 +12,33 @@ public class ChatMsg implements Serializable {
     public final static int MODE_ROOM_STATUS = 0x40;
     public final static int MODE_ROOM_JOIN = 0x41; // 방 포트 정보 전달
 
+
     String userID;
     int mode;
     String message;
     ImageIcon image;
     UnoGame uno;
-    int roomNumber;
 
-    public ChatMsg(String userID, int code, String message, ImageIcon image, UnoGame uno, int roomNumber) {
+    public ChatMsg(String userID, int code, String message, ImageIcon image, UnoGame uno) {
         this.userID = userID;
         this.mode = code;
         this.message = message;
         this.image = image;
         this.uno = uno;
-        this.roomNumber = roomNumber;
     }
 
-    public ChatMsg(String userID, int code, String message, ImageIcon image,int  roomNumber) {
-        this(userID, code, message, image, null, roomNumber);
+    public ChatMsg(String userID, int code, String message, ImageIcon image) {
+        this(userID, code, message, image, null);
     }
-    public ChatMsg(String userID, int code, int roomNumber) {
-        this(userID, code, null, null, roomNumber);
+    public ChatMsg(String userID, int code) {
+        this(userID, code, null, null);
     }
 
-    public ChatMsg(String userID, int code, String message, int roomNumber) {
-        this(userID, code, message, null, roomNumber);
+    public ChatMsg(String userID, int code, String message) {
+        this(userID, code, message, null);
     }
-    public ChatMsg(String userID, int code, UnoGame uno, int roomNumber) {
-        this(userID, code, null, null, uno, roomNumber);
+    public ChatMsg(String userID, int code, UnoGame uno) {
+        this(userID, code, null, null, uno);
     }
 
 
