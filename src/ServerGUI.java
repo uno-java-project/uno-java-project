@@ -248,9 +248,14 @@ public class ServerGUI extends JFrame {
     }
 
     private void UnoGameUpdate() {
-        remove(unoGameServerGUI);
+        if(unoGameServerGUI!=null){
+            remove(unoGameServerGUI);
+        }
         unoGameServerGUI = new UnoGameServerGUI(unoGame);
-        add(unoGameServerGUI, BorderLayout.CENTER);
+
+        if(viewingRoomNumber!=0){
+            add(unoGameServerGUI, BorderLayout.CENTER);
+        }
 
         revalidate();
         repaint();

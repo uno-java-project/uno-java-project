@@ -401,6 +401,11 @@ public class ClientGUI extends JFrame {
                 case GamePacket.MODE_UNO_UPDATE:
                     // UNO 게임 상태 업데이트 처리
                     printDisplay(uid + "의 턴이 종료되었습니다.");
+
+                    if (waitingLabel != null) {
+                        remove(waitingLabel);
+                    }
+
                     // 이전 GUI 컴포넌트 제거
                     remove(currentUNOGUI);
                     currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
