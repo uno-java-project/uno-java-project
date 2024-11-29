@@ -19,6 +19,7 @@ public class ServerGUI extends JFrame {
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
     private HashMap<Integer, List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
+    private HashMap<Integer, List<String>> ReadyProgress = new HashMap<Integer, List<String>>();
     private UnoGameServerGUI unoGameServerGUI;
     private int viewingRoomNumber = 0;
     private int roomCount = 0;
@@ -94,6 +95,8 @@ public class ServerGUI extends JFrame {
         singleRoomPanel.setPreferredSize(new Dimension(550, 50));
         singleRoomPanel.setMaximumSize(new Dimension(550, 50));
 
+        ReadyProgress.put(roomNumber, new ArrayList<String>());
+
         RoomNumUid.put(roomNumber + 1, new ArrayList<>());
         JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber + 1).size() + "/4)", SwingConstants.CENTER);
         JButton joinButton = new JButton("관전");
@@ -110,7 +113,7 @@ public class ServerGUI extends JFrame {
 
     // 방 참가 처리
     private void handleRoomJoin(int roomNumber) {
-        if (RoomNumUid.get(roomNumber).size() < 4) {
+        if (ReadyProgress.get(roomNumber).size() < 4) {
             printDisplay("현재 room " + roomNumber + "이 시작되지 않았습니다");
         } else {
             UnoGameViewing(roomNumber);
@@ -317,6 +320,10 @@ public class ServerGUI extends JFrame {
                 case GamePacket.MODE_ROOM_JOIN:
                     handleRoomJoin(msg);
                     break;
+                case GamePacket.MODE_ROOM_READY:
+                    handleRoomReady(msg);
+                    System.out.println(ReadyProgress.get(msg.getRoomNum()).size());
+                    break;
                 case GamePacket.MODE_UNO_UPDATE:
                     handleUnoUpdate(msg);
                     break;
@@ -340,6 +347,24 @@ public class ServerGUI extends JFrame {
             updateParticipantsPanel();
             users.remove(this);
             printDisplay(uid + " 퇴장. 현재 참가자 수: " + users.size());
+        }
+
+        private void handleRoomReady(GamePacket msg) {
+            if (ReadyProgress.get(msg.getRoomNum()).contains(msg.getUserID())){
+                ReadyProgress.get(msg.getRoomNum()).remove(msg.getUserID());
+            }else {
+                ReadyProgress.get(msg.getRoomNum()).add(msg.getUserID());
+            }
+
+            if (ReadyProgress.get(msg.getRoomNum()).size() == 4) {
+                unoGame = new UnoGame();
+                unoGame.setPlayers(RoomNumUid.get(msg.getRoomNum()));
+                unoGame.startGame();
+
+                broadcastingUnoStart(msg.getRoomNum());
+            }else {
+                broadcastingReady(msg.getRoomNum(), ReadyProgress.get(msg.getRoomNum()).size());
+            }
         }
 
         private void handleMessage(GamePacket msg) {
@@ -366,13 +391,16 @@ public class ServerGUI extends JFrame {
             printDisplay(uid + ": " + msg.getRoomNum() + "방 입장");
             joinRoom(msg.getUserID(), msg.getRoomNum());
 
-            if (RoomNumUid.get(msg.getRoomNum()).size() == 4) {
-                unoGame = new UnoGame();
-                unoGame.setPlayers(RoomNumUid.get(msg.getRoomNum()));
-                unoGame.startGame();
-
-                broadcastingUnoStart(msg.getRoomNum());
+            // ReadyProgress.get()이 null일 경우, 빈 리스트를 반환하도록 처리
+            List<String> readyList = ReadyProgress.get(msg.getRoomNum());
+            if (readyList == null) {
+                readyList = new ArrayList<>(); // 빈 리스트로 초기화
+                ReadyProgress.put(msg.getRoomNum(), readyList); // 맵에 새로운 리스트 추가
             }
+
+            Integer readyProgress = ReadyProgress.get(msg.getRoomNum()).size();
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, readyProgress, msg.getRoomNum()));
+
             updateParticipantsPanel();
         }
 
@@ -408,6 +436,12 @@ public class ServerGUI extends JFrame {
             }
         }
 
+        private void broadcastingReady(int roomNum, int ready) {
+            for (ClientHandler client : users) {
+                client.sendReady(roomNum, ready);
+            }
+        }
+
         private void broadcastingUnoUpdate(int roomNum) {
             for (ClientHandler client : users) {
                 client.sendUnoUpdate(roomNum);
@@ -422,6 +456,10 @@ public class ServerGUI extends JFrame {
 
         private void sendUnoStart(int roomNum) {
             send(new GamePacket(uid, GamePacket.MODE_UNO_START, unoGame, roomNum));
+        }
+
+        private void sendReady(int roomNum, Integer ready) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, ready, roomNum));
         }
 
         private void sendUnoUpdate(int roomNum) {

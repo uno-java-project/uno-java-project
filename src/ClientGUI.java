@@ -17,7 +17,7 @@ public class ClientGUI extends JFrame {
     private ObjectOutputStream out;
     private JPanel leftWrapperPanel;
     private JPanel roomPanel;
-    private JLabel waitingLabel;
+    private ClientReadyRoomGUI waitingPanel;
 
     private JButton b_exit, b_select, b_disconnect;;
     private JTextPane t_display;
@@ -133,8 +133,6 @@ public class ClientGUI extends JFrame {
                     myRoomNumber = roomNumber;
                     sendJoinRoom(uid, myRoomNumber);
                     remove(leftWrapperPanel);
-                    waitingLabel = waitingLabel();
-                    add(waitingLabel, BorderLayout.CENTER);
                     revalidate();
                     repaint();
                 }
@@ -151,18 +149,6 @@ public class ClientGUI extends JFrame {
         // 레이아웃 갱신 (새로 추가된 방을 반영)
         roomPanel.revalidate();
         roomPanel.repaint();
-    }
-
-    private JLabel waitingLabel(){
-        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/waiting.png");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(710, 800, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-//        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-//        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
-
-        return imageLabel;
     }
 
     private JPanel createLeftPanel() {
@@ -310,6 +296,10 @@ public class ClientGUI extends JFrame {
         send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, joinRoomNum));
     }
 
+    public void sendReady(int roomNumber){
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, roomNumber));
+    }
+
     private void printDisplay(ImageIcon icon) {
         t_display.setCaretPosition(t_display.getDocument().getLength());
 
@@ -323,7 +313,7 @@ public class ClientGUI extends JFrame {
         t_input.setText("");
     }
 
-    private void connectToServer() throws UnknownHostException, IOException {
+    private void connectToServer() throws IOException {
         socket = new Socket();
         SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
         socket.connect(sa, 3000);
@@ -376,14 +366,29 @@ public class ClientGUI extends JFrame {
                     updateRoom();  // 방 리스트나 UI 갱신 함수 호출
                     break;
 
+                case GamePacket.MODE_ROOM_JOIN:
+                    waitingPanel = new ClientReadyRoomGUI(this, myRoomNumber, inMsg.getRoomReady());
+                    add(waitingPanel, BorderLayout.CENTER);
+                    revalidate();
+                    repaint();
+                    break;
+
+                case GamePacket.MODE_ROOM_READY:
+                    if(waitingPanel != null) {
+                        waitingPanel.setReadyProgress(inMsg.getRoomReady());
+                        revalidate();
+                        repaint();
+                    }
+                    break;
+
                 case GamePacket.MODE_UNO_START:
                     // 게임 시작 요청 처리
                     if (inMsg.getRoomNum() == myRoomNumber) {  // getter 사용
                         printDisplay("게임이 시작됩니다.");
 
                         // 이전 GUI 컴포넌트가 있다면 제거
-                        if (waitingLabel != null) {
-                            remove(waitingLabel);
+                        if (waitingPanel != null) {
+                            remove(waitingPanel);
                         }
 
                         if (currentUNOGUI != null) {
@@ -402,8 +407,8 @@ public class ClientGUI extends JFrame {
                     // UNO 게임 상태 업데이트 처리
                     printDisplay(uid + "의 턴이 종료되었습니다.");
 
-                    if (waitingLabel != null) {
-                        remove(waitingLabel);
+                    if (waitingPanel != null) {
+                        remove(waitingPanel);
                     }
 
                     // 이전 GUI 컴포넌트 제거
