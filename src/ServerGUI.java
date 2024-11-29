@@ -18,10 +18,11 @@ public class ServerGUI extends JFrame {
     private JButton b_connect, b_disconnect, b_exit;
     private Thread acceptThread = null;
     private Vector<ClientHandler> users = new Vector<ClientHandler>();
-    private HashMap<Integer, List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
+    private HashMap<Integer, ArrayList<String>> RoomNumUid = new HashMap<Integer, ArrayList<String>>();
     private UnoGameServerGUI unoGameServerGUI;
     private int viewingRoomNumber = 0;
     private int roomCount = 0;
+    private HashMap<Integer, ArrayList<String>> ReadyMap = new HashMap<Integer, ArrayList<String>>();
 
     public ServerGUI(int port) {
         super("Uno Game");
@@ -95,6 +96,8 @@ public class ServerGUI extends JFrame {
         singleRoomPanel.setMaximumSize(new Dimension(550, 50));
 
         RoomNumUid.put(roomNumber + 1, new ArrayList<>());
+        ReadyMap.put(roomNumber + 1, new ArrayList<>());
+
         JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber + 1).size() + "/4)", SwingConstants.CENTER);
         JButton joinButton = new JButton("관전");
 
@@ -312,6 +315,9 @@ public class ServerGUI extends JFrame {
                 case GamePacket.MODE_ROOM_JOIN:
                     handleRoomJoin(msg);
                     break;
+                case GamePacket.MODE_ROOM_READY:
+                    handleReady(msg);
+                    break;
                 case GamePacket.MODE_UNO_UPDATE:
                     handleUnoUpdate(msg);
                     break;
@@ -323,7 +329,7 @@ public class ServerGUI extends JFrame {
         private void handleLogin(String userID) {
             uid = userID;
             RoomNumUid.get(0).add(uid);
-            sendRoomCount();
+            sendRoomCount(uid);
 
             printDisplay("새 참가자: " + uid);
             printDisplay("현재 참가자 수: " + users.size());
@@ -361,7 +367,19 @@ public class ServerGUI extends JFrame {
             printDisplay(uid + ": " + msg.getRoomNum() + "방 입장");
             joinRoom(msg.getUserID(), msg.getRoomNum());
 
-            if (RoomNumUid.get(msg.getRoomNum()).size() == 4) {
+            broadcastingRoomJoin(msg.getRoomNum());
+
+            updateParticipantsPanel();
+        }
+
+        private void handleReady(GamePacket msg) {
+            ArrayList<String> playerList = ReadyMap.get(msg.getRoomNum());
+            playerList.add(msg.getUserID());
+            ReadyMap.put(msg.getRoomNum(),playerList);
+
+            broadcastingReady(msg.getRoomNum(), ReadyMap.get(msg.getRoomNum()));
+
+            if (ReadyMap.get(msg.getRoomNum()).size() == 4) {
                 unoGame = new UnoGame();
                 unoGame.setPlayers(RoomNumUid.get(msg.getRoomNum()));
                 unoGame.startGame();
@@ -378,7 +396,11 @@ public class ServerGUI extends JFrame {
             broadcastingUnoUpdate(msg.getRoomNum());
         }
 
-        private void sendRoomCount() {
+        private void sendJoinRoom(int roomNum, String uid, HashMap<Integer, ArrayList<String>> roomState) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, roomState, ReadyMap.get(roomNum), roomNum));
+        }
+
+        private void sendRoomCount(String uid) {
             send(new GamePacket(uid, GamePacket.MODE_ROOM_COUNT, roomCount, 0));
         }
 
@@ -397,6 +419,12 @@ public class ServerGUI extends JFrame {
             }
         }
 
+        private void broadcastingReady(int roomNum, ArrayList<String> readyList) {
+            for (ClientHandler client : users) {
+                client.sendReady(roomNum, readyList);
+            }
+        }
+
         private void broadcastingUnoStart(int roomNum) {
             for (ClientHandler client : users) {
                 client.sendUnoStart(roomNum);
@@ -409,10 +437,20 @@ public class ServerGUI extends JFrame {
             }
         }
 
+        private void broadcastingRoomJoin(int roomNum) {
+            for (ClientHandler client : users) {
+                client.sendJoinRoom(roomNum, client.uid, RoomNumUid);
+            }
+        }
+
         private void broadcastingRoomUpdate() {
             for (ClientHandler client : users) {
-                client.sendRoomCount();
+                client.sendRoomCount(client.uid);
             }
+        }
+
+        private void sendReady(int roomNum, ArrayList<String> readyList) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, RoomNumUid, readyList, roomNum));
         }
 
         private void sendUnoStart(int roomNum) {

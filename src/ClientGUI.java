@@ -17,7 +17,7 @@ public class ClientGUI extends JFrame {
     private ObjectOutputStream out;
     private JPanel leftWrapperPanel;
     private JPanel roomPanel;
-    private JLabel waitingLabel;
+    private JPanel readyRoomPanel;
 
     private JButton b_exit, b_select, b_disconnect;;
     private JTextPane t_display;
@@ -25,13 +25,13 @@ public class ClientGUI extends JFrame {
     private DefaultStyledDocument document;
     Socket socket;
     private Thread receiveThread = null;
-    private String uid;
+    public String uid;
     private JPanel currentUNOGUI;
     public int myRoomNumber = 0;
-    private int roomCount = 0;
+    private int roomCount;
 
-    private HashMap<Integer, java.util.List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
-
+    private HashMap<Integer, ArrayList<String>> RoomNumUid = new HashMap<Integer, ArrayList<String>>();
+    public ArrayList<String> ReadyList = new ArrayList<>();
 
     public ClientGUI(String uid, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -131,10 +131,10 @@ public class ClientGUI extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
                     myRoomNumber = roomNumber;
-                    sendJoinRoom(uid, myRoomNumber);
+                    sendJoinRoom(myRoomNumber);
                     remove(leftWrapperPanel);
-                    waitingLabel = waitingLabel();
-                    add(waitingLabel, BorderLayout.CENTER);
+                    readyRoomPanel = new ClientReadyRoomGUI(ClientGUI.this, roomNumber, RoomNumUid.get(roomNumber), ReadyList);
+                    add(readyRoomPanel, BorderLayout.CENTER);
                     revalidate();
                     repaint();
                 }
@@ -153,17 +153,17 @@ public class ClientGUI extends JFrame {
         roomPanel.repaint();
     }
 
-    private JLabel waitingLabel(){
-        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/waiting.png");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(710, 800, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-//        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-//        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
-
-        return imageLabel;
-    }
+//    private JLabel waitingLabel(){
+//        // 상단 이미지 영역: 비율 증가 및 중앙 정렬
+//        JLabel imageLabel = new JLabel();
+//        ImageIcon imageIcon = new ImageIcon("assets/waiting.png");
+//        Image scaledImage = imageIcon.getImage().getScaledInstance(710, 800, Image.SCALE_SMOOTH); // 이미지 크기를 더 키움
+//        imageLabel.setIcon(new ImageIcon(scaledImage));
+////        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+////        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+//
+//        return imageLabel;
+//    }
 
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -306,8 +306,12 @@ public class ClientGUI extends JFrame {
         send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, myRoomNumber));
     }
 
-    public void sendJoinRoom(String uid, int joinRoomNum){
+    public void sendJoinRoom(int joinRoomNum){
         send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, joinRoomNum));
+    }
+
+    public void sendReady(int readyRoomNum){
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, readyRoomNum));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -323,7 +327,7 @@ public class ClientGUI extends JFrame {
         t_input.setText("");
     }
 
-    private void connectToServer() throws UnknownHostException, IOException {
+    private void connectToServer() throws IOException {
         socket = new Socket();
         SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
         socket.connect(sa, 3000);
@@ -368,27 +372,78 @@ public class ClientGUI extends JFrame {
                     printDisplay(inMsg.getImage());  // 이미지 출력
                     break;
 
-                case GamePacket.MODE_ROOM_COUNT:
-                    // 방이 업데이트 되었을 때 처리
-                    printDisplay("방이 업데이트 되었습니다.");
-                    System.out.printf("현재 방 수: %d\n", roomCount);
-                    roomCount = inMsg.getRoomCount();  // getter 사용
-                    updateRoom();  // 방 리스트나 UI 갱신 함수 호출
+                case GamePacket.MODE_ROOM_JOIN:
+                    if (inMsg.getRoomNum() == myRoomNumber){
+                        printDisplay(inMsg.getUserID() + " 참가");
+                        if (inMsg.getRoomState() != null && inMsg.getReadyList() != null) {
+                            RoomNumUid = inMsg.getRoomState();
+                            ReadyList = inMsg.getReadyList();
+
+                            if (readyRoomPanel != null) {
+                                remove(readyRoomPanel);  // 기존 패널이 있다면 제거
+                            }
+
+                            readyRoomPanel = new ClientReadyRoomGUI(this, myRoomNumber,RoomNumUid.get(myRoomNumber),ReadyList);
+                            add(readyRoomPanel);
+                        }
+                    }
                     break;
 
+                case GamePacket.MODE_ROOM_COUNT:
+                    if (0 == myRoomNumber){
+                        // 방이 업데이트 되었을 때 처리
+                        printDisplay("방이 업데이트 되었습니다.");
+                        roomCount = inMsg.getRoomCount();  // getter 사용
+                        System.out.printf("현재 방 수: %d\n", roomCount);
+                        updateRoom();  // 방 리스트나 UI 갱신 함수 호출
+                    }
+                    break;
+                case GamePacket.MODE_ROOM_READY:
+                    if (inMsg.getRoomNum() == myRoomNumber){
+                        printDisplay(inMsg.getReadyList().size() + "");
+
+                        // RoomNumUid와 ReadyList가 null이 아닌지 확인
+                        if (inMsg.getRoomState() != null && inMsg.getReadyList() != null) {
+                            RoomNumUid = inMsg.getRoomState();
+                            ReadyList = inMsg.getReadyList();
+
+                            // myRoomNumber가 RoomNumUid에 존재하는지 확인
+                            if (RoomNumUid.size() > myRoomNumber && RoomNumUid.get(myRoomNumber) != null && currentUNOGUI == null) {
+                                // 이전 GUI 컴포넌트가 있다면 제거
+                                if (readyRoomPanel != null) {
+                                    remove(readyRoomPanel);  // 기존 패널이 있다면 제거
+                                }
+
+                                // 새로운 ClientReadyRoomGUI 생성 및 추가
+                                readyRoomPanel = new ClientReadyRoomGUI(this, myRoomNumber, RoomNumUid.get(myRoomNumber), ReadyList);
+                                add(readyRoomPanel);
+
+                                revalidate();
+                                repaint();
+                            } else {
+                                // RoomNumUid에 문제가 있을 경우 처리
+                                printDisplay("Error: Invalid Room Number or RoomNumUid is not initialized correctly.");
+                            }
+                        } else {
+                            // RoomState 또는 ReadyList가 null인 경우
+                            printDisplay("Error: Room State or Ready List is not available.");
+                        }
+                    }
+                    break;
                 case GamePacket.MODE_UNO_START:
                     // 게임 시작 요청 처리
                     if (inMsg.getRoomNum() == myRoomNumber) {  // getter 사용
                         printDisplay("게임이 시작됩니다.");
 
                         // 이전 GUI 컴포넌트가 있다면 제거
-                        if (waitingLabel != null) {
-                            remove(waitingLabel);
+                        if (readyRoomPanel != null) {
+                            remove(readyRoomPanel);
                         }
 
                         if (currentUNOGUI != null) {
                             remove(currentUNOGUI);
                         }
+
 
                         // 새로운 UnoGame GUI 추가
                         currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
@@ -399,14 +454,16 @@ public class ClientGUI extends JFrame {
                     break;
 
                 case GamePacket.MODE_UNO_UPDATE:
-                    // UNO 게임 상태 업데이트 처리
-                    printDisplay(uid + "의 턴이 종료되었습니다.");
-                    // 이전 GUI 컴포넌트 제거
-                    remove(currentUNOGUI);
-                    currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
-                    add(currentUNOGUI, BorderLayout.CENTER);
-                    revalidate();
-                    repaint();
+                    if (inMsg.getRoomNum() == myRoomNumber){
+                        // UNO 게임 상태 업데이트 처리
+                        printDisplay(uid + "의 턴이 종료되었습니다.");
+                        // 이전 GUI 컴포넌트 제거
+                        remove(currentUNOGUI);
+                        currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
+                        add(currentUNOGUI, BorderLayout.CENTER);
+                        revalidate();
+                        repaint();
+                    }
                     break;
 
                 default:
