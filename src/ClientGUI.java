@@ -88,11 +88,11 @@ public class ClientGUI extends JFrame {
             return;
         }
         ImageIcon icon = new ImageIcon(filename);
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_IMAGE, file.getName(), icon, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_TX_IMAGE, file.getName(), icon, myRoomNumber));
         t_input.setText("");
     }
 
-    public void send(ChatMsg msg) {
+    public void send(GamePacket msg) {
         try {
             out.writeObject(msg);
             out.flush();
@@ -289,25 +289,25 @@ public class ClientGUI extends JFrame {
         String message = t_input.getText();
         if (message.isEmpty()) return;
 
-        send(new ChatMsg(uid, ChatMsg.MODE_TX_STRING, message, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_TX_STRING, message, myRoomNumber));
 
         t_input.setText(""); // 보낸 후 입력창은 비우기
     }
 
     private void sendUserID() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGIN, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_LOGIN, myRoomNumber));
     }
 
     public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new ChatMsg(uid, ChatMsg.MODE_UNO_UPDATE, unoGame, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, unoGame, myRoomNumber));
     }
 
     public void sendAddRoom(String uid){
-        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_ADD, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, myRoomNumber));
     }
 
     public void sendJoinRoom(String uid, int joinRoomNum){
-        send(new ChatMsg(uid, ChatMsg.MODE_ROOM_JOIN, joinRoomNum));
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, joinRoomNum));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -350,64 +350,79 @@ public class ClientGUI extends JFrame {
     }
     private void receiveMessage(ObjectInputStream in) {
         try {
-            ChatMsg inMsg = (ChatMsg) in.readObject();
+            GamePacket inMsg = (GamePacket) in.readObject();
             if (inMsg == null) {
                 disconnect();
                 printDisplay("서버 연결 끊김");
                 return;
             }
-            switch (inMsg.mode) {
-                case ChatMsg.MODE_TX_STRING:
-                    printDisplay(inMsg.userID + ":" + inMsg.message);
+
+            // 메시지 모드에 따라 분기
+            switch (inMsg.getMode()) {  // getter 사용
+                case GamePacket.MODE_TX_STRING:
+                    printDisplay(inMsg.getUserID() + ": " + inMsg.getMessage());
                     break;
-                case ChatMsg.MODE_TX_IMAGE:
-                    printDisplay(inMsg.userID + ":" + inMsg.message);
-                    printDisplay(inMsg.image);
+
+                case GamePacket.MODE_TX_IMAGE:
+                    printDisplay(inMsg.getUserID() + ": " + inMsg.getMessage());
+                    printDisplay(inMsg.getImage());  // 이미지 출력
                     break;
-                case ChatMsg.MODE_ROOM_COUNT:
+
+                case GamePacket.MODE_ROOM_COUNT:
+                    // 방이 업데이트 되었을 때 처리
                     printDisplay("방이 업데이트 되었습니다.");
-                    System.out.printf(roomCount + "");
-                    roomCount = inMsg.roomCount;
-                    updateRoom();
+                    System.out.printf("현재 방 수: %d\n", roomCount);
+                    roomCount = inMsg.getRoomCount();  // getter 사용
+                    updateRoom();  // 방 리스트나 UI 갱신 함수 호출
                     break;
-                case ChatMsg.MODE_UNO_START:
-                    if(inMsg.roomNum == myRoomNumber){
+
+                case GamePacket.MODE_UNO_START:
+                    // 게임 시작 요청 처리
+                    if (inMsg.getRoomNum() == myRoomNumber) {  // getter 사용
                         printDisplay("게임이 시작됩니다.");
 
-                        // waitingLabel이 null이 아닌지 체크 후 remove
+                        // 이전 GUI 컴포넌트가 있다면 제거
                         if (waitingLabel != null) {
                             remove(waitingLabel);
                         }
 
-                        // currentUNOGUI가 null이 아닌지 확인 후 제거
                         if (currentUNOGUI != null) {
                             remove(currentUNOGUI);
                         }
 
-                        currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
+                        // 새로운 UnoGame GUI 추가
+                        currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
                         add(currentUNOGUI, BorderLayout.CENTER);
                         revalidate();
                         repaint();
                     }
                     break;
-                case ChatMsg.MODE_UNO_UPDATE:
-                    printDisplay(uid + "턴 종료");
+
+                case GamePacket.MODE_UNO_UPDATE:
+                    // UNO 게임 상태 업데이트 처리
+                    printDisplay(uid + "의 턴이 종료되었습니다.");
+                    // 이전 GUI 컴포넌트 제거
                     remove(currentUNOGUI);
-                    currentUNOGUI = new UnoGameClientGUI(inMsg.uno, uid, this);
+                    currentUNOGUI = new UnoGameClientGUI(inMsg.getUno(), uid, this);  // getter 사용
                     add(currentUNOGUI, BorderLayout.CENTER);
                     revalidate();
                     repaint();
                     break;
+
+                default:
+                    printDisplay("알 수 없는 메시지 모드: " + inMsg.getMode());
+                    break;
             }
         } catch (IOException e) {
-            printDisplay("연결 종류");
+            printDisplay("연결이 종료되었습니다: " + e.getMessage());
         } catch (ClassNotFoundException e) {
-            printDisplay("잘못된 객체가 전달되었습니다");
+            printDisplay("잘못된 객체 형식이 전달되었습니다: " + e.getMessage());
         }
     }
 
+
     private void disconnect() {
-        send(new ChatMsg(uid, ChatMsg.MODE_LOGOUT, 0));
+        send(new GamePacket(uid, GamePacket.MODE_LOGOUT, 0));
         try {
             receiveThread = null;
             socket.close();
