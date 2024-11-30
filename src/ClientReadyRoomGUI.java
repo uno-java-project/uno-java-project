@@ -26,9 +26,9 @@ public class ClientReadyRoomGUI extends JPanel {
         for (int i = 0; i < 4; i++) {
             // 개별 네모와 버튼을 포함하는 패널 생성
             JPanel boxPanel = new JPanel(new BorderLayout());
-            JLabel uidPanel = new JLabel("Player" + i); // 플레이어가 없는 경우 빈 JLabel
+            JLabel uidPanel = new JLabel("Player" + i + 1); // 플레이어가 없는 경우 빈 JLabel
 
-            uidPanel.setPreferredSize(new Dimension(100, 30));
+            uidPanel.setPreferredSize(new Dimension(100, 20));
             boxPanel.add(uidPanel, BorderLayout.NORTH);
 
             // 네모 생성
@@ -36,17 +36,18 @@ public class ClientReadyRoomGUI extends JPanel {
             box.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             box.setPreferredSize(new Dimension(100, 100));
 
+
             if (joinProgress > i) {
-                if (readyProgress > i) {
-                    // 접속하고 레디 했으면 초록색
-                    box.setBackground(Color.GREEN);
-                } else {
-                    // 접속했지만 레디하지 않았으면 주황색
-                    box.setBackground(Color.ORANGE);
-                }
+                // 이미지 아이콘을 생성하여 JLabel에 설정
+                ImageIcon imageIcon = new ImageIcon("assets/pro.png");
+                Image scaledImage = imageIcon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH); // 크기 조정
+                JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+
+                // JLabel을 stateBoxPanel에 추가
+                box.removeAll(); // 이미지 제거
+                box.add(imageLabel);
             } else {
-                // 접속하지 않았으면 하얀색
-                box.setBackground(Color.WHITE);
+                box.removeAll(); // 이미지 제거
             }
 
             boxPanel.add(box, BorderLayout.CENTER);
@@ -54,11 +55,44 @@ public class ClientReadyRoomGUI extends JPanel {
             boxesPanel.add(boxPanel);
         }
 
+        // StatePanel 생성 (ready state 제목과 4개의 박스를 포함)
+        JPanel statePanel = new JPanel();
+        statePanel.setLayout(new BorderLayout());
+
+        // "Ready State" 제목을 추가
+        JLabel titleLabel = new JLabel("Ready State", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        statePanel.add(titleLabel, BorderLayout.NORTH);
+
+        // StatePanel 내에 4개의 박스를 추가
+        JPanel stateBoxesPanel = new JPanel(new GridLayout(1, 4, 10, 10)); // 1x4 그리드
+        for (int i = 0; i < 4; i++) {
+            JPanel stateBoxPanel = new JPanel();
+            stateBoxPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+            stateBoxPanel.setPreferredSize(new Dimension(100, 50));
+
+            if (joinProgress > i) {
+                if (readyProgress > i) {
+                    // 접속하고 레디 했으면 초록색
+                    stateBoxPanel.setBackground(Color.GREEN);
+                } else {
+                    // 접속했지만 레디하지 않았으면 주황색
+                    stateBoxPanel.setBackground(Color.ORANGE);
+                }
+            } else {
+                // 접속하지 않았으면 하얀색
+                stateBoxPanel.setBackground(Color.WHITE);
+            }
+
+            stateBoxesPanel.add(stateBoxPanel);
+        }
+
+        statePanel.add(stateBoxesPanel, BorderLayout.CENTER);
+
         // 버튼 생성
         JButton readyButton = new JButton("READY");
         readyButton.setPreferredSize(new Dimension(100, 40));
         readyButton.setBackground(Color.GREEN); // READY 상태일 때 배경을 초록색으로 변경
-
 
         readyButton.addActionListener(new ActionListener() {
             @Override
@@ -79,6 +113,9 @@ public class ClientReadyRoomGUI extends JPanel {
             }
         });
 
+        // 레이아웃에 추가
+        setLayout(new BorderLayout());
+        add(statePanel, BorderLayout.NORTH); // statePanel을 상단에 배치
         add(boxesPanel, BorderLayout.CENTER);
         add(readyButton, BorderLayout.SOUTH);
     }
@@ -91,25 +128,50 @@ public class ClientReadyRoomGUI extends JPanel {
     }
 
     private void updatePanel() {
-        // 네모와 버튼을 다시 그리도록 트리거
+        // boxesPanel과 statePanel 모두에 대해 색상을 업데이트합니다.
+
+        // boxesPanel 업데이트
         for (int i = 0; i < 4; i++) {
-            JPanel boxPanel = (JPanel) ((JPanel) getComponent(0)).getComponent(i); // boxesPanel에서 각 boxPanel을 가져옴
+            JPanel boxPanel = (JPanel) ((JPanel) getComponent(1)).getComponent(i); // boxesPanel에서 각 boxPanel을 가져옴
             JPanel box = (JPanel) boxPanel.getComponent(1); // boxPanel에서 네모 패널 가져옴
+
+            if (joinProgress > i) {
+                // 이미지 아이콘을 생성하여 JLabel에 설정
+                ImageIcon imageIcon = new ImageIcon("assets/pro.png");
+                Image scaledImage = imageIcon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH); // 크기 조정
+                JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
+
+                // JLabel을 stateBoxPanel에 추가
+                box.removeAll(); // 이미지 제거
+                box.add(imageLabel);
+            } else {
+                box.removeAll(); // 이미지 제거
+            }
+        }
+
+        // statePanel 업데이트
+        JPanel statePanel = (JPanel) getComponent(0); // StatePanel을 가져옴
+        JPanel stateBoxesPanel = (JPanel) statePanel.getComponent(1); // statePanel에서 stateBoxesPanel을 가져옴
+
+        for (int i = 0; i < 4; i++) {
+            JPanel stateBoxPanel = (JPanel) stateBoxesPanel.getComponent(i); // 각 박스를 가져옴
 
             if (joinProgress > i) {
                 if (readyProgress > i) {
                     // 접속하고 레디 했으면 초록색
-                    box.setBackground(Color.GREEN);
+                    stateBoxPanel.setBackground(Color.GREEN);
                 } else {
                     // 접속했지만 레디하지 않았으면 주황색
-                    box.setBackground(Color.ORANGE);
+                    stateBoxPanel.setBackground(Color.ORANGE);
                 }
             } else {
                 // 접속하지 않았으면 하얀색
-                box.setBackground(Color.WHITE);
+                stateBoxPanel.setBackground(Color.WHITE);
             }
         }
+
         revalidate();
         repaint();
     }
+
 }
