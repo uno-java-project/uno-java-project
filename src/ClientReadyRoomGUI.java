@@ -8,12 +8,14 @@ public class ClientReadyRoomGUI extends JPanel {
     private int roomNumber;
     private ClientGUI uc;
     private int readyProgress;
+    private int joinProgress;
     private boolean isReady = false; // 초기 상태는 레디가 아님
 
-    public ClientReadyRoomGUI(ClientGUI uc, int roomNumber, int readyProgress) {
+    public ClientReadyRoomGUI(ClientGUI uc, int roomNumber, int readyProgress, int joinProgress) {
         this.uc = uc;
         this.roomNumber = roomNumber;
         this.readyProgress = readyProgress;
+        this.joinProgress = joinProgress;
         setLayout(new BorderLayout());
         createReadyRoomPanel();
     }
@@ -34,12 +36,19 @@ public class ClientReadyRoomGUI extends JPanel {
             box.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             box.setPreferredSize(new Dimension(100, 100));
 
-            // ReadyPlayers에 해당 플레이어가 있는지 확인
-            if(readyProgress > i){
-                box.setBackground(Color.GREEN); // 레디 플레이어는 초록색 배경
+            if (joinProgress > i) {
+                if (readyProgress > i) {
+                    // 접속하고 레디 했으면 초록색
+                    box.setBackground(Color.GREEN);
+                } else {
+                    // 접속했지만 레디하지 않았으면 주황색
+                    box.setBackground(Color.ORANGE);
+                }
             } else {
-                box.setBackground(Color.WHITE); // 레디하지 않은 플레이어는 흰색 배경
+                // 접속하지 않았으면 하얀색
+                box.setBackground(Color.WHITE);
             }
+
             boxPanel.add(box, BorderLayout.CENTER);
             // 메인 패널에 추가
             boxesPanel.add(boxPanel);
@@ -75,8 +84,9 @@ public class ClientReadyRoomGUI extends JPanel {
     }
 
     // 외부에서 readyProgress를 변경하는 메서드 추가
-    public void setReadyProgress(int newReadyProgress) {
+    public void setReadyProgress(int newReadyProgress, int newJoinProgress) {
         this.readyProgress = newReadyProgress;
+        this.joinProgress = newJoinProgress;
         updatePanel();
     }
 
@@ -86,10 +96,17 @@ public class ClientReadyRoomGUI extends JPanel {
             JPanel boxPanel = (JPanel) ((JPanel) getComponent(0)).getComponent(i); // boxesPanel에서 각 boxPanel을 가져옴
             JPanel box = (JPanel) boxPanel.getComponent(1); // boxPanel에서 네모 패널 가져옴
 
-            if (readyProgress > i) {
-                box.setBackground(Color.GREEN); // 레디 플레이어는 초록색 배경
+            if (joinProgress > i) {
+                if (readyProgress > i) {
+                    // 접속하고 레디 했으면 초록색
+                    box.setBackground(Color.GREEN);
+                } else {
+                    // 접속했지만 레디하지 않았으면 주황색
+                    box.setBackground(Color.ORANGE);
+                }
             } else {
-                box.setBackground(Color.WHITE); // 레디하지 않은 플레이어는 흰색 배경
+                // 접속하지 않았으면 하얀색
+                box.setBackground(Color.WHITE);
             }
         }
         revalidate();

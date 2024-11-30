@@ -322,7 +322,6 @@ public class ServerGUI extends JFrame {
                     break;
                 case GamePacket.MODE_ROOM_READY:
                     handleRoomReady(msg);
-                    System.out.println(ReadyProgress.get(msg.getRoomNum()).size());
                     break;
                 case GamePacket.MODE_UNO_UPDATE:
                     handleUnoUpdate(msg);
@@ -363,7 +362,10 @@ public class ServerGUI extends JFrame {
 
                 broadcastingUnoStart(msg.getRoomNum());
             }else {
-                broadcastingReady(msg.getRoomNum(), ReadyProgress.get(msg.getRoomNum()).size());
+                Integer readyProgress = ReadyProgress.get(msg.getRoomNum()).size();
+                Integer joinProgress = RoomNumUid.get(msg.getRoomNum()).size();
+
+                broadcastingReady(msg.getRoomNum(), readyProgress, joinProgress);
             }
         }
 
@@ -383,12 +385,15 @@ public class ServerGUI extends JFrame {
             roomCount++;
 
             printDisplay(uid + ": 방 추가 요청");
-            printDisplay("[방 목록 업데이트]");
+            printDisplay("방이 추가 되었습니다.");
             broadcastingRoomUpdate();
         }
 
         private void handleRoomJoin(GamePacket msg) {
-            printDisplay(uid + ": " + msg.getRoomNum() + "방 입장");
+            String broadMsg = uid + "님이  " + msg.getRoomNum() + "번 방에 입장하였습니다.";
+            broadcastingMessages(msg.getRoomNum(), broadMsg);
+            printDisplay(uid + "님이  " + msg.getRoomNum() + "번 방에 입장하였습니다.");
+
             joinRoom(msg.getUserID(), msg.getRoomNum());
 
             // ReadyProgress.get()이 null일 경우, 빈 리스트를 반환하도록 처리
@@ -398,14 +403,17 @@ public class ServerGUI extends JFrame {
                 ReadyProgress.put(msg.getRoomNum(), readyList); // 맵에 새로운 리스트 추가
             }
 
+            Integer joinProgress = RoomNumUid.get(msg.getRoomNum()).size();
             Integer readyProgress = ReadyProgress.get(msg.getRoomNum()).size();
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, readyProgress, msg.getRoomNum()));
+
+
+            broadcastingJoin(readyProgress, joinProgress, msg.getRoomNum());
 
             updateParticipantsPanel();
         }
 
         private void handleUnoUpdate(GamePacket msg) {
-            printDisplay(uid + ": 플레이 완료");
+            printDisplay(uid + "님 플레이 완료");
             unoGame = msg.getUno();
             UnoGameUpdate();
             broadcastingUnoUpdate(msg.getRoomNum());
@@ -430,15 +438,27 @@ public class ServerGUI extends JFrame {
             }
         }
 
+        private void broadcastingJoin(Integer readyProgress, Integer joinProgress, int roomNum) {
+            for (ClientHandler client : users) {
+                client.sendJoin(readyProgress, joinProgress, roomNum);
+            }
+        }
+
+        private void broadcastingMessages(int roomNum, String msg) {
+            for (ClientHandler client : users) {
+                client.sendMessages(msg, roomNum);
+            }
+        }
+
         private void broadcastingUnoStart(int roomNum) {
             for (ClientHandler client : users) {
                 client.sendUnoStart(roomNum);
             }
         }
 
-        private void broadcastingReady(int roomNum, int ready) {
+        private void broadcastingReady(int roomNum, int ready, int joinRoom) {
             for (ClientHandler client : users) {
-                client.sendReady(roomNum, ready);
+                client.sendReady(roomNum, ready, joinRoom);
             }
         }
 
@@ -454,12 +474,20 @@ public class ServerGUI extends JFrame {
             }
         }
 
+        private void sendMessages(String msg, int roomNum){
+            send(new GamePacket(uid, GamePacket.MODE_BROAD_STRING ,msg ,roomNum));
+        }
+
+        private void sendJoin(Integer readyProgress, Integer joinProgress, int roomNum){
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, readyProgress, joinProgress ,roomNum));
+        }
+
         private void sendUnoStart(int roomNum) {
             send(new GamePacket(uid, GamePacket.MODE_UNO_START, unoGame, roomNum));
         }
 
-        private void sendReady(int roomNum, Integer ready) {
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, ready, roomNum));
+        private void sendReady(int roomNum, Integer ready, Integer joinRoom) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, ready, joinRoom, roomNum));
         }
 
         private void sendUnoUpdate(int roomNum) {

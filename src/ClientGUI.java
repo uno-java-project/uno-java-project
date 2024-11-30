@@ -30,8 +30,6 @@ public class ClientGUI extends JFrame {
     public int myRoomNumber = 0;
     private int roomCount = 0;
 
-    private HashMap<Integer, java.util.List<String>> RoomNumUid = new HashMap<Integer, List<String>>();
-
 
     public ClientGUI(String uid, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -117,11 +115,8 @@ public class ClientGUI extends JFrame {
             // 방 번호는 1부터 시작하도록
             int roomNumber = i + 1;  // 1부터 시작하는 방 번호
 
-            // 방의 UID 리스트를 RoomNumUid에 추가 (초기값은 빈 리스트)
-            RoomNumUid.put(roomNumber, new ArrayList<String>());
-
             // 방 이름을 레이블로 설정
-            JLabel roomLabel = new JLabel("방 " + roomNumber + " (" + RoomNumUid.get(roomNumber).size() + "/4)", SwingConstants.CENTER);
+            JLabel roomLabel = new JLabel("방 " + roomNumber , SwingConstants.CENTER);
 
             // 참가 버튼 생성
             JButton joinButton = new JButton("참가");
@@ -131,8 +126,8 @@ public class ClientGUI extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
                     myRoomNumber = roomNumber;
-                    sendJoinRoom(uid, myRoomNumber);
                     remove(leftWrapperPanel);
+                    sendJoinRoom(uid, myRoomNumber);
                     revalidate();
                     repaint();
                 }
@@ -340,6 +335,8 @@ public class ClientGUI extends JFrame {
     }
     private void receiveMessage(ObjectInputStream in) {
         try {
+            int readyPro;
+            int joinPro;
             GamePacket inMsg = (GamePacket) in.readObject();
             if (inMsg == null) {
                 disconnect();
@@ -349,6 +346,9 @@ public class ClientGUI extends JFrame {
 
             // 메시지 모드에 따라 분기
             switch (inMsg.getMode()) {  // getter 사용
+                case GamePacket.MODE_BROAD_STRING:
+                    printDisplay(inMsg.getMessage());
+                    break;
                 case GamePacket.MODE_TX_STRING:
                     printDisplay(inMsg.getUserID() + ": " + inMsg.getMessage());
                     break;
@@ -360,22 +360,32 @@ public class ClientGUI extends JFrame {
 
                 case GamePacket.MODE_ROOM_COUNT:
                     // 방이 업데이트 되었을 때 처리
-                    printDisplay("방이 업데이트 되었습니다.");
-                    System.out.printf("현재 방 수: %d\n", roomCount);
+                    printDisplay("방이 추가 되었습니다");
                     roomCount = inMsg.getRoomCount();  // getter 사용
                     updateRoom();  // 방 리스트나 UI 갱신 함수 호출
                     break;
 
                 case GamePacket.MODE_ROOM_JOIN:
-                    waitingPanel = new ClientReadyRoomGUI(this, myRoomNumber, inMsg.getRoomReady());
-                    add(waitingPanel, BorderLayout.CENTER);
-                    revalidate();
-                    repaint();
+                    printDisplay("방 참가에 성공하였습니다.");
+                    readyPro = inMsg.getRoomReady();
+                    joinPro = inMsg.getRoomJoin();
+
+                    if(waitingPanel == null) {
+                        waitingPanel = new ClientReadyRoomGUI(this, myRoomNumber, readyPro, joinPro);
+                        add(waitingPanel, BorderLayout.CENTER);
+                        revalidate();
+                        repaint();
+                    }else {
+                        waitingPanel.setReadyProgress(readyPro, joinPro);
+                    }
                     break;
 
                 case GamePacket.MODE_ROOM_READY:
+                    readyPro = inMsg.getRoomReady();
+                    joinPro = inMsg.getRoomJoin();
+
                     if(waitingPanel != null) {
-                        waitingPanel.setReadyProgress(inMsg.getRoomReady());
+                        waitingPanel.setReadyProgress(readyPro, joinPro);
                         revalidate();
                         repaint();
                     }
