@@ -26,7 +26,7 @@ public class ClientReadyRoomGUI extends JPanel {
         for (int i = 0; i < 4; i++) {
             // 개별 네모와 버튼을 포함하는 패널 생성
             JPanel boxPanel = new JPanel(new BorderLayout());
-            JLabel uidPanel = new JLabel("Player" + i + 1); // 플레이어가 없는 경우 빈 JLabel
+            JLabel uidPanel = new JLabel("Player " + (i + 1)); // 플레이어가 없는 경우 빈 JLabel
 
             uidPanel.setPreferredSize(new Dimension(100, 20));
             boxPanel.add(uidPanel, BorderLayout.NORTH);
@@ -60,7 +60,7 @@ public class ClientReadyRoomGUI extends JPanel {
         statePanel.setLayout(new BorderLayout());
 
         // "Ready State" 제목을 추가
-        JLabel titleLabel = new JLabel("Ready State", JLabel.CENTER);
+        JLabel titleLabel = new JLabel("[ Room: " + roomNumber + " ] Ready State", JLabel.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
         statePanel.add(titleLabel, BorderLayout.NORTH);
 
