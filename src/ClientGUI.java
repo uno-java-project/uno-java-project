@@ -274,25 +274,29 @@ public class ClientGUI extends JFrame {
 
         t_input.setText(""); // 보낸 후 입력창은 비우기
     }
-
+    // 로그인 시 사용자 ID와 현재 방 번호를 전송
     private void sendUserID() {
-        send(new GamePacket(uid, GamePacket.MODE_LOGIN, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_LOGIN, null, null, null, 0, 0, 0, myRoomNumber, 0));
     }
 
-    public void sendUnoUpdate(String uid, UnoGame unoGame){
-        send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, unoGame, myRoomNumber));
+    // UNO 업데이트 정보를 방 번호와 함께 전
+    public void sendUnoUpdate(String uid, UnoGame unoGame) {
+        send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, null, null, unoGame, 0, 0, 0, myRoomNumber, 0));
     }
 
-    public void sendAddRoom(String uid){
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, myRoomNumber));
+    // 방 추가 요청 시 사용자 ID와 현재 방 번호를 전송
+    public void sendAddRoom(String uid) {
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, null, null, null, 0, 0, 0, myRoomNumber, 0));
     }
 
-    public void sendJoinRoom(String uid, int joinRoomNum){
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, joinRoomNum));
+    // 방 입장 요청 시 사용자 ID와 입장할 방 번호를 전송
+    public void sendJoinRoom(String uid, int joinRoomNum) {
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, null, null, null, 0, 0, 0, joinRoomNum, 0));
     }
 
-    public void sendReady(int roomNumber){
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, roomNumber));
+    // 준비 상태를 서버로 전송 (참여 인원 정보 포함 가능)
+    public void sendReady(int roomNumber) {
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, null, null, null, 0, 0, 0, roomNumber, 0));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -381,15 +385,16 @@ public class ClientGUI extends JFrame {
                     break;
 
                 case GamePacket.MODE_ROOM_READY:
-                    readyPro = inMsg.getRoomReady();
-                    joinPro = inMsg.getRoomJoin();
+                     readyPro = inMsg.getRoomReady();
+                     joinPro = inMsg.getRoomJoin();
 
-                    if(waitingPanel != null) {
+                    if (waitingPanel != null) {
                         waitingPanel.setReadyProgress(readyPro, joinPro);
                         revalidate();
                         repaint();
                     }
                     break;
+
 
                 case GamePacket.MODE_UNO_START:
                     // 게임 시작 요청 처리
@@ -429,6 +434,23 @@ public class ClientGUI extends JFrame {
                     repaint();
                     break;
 
+                case GamePacket.MODE_ROOM_INFO:
+                    int roomNumber = inMsg.getRoomNum();
+                    int participantsCount = inMsg.getParticipantsCount();
+
+                    printDisplay("방 " + roomNumber + ": 현재 참가자 수 " + participantsCount);
+
+                    // 현재 방 번호와 같으면 ClientReadyRoomGUI에 반영
+                    if (waitingPanel != null && roomNumber == myRoomNumber) {
+                        waitingPanel.handleRoomInfo(inMsg);
+                    }
+
+                    // 방 목록 UI를 갱신할 필요가 있으면 아래 메서드 호출
+                    updateRoomParticipants(roomNumber, participantsCount);
+                    break;
+
+
+
                 default:
                     printDisplay("알 수 없는 메시지 모드: " + inMsg.getMode());
                     break;
@@ -440,15 +462,33 @@ public class ClientGUI extends JFrame {
         }
     }
 
+    private void updateRoomParticipants(int roomNumber, int participantsCount) {
+        for (Component comp : roomPanel.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel singleRoomPanel = (JPanel) comp;
+                JLabel roomLabel = (JLabel) singleRoomPanel.getComponent(0);
+
+                // 방 번호를 확인하여 레이블 텍스트 업데이트
+                if (roomLabel.getText().contains("방 " + roomNumber)) {
+                    roomLabel.setText("방 " + roomNumber + " (" + participantsCount + "/4)");
+                    break;
+                }
+            }
+        }
+
+        roomPanel.revalidate();
+        roomPanel.repaint();
+    }
 
     private void disconnect() {
-        send(new GamePacket(uid, GamePacket.MODE_LOGOUT, 0));
+        send(new GamePacket(uid, GamePacket.MODE_LOGOUT, null, null, null, 0, 0, 0, 0, 0)); // LOGOUT 패킷 전송
         try {
-            receiveThread = null;
-            socket.close();
+            receiveThread = null; // 수신 스레드 종료
+            socket.close(); // 소켓 닫기
         } catch (IOException e) {
             System.err.println("클라이언트 닫기 오류 > " + e.getMessage());
-            System.exit(-1);
+            System.exit(-1); // 오류 발생 시 비정상 종료
         }
     }
+
 }

@@ -19,6 +19,25 @@ public class ClientReadyRoomGUI extends JPanel {
         setLayout(new BorderLayout());
         createReadyRoomPanel();
     }
+    public void handleRoomInfo(GamePacket packet) {
+        int roomNumber = packet.getRoomNum();
+        int participantsCount = packet.getParticipantsCount();
+
+        if (this.roomNumber == roomNumber) {
+            setRoomParticipants(participantsCount);
+        }
+    }
+
+    private void setRoomParticipants(int participantsCount) {
+        JLabel titleLabel = (JLabel) ((JPanel) getComponent(0)).getComponent(0);
+        titleLabel.setText("[ Room: " + roomNumber + " ] Participants: " + participantsCount + "/4");
+        revalidate();
+        repaint();
+    }
+
+
+
+
 
     private void createReadyRoomPanel() {
         // 네모와 버튼을 가로로 배치하는 패널
@@ -97,19 +116,7 @@ public class ClientReadyRoomGUI extends JPanel {
         readyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                if (!isReady) {
-                    readyButton.setText("CANCEL"); // 레디 상태일 때 버튼 텍스트를 CANCEL로 변경
-                    readyButton.setBackground(Color.RED); // CANCEL 상태일 때 배경을 빨간색으로 변경
-                    uc.sendReady(roomNumber); // 레디 상태를 서버에 전송
-                    isReady = true;
-                } else {
-                    readyButton.setText("READY"); // 레디 상태가 아닐 때 버튼 텍스트를 READY로 변경
-                    readyButton.setBackground(Color.GREEN); // READY 상태일 때 배경을 초록색으로 변경
-                    uc.sendReady(roomNumber); // CANCEL 상태를 서버에 전송
-                    isReady = false;
-                }
-                revalidate();
-                repaint();
+                uc.sendReady(roomNumber); // 서버로 레디 요청 전송
             }
         });
 
@@ -124,8 +131,12 @@ public class ClientReadyRoomGUI extends JPanel {
     public void setReadyProgress(int newReadyProgress, int newJoinProgress) {
         this.readyProgress = newReadyProgress;
         this.joinProgress = newJoinProgress;
+
+        // 레디 상태를 기반으로 UI 업데이트
         updatePanel();
     }
+
+
 
     private void updatePanel() {
         // boxesPanel과 statePanel 모두에 대해 색상을 업데이트합니다.
