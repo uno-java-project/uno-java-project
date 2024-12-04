@@ -338,6 +338,10 @@ public class ServerGUI extends JFrame {
 
             printDisplay("새 참가자: " + uid);
             printDisplay("현재 참가자 수: " + users.size());
+
+            String broadMsg = uid + "님이 로그인 하였습니다.";
+            broadcastingMessages(0, broadMsg);
+
             updateParticipantsPanel();
         }
 
@@ -394,19 +398,16 @@ public class ServerGUI extends JFrame {
             printDisplay("방이 추가 되었습니다.");
             broadcastingRoomUpdate();
         }
-        private void broadcastRoomInfo(int roomNumber) {
-            int currentParticipants = RoomNumUid.get(roomNumber).size();
+        private void broadcastRoomInfo() {
+            int currentParticipants = RoomNumUid.get(0).size();
             for (ClientHandler client : users) {
-                client.sendRoomInfo(roomNumber, currentParticipants);
+                client.sendRoomInfo(currentParticipants);
             }
         }
 
-
-        private void sendRoomInfo(int roomNumber, int participantsCount) {
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, roomNumber, participantsCount));
+        private void sendRoomInfo(int participantsCount) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, 0, participantsCount));
         }
-
-
 
         private void handleRoomJoin(GamePacket msg) {
             int roomNumber = msg.getRoomNum();
@@ -427,10 +428,10 @@ public class ServerGUI extends JFrame {
             Integer readyProgress = ReadyProgress.get(msg.getRoomNum()).size();
 
 
-            broadcastingJoin(readyProgress, joinProgress, msg.getRoomNum());
+            broadcastingJoin(readyProgress, joinProgress, msg.getRoomJoin());
 
-            // 참가자 수 업데이트 후 클라이언트에 전송
-            broadcastRoomInfo(roomNumber);
+            // 참가자 수 업데이트 후 메인 클라이언트에 전송
+            broadcastRoomInfo();
 
             // 참가자 목록 UI 갱신
             updateRoomLabel(roomNumber);

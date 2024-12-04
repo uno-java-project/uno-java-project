@@ -66,8 +66,6 @@ public class GamePacket implements Serializable {
         this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
     }
 
-
-
     // 방 레디/참가 정보와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, Integer roomReady, Integer roomJoin, int roomNum) {
         this(userID, mode, null, null, null, 0, roomReady, roomJoin, roomNum, 0);

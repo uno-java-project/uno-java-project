@@ -35,10 +35,6 @@ public class ClientReadyRoomGUI extends JPanel {
         repaint();
     }
 
-
-
-
-
     private void createReadyRoomPanel() {
         // 네모와 버튼을 가로로 배치하는 패널
         JPanel boxesPanel = new JPanel(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
