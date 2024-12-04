@@ -119,6 +119,7 @@ public class UnoGameClientGUI extends JPanel {
                     unoGame.getIsUNO().put(uid, true);  // UNO를 외쳤다고 설정
                     uc.send(new GamePacket(uid, GamePacket.MODE_TX_STRING, "UNO!!!", uc.myRoomNumber));
                     uc.sendUnoUpdate(uid, unoGame);
+                    unoGame.nextTurn();
                 } else {
                     // 카드가 하나 남지 않으면 UNO 버튼을 눌러도 플래그 변경 없음
                     uc.printDisplay( "UNO를 외칠 수 없습니다.");

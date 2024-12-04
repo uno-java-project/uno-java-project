@@ -19,6 +19,7 @@ public class GamePacket implements Serializable {
 
     public static final int MODE_UNO_START = 0x50;
     public static final int MODE_UNO_UPDATE = 0x51;
+    public static final int MODE_UNO_GAME_OVER = 0x52;
 
     // 필드들
     private String userID;
