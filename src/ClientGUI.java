@@ -430,7 +430,6 @@ public class ClientGUI extends JFrame {
                         printDisplay("방 참가에 성공하였습니다.");
                         readyPro = inMsg.getRoomReady();
                         joinPro = inMsg.getRoomJoin();
-                        printDisplay("방 " + inMsg.getRoomNum() + ": 현재 참가자 수 " + joinPro );
 
                         if(waitingPanel == null) {
                             waitingPanel = new ClientReadyRoomGUI(this, myRoomNumber, readyPro, joinPro);

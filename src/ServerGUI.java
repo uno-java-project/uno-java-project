@@ -398,15 +398,15 @@ public class ServerGUI extends JFrame {
             printDisplay("방이 추가 되었습니다.");
             broadcastingRoomUpdate();
         }
-        private void broadcastRoomInfo() {
-            int currentParticipants = RoomNumUid.get(0).size();
+        private void broadcastRoomInfo(int roomNumber) {
+            int currentParticipants = RoomNumUid.get(roomNumber).size();
             for (ClientHandler client : users) {
-                client.sendRoomInfo(currentParticipants);
+                client.sendRoomInfo(roomNumber, currentParticipants);
             }
         }
 
-        private void sendRoomInfo(int participantsCount) {
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, 0, participantsCount));
+        private void sendRoomInfo(int roomNumber, int participantsCount) {
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, roomNumber, participantsCount));
         }
 
         private void handleRoomJoin(GamePacket msg) {
@@ -431,7 +431,7 @@ public class ServerGUI extends JFrame {
             broadcastingJoin(readyProgress, joinProgress, msg.getRoomJoin());
 
             // 참가자 수 업데이트 후 메인 클라이언트에 전송
-            broadcastRoomInfo();
+            broadcastRoomInfo(roomNumber);
 
             // 참가자 목록 UI 갱신
             updateRoomLabel(roomNumber);
