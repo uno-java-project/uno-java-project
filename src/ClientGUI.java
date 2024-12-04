@@ -89,6 +89,17 @@ public class ClientGUI extends JFrame {
         send(new GamePacket(uid, GamePacket.MODE_TX_IMAGE, file.getName(), icon, myRoomNumber));
         t_input.setText("");
     }
+    //이모티콘용 sendimg
+    private void sendImage(ImageIcon image) {
+        if (image == null) {
+            printDisplay(">> 이미지를 전송할 수 없습니다: 이미지가 null입니다.");
+            return;
+        }
+        Image scaledImage = image.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+        ImageIcon resizedIcon = new ImageIcon(scaledImage);
+        //이모지 사이즈 조절
+        send(new GamePacket(uid, GamePacket.MODE_TX_IMAGE, "이모지", resizedIcon, myRoomNumber));
+    }
 
     public void send(GamePacket msg) {
         try {
@@ -213,6 +224,43 @@ public class ClientGUI extends JFrame {
             }
         });
         inputPanel.add(t_input, BorderLayout.NORTH); // 입력 필드는 상단에 배치
+        // 이모티콘 선택 버튼 추가
+        JButton b_emoji = new JButton("이모티콘");
+        b_emoji.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 이모티콘 선택을 위한 팝업 메뉴 생성
+                JPopupMenu emojiMenu = new JPopupMenu();
+
+                // assets 폴더에 있는 이모티콘 파일 로드
+                String[] emojiFiles = {"happy.png", "sad.png","cry.png","heeng.png"}; // 사용할 이미지 파일명
+                for (String emojiFile : emojiFiles) {
+                    // 이모티콘 이미지를 로드
+                    ImageIcon emojiIcon = new ImageIcon("assets/" + emojiFile);
+                    Image scaledImage = emojiIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH); // 크기 조정
+                    ImageIcon scaledIcon = new ImageIcon(scaledImage);
+
+                    // 각 이모티콘에 대한 메뉴 아이템 생성
+                    JMenuItem emojiItem = new JMenuItem(emojiFile, scaledIcon);
+                    emojiItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // 선택된 이모티콘을 전송
+                            t_input.setText("이모티콘: " + emojiFile); // 선택한 이모티콘 표시
+                            sendImage(new ImageIcon("assets/" + emojiFile)); // 이미지 전송
+                        }
+                    });
+
+                    emojiMenu.add(emojiItem); // 메뉴에 추가
+                }
+
+                // 버튼 아래에 팝업 표시
+                emojiMenu.show(b_emoji, b_emoji.getWidth() / 2, b_emoji.getHeight() / 2);
+            }
+        });
+
+// 이모티콘 버튼을 입력 필드 오른쪽에 배치
+        inputPanel.add(b_emoji, BorderLayout.EAST);
 
         // 버튼 패널 (보내기, 선택하기 버튼)
         JPanel p_button = new JPanel(new GridLayout(1, 3, 5, 5)); // 가로로 두 개 버튼 배치
