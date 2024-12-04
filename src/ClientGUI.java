@@ -439,6 +439,13 @@ public class ClientGUI extends JFrame {
                         }else {
                             waitingPanel.setReadyProgress(readyPro, joinPro);
                         }
+
+                        printDisplay("방 " + inMsg.getRoomNum() + ": 현재 참가자 수 " + joinPro);
+
+                        // 현재 방 번호와 같으면 ClientReadyRoomGUI에 반영
+                        if (waitingPanel != null && inMsg.getRoomNum() == myRoomNumber) {
+                            waitingPanel.handleRoomInfo(inMsg);
+                        }
                     }
                     break;
 
@@ -497,16 +504,10 @@ public class ClientGUI extends JFrame {
                     break;
 
                 case GamePacket.MODE_ROOM_INFO:
-                    if (inMsg.getRoomNum() == myRoomNumber){
-                        int roomNumber = inMsg.getRoomNum();
-                        int participantsCount = inMsg.getParticipantsCount();
+                    int roomNumber = inMsg.getRoomNum();
+                    int participantsCount = inMsg.getParticipantsCount();
 
-                        printDisplay("방 " + roomNumber + ": 현재 참가자 수 " + participantsCount);
-
-                        // 현재 방 번호와 같으면 ClientReadyRoomGUI에 반영
-                        if (waitingPanel != null && roomNumber == myRoomNumber) {
-                            waitingPanel.handleRoomInfo(inMsg);
-                        }
+                    if(myRoomNumber == 0){
                         updateRoomParticipants(roomNumber, participantsCount);
                     }
                     break;

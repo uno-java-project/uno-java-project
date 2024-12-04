@@ -342,6 +342,13 @@ public class ServerGUI extends JFrame {
             String broadMsg = uid + "님이 로그인 하였습니다.";
             broadcastingMessages(0, broadMsg);
 
+            int participantsCount;
+
+            for (int i = RoomNumUid.size() - 1; i > 0; i--) {
+                participantsCount = RoomNumUid.get(i).size();
+                sendRoomInfo(i, participantsCount);
+            }
+
             updateParticipantsPanel();
         }
 
@@ -396,7 +403,11 @@ public class ServerGUI extends JFrame {
 
             printDisplay(uid + ": 방 추가 요청");
             printDisplay("방이 추가 되었습니다.");
+
             broadcastingRoomUpdate();
+
+            int participantsCount = RoomNumUid.get(roomCount).size();
+            sendRoomInfo(roomCount, participantsCount);
         }
         private void broadcastRoomInfo(int roomNumber) {
             int currentParticipants = RoomNumUid.get(roomNumber).size();

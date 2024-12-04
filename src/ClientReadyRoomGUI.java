@@ -21,7 +21,7 @@ public class ClientReadyRoomGUI extends JPanel {
     }
     public void handleRoomInfo(GamePacket packet) {
         int roomNumber = packet.getRoomNum();
-        int participantsCount = packet.getParticipantsCount();
+        int participantsCount = packet.getRoomJoin();
 
         if (this.roomNumber == roomNumber) {
             setRoomParticipants(participantsCount);
@@ -112,7 +112,20 @@ public class ClientReadyRoomGUI extends JPanel {
         readyButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                uc.sendReady(roomNumber); // 서버로 레디 요청 전송
+                // 상태에 따라 버튼 텍스트와 색상 변경
+                if (isReady) {
+                    readyButton.setText("READY");
+                    readyButton.setBackground(Color.GREEN); // READY 상태 배경 색
+                    readyButton.setForeground(Color.BLACK); // 글자색 기본값
+                    isReady = false;
+                    uc.sendReady(roomNumber); // 서버로 레디 취소 요청 전송
+                } else {
+                    readyButton.setText("CANCEL");
+                    readyButton.setBackground(Color.RED); // CANCEL 상태 배경 색
+                    readyButton.setForeground(Color.WHITE); // 글자색 하얀색
+                    isReady = true;
+                    uc.sendReady(roomNumber); // 서버로 레디 요청 전송
+                }
             }
         });
 
