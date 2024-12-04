@@ -73,7 +73,7 @@ public class LoginGUI extends JFrame {
 
         // 이미지 패널 설정
         JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        ImageIcon imageIcon = new ImageIcon("assets/uno.png");
         Image scaledImage = imageIcon.getImage().getScaledInstance(400, -1, Image.SCALE_SMOOTH);
         imageLabel.setIcon(new ImageIcon(scaledImage));
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
