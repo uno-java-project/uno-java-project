@@ -326,11 +326,35 @@ public class ServerGUI extends JFrame {
                 case GamePacket.MODE_UNO_UPDATE:
                     handleUnoUpdate(msg);
                     break;
+                case GamePacket.MODE_UNO_GAME_OVER:
+                    handleGameOver(msg);
+                    break;
                 default:
                     break;
+
             }
         }
+        private void handleGameOver(GamePacket msg) {
+            String winner = msg.getUserID(); // 승리한 플레이어
+            int roomNumber = msg.getRoomNum();
 
+            // 종료 메시지 출력
+            printDisplay("방 " + roomNumber + "에서 게임이 종료되었습니다. 승자는 " + winner + "입니다!");
+
+            // 해당 방의 모든 클라이언트에 종료 메시지 브로드캐스트
+            broadcastingMessages(roomNumber, "게임이 종료되었습니다! 승리자는 " + winner + "입니다!");
+
+            // 방 초기화
+            resetRoom(roomNumber);
+        }
+
+        private void resetRoom(int roomNumber) {
+            // ReadyProgress와 RoomNumUid를 초기화하여 방을 리셋
+            ReadyProgress.put(roomNumber, new ArrayList<>());
+            RoomNumUid.put(roomNumber, new ArrayList<>());
+            unoGame = null; // 게임 상태 초기화
+            broadcastRoomInfo(roomNumber);
+        }
         private void handleLogin(String userID) {
             uid = userID;
             RoomNumUid.get(0).add(uid);

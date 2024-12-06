@@ -6,12 +6,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
-import java.net.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.UnknownHostException;
 
-public class ClientGUI extends JFrame {
+public class GameOverGUI extends JFrame {
     private String serverAddress;
     private int serverPort;
     private ObjectOutputStream out;
@@ -31,7 +31,7 @@ public class ClientGUI extends JFrame {
     private int roomCount = 0;
 
 
-    public ClientGUI(String uid, String serverAddress, int serverPort) {
+    public GameOverGUI(String uid, String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         this.uid = uid;
@@ -158,40 +158,19 @@ public class ClientGUI extends JFrame {
         roomPanel.revalidate();
         roomPanel.repaint();
     }
-
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
 
-        JPanel leftTopPanel = new JPanel(new BorderLayout());
+        // "홈으로" 버튼 생성
+        JButton homeButton = new JButton("홈으로");
+        homeButton.setPreferredSize(new Dimension(100, 40));
+        homeButton.addActionListener(e -> {
+            // 홈으로 이동하는 로직
 
-        // 이미지 영역 추가
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH); // 이미지 크기 조정
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
-        imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0)); // 여백 설정
-        leftTopPanel.add(imageLabel, BorderLayout.CENTER);
-
-        // 방 추가 버튼
-        JButton addRoomButton = new JButton("방 추가");
-        leftTopPanel.add(addRoomButton, BorderLayout.SOUTH);
-
-        // BoxLayout을 사용하여 세로로 방 배치
-        roomPanel = new JPanel();
-        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
-        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
-
-        addRoomButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendAddRoom(uid);
-                updateRoom();
-            }
         });
 
-        leftPanel.add(leftTopPanel, BorderLayout.NORTH); // 버튼 패널을 상단에 추가
-        leftPanel.add(new JScrollPane(roomPanel), BorderLayout.CENTER); // 방 목록을 중앙에 추가
+        // 버튼을 패널에 추가
+        leftPanel.add(homeButton, BorderLayout.NORTH);
 
         return leftPanel;
     }
@@ -293,9 +272,9 @@ public class ClientGUI extends JFrame {
                         "jpg", "gif", "png");
                 chooser.setFileFilter(filter);
 
-                int ret = chooser.showOpenDialog(ClientGUI.this);
+                int ret = chooser.showOpenDialog(GameOverGUI.this);
                 if (ret != JFileChooser.APPROVE_OPTION) {
-                    JOptionPane.showMessageDialog(ClientGUI.this, "파일을 선택하지 않았습니다");
+                    JOptionPane.showMessageDialog(GameOverGUI.this, "파일을 선택하지 않았습니다");
                     return;
                 }
                 t_input.setText(chooser.getSelectedFile().getAbsolutePath());
@@ -425,7 +404,7 @@ public class ClientGUI extends JFrame {
                     }
                     break;
 
-                case GamePacket.MODE_ROOM_JOIN:
+              /*  case GamePacket.MODE_ROOM_JOIN:
                     if(inMsg.getRoomNum() == myRoomNumber) {
                         printDisplay("방 참가에 성공하였습니다.");
                         readyPro = inMsg.getRoomReady();
@@ -447,7 +426,7 @@ public class ClientGUI extends JFrame {
                             waitingPanel.handleRoomInfo(inMsg);
                         }
                     }
-                    break;
+                    break;*/
 
                 case GamePacket.MODE_ROOM_READY:
                     if(inMsg.getRoomNum() == myRoomNumber){
@@ -463,7 +442,7 @@ public class ClientGUI extends JFrame {
                     break;
 
 
-                case GamePacket.MODE_UNO_START:
+               /* case GamePacket.MODE_UNO_START:
                     // 게임 시작 요청 처리
                     if (inMsg.getRoomNum() == myRoomNumber) {  // getter 사용
                         printDisplay("게임이 시작됩니다.");
@@ -502,7 +481,7 @@ public class ClientGUI extends JFrame {
                         repaint();
                     }
                     break;
-
+*/
                 case GamePacket.MODE_ROOM_INFO:
                     int roomNumber = inMsg.getRoomNum();
                     int participantsCount = inMsg.getParticipantsCount();
@@ -511,10 +490,7 @@ public class ClientGUI extends JFrame {
                         updateRoomParticipants(roomNumber, participantsCount);
                     }
                     break;
-                case GamePacket.MODE_UNO_GAME_OVER:
-                    returnToLobby();
-                    break;
-                // 기존 케이스들..
+
                 default:
                     printDisplay("알 수 없는 메시지 모드: " + inMsg.getMode());
                     break;
@@ -524,19 +500,6 @@ public class ClientGUI extends JFrame {
         } catch (ClassNotFoundException e) {
             printDisplay("잘못된 객체 형식이 전달되었습니다: " + e.getMessage());
         }
-    }
-    private void returnToLobby() {
-        // 현재 방의 UI 제거
-        remove(currentUNOGUI); // 현재 UNO 게임 화면 제거
-        currentUNOGUI = null;
-
-        // 방 번호 초기화
-        myRoomNumber = 0;
-
-        // 로비 UI 갱신
-        updateRoom(); // 방 목록 UI 갱신
-        revalidate();
-        repaint();
     }
 
     private void updateRoomParticipants(int roomNumber, int participantsCount) {

@@ -10,6 +10,7 @@ public class UnoGameServerGUI extends JPanel {
     private UnoGame unoGame;
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
+    private ClientGUI uc;
 
     public UnoGameServerGUI(UnoGame unoGame) {
     	setLayout(new BorderLayout()); // 기존의 레이아웃 설정
@@ -206,11 +207,18 @@ public class UnoGameServerGUI extends JPanel {
     }
 
     private void playCardUpdate(String card, int playerIndex) {
-        if(!unoGame.playCard(card, playerIndex)){
+        if (!unoGame.playCard(card, playerIndex)) {
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
+        } else {
+            if (unoGame.getPlayerCards(playerIndex).isEmpty()) {
+                String winner = unoGame.getPlayerNumMap().get(playerIndex); // 승리한 플레이어 ID
+                GamePacket gameOverPacket = new GamePacket(winner, GamePacket.MODE_UNO_GAME_OVER, unoGame, roomNumber);
+                uc.send(gameOverPacket); // 서버로 게임 종료 패킷 전송
+            }
         }
         updateGamePanel();
     }
+
 
     private void drawCardUpdate(int playerIndex) {
         // 덱에서 한 장의 카드를 뽑아 해당 플레이어에게 추가
@@ -219,7 +227,7 @@ public class UnoGameServerGUI extends JPanel {
         // 게임 화면 갱신
         updateGamePanel();
     }
-    
+
     private JPanel displayTurnPanel() {
         JPanel turnPanel = new JPanel();
         turnPanel.setLayout(new GridLayout(unoGame.getTurn().size() + 1, 1));  // 각 플레이어를 세로로 나열

@@ -36,6 +36,8 @@ public class ClientReadyRoomGUI extends JPanel {
     }
 
     private void createReadyRoomPanel() {
+        JPanel topPanel = new JPanel(new BorderLayout());
+
         // 네모와 버튼을 가로로 배치하는 패널
         JPanel boxesPanel = new JPanel(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
         for (int i = 0; i < 4; i++) {
@@ -69,6 +71,17 @@ public class ClientReadyRoomGUI extends JPanel {
             // 메인 패널에 추가
             boxesPanel.add(boxPanel);
         }
+        JButton backButton = new JButton("Back");
+        backButton.setPreferredSize(new Dimension(80, 30));
+        backButton.setBackground(Color.LIGHT_GRAY); // 버튼 배경 색상
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+         //
+
+            }
+        });
+        topPanel.add(backButton, BorderLayout.EAST); // 버튼을 오른쪽에 배치
 
         // StatePanel 생성 (ready state 제목과 4개의 박스를 포함)
         JPanel statePanel = new JPanel();
@@ -103,7 +116,7 @@ public class ClientReadyRoomGUI extends JPanel {
         }
 
         statePanel.add(stateBoxesPanel, BorderLayout.CENTER);
-
+        statePanel.add(topPanel, BorderLayout.NORTH);
         // 버튼 생성
         JButton readyButton = new JButton("READY");
         readyButton.setPreferredSize(new Dimension(100, 40));
