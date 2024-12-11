@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
@@ -109,7 +110,20 @@ public class ServerGUI extends JFrame {
         JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber + 1).size() + "/4)", SwingConstants.CENTER);
         JButton joinButton = new JButton("관전");
 
-        joinButton.addActionListener(e -> handleRoomJoin(roomNumber + 1));
+        joinButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JButton clickedButton = (JButton) actionEvent.getSource();
+                if (ReadyProgress.get(roomNumber+1).size() < 4) {
+                    printDisplay("현재 room " + (roomNumber+1) + "이 시작되지 않았습니다");
+                } else {
+                    clickedButton.setEnabled(false);
+                    UnoGameViewing((roomNumber+1));
+                    t_display.setText("");
+                    updateParticipantsPanel();
+                }
+            }
+        });
 
         singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
         singleRoomPanel.add(joinButton, BorderLayout.EAST);
@@ -117,17 +131,6 @@ public class ServerGUI extends JFrame {
         roomPanel.add(singleRoomPanel);
         roomPanel.revalidate();
         roomPanel.repaint();
-    }
-
-    // 방 참가 처리
-    private void handleRoomJoin(int roomNumber) {
-        if (ReadyProgress.get(roomNumber).size() < 4) {
-            printDisplay("현재 room " + roomNumber + "이 시작되지 않았습니다");
-        } else {
-            UnoGameViewing(roomNumber);
-            t_display.setText("");
-            updateParticipantsPanel();
-        }
     }
 
     // GUI 구성 메서드
@@ -267,6 +270,17 @@ public class ServerGUI extends JFrame {
         if(viewingRoomNumber!=0){
             add(unoGameServerGUI, BorderLayout.CENTER);
         }
+
+        revalidate();
+        repaint();
+    }
+
+    private void UnoGameEnd() {
+        if(unoGameServerGUI != null){
+            remove(unoGameServerGUI);
+            add(leftWrapperPanel, BorderLayout.CENTER);
+        }
+        add(leftWrapperPanel, BorderLayout.CENTER);
 
         revalidate();
         repaint();
@@ -501,6 +515,13 @@ public class ServerGUI extends JFrame {
         private void handleUnoUpdate(GamePacket msg) {
             printDisplay(uid + "님 플레이 완료");
             unoGame = msg.getUno();
+            for (int i = 0; i < 4; i++) {
+                if(unoGame != null && unoGame.getPlayerCards(i).isEmpty()){
+                    String winner = unoGame.getPlayerNumMap().get(i);
+                    broadcastingMessages(msg.getRoomNum(), "게임 종료 우승자 [ " + winner + " ]");
+                }
+            }
+
             UnoGameUpdate();
             broadcastingUnoUpdate(msg.getRoomNum());
         }
