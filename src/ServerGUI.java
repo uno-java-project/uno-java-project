@@ -461,6 +461,13 @@ public class ServerGUI extends JFrame {
         private void handleUnoUpdate(GamePacket msg) {
             printDisplay(uid + "님 플레이 완료");
             unoGame = msg.getUno();
+            for (int i = 0; i < 4; i++) {
+                if(unoGame != null && unoGame.getPlayerCards(i).isEmpty()){
+                    String winner = unoGame.getPlayerNumMap().get(i);
+                    broadcastingMessages(msg.getRoomNum(), "게임 종료 우승자 [ " + winner + " ]");
+                }
+            }
+
             UnoGameUpdate();
             broadcastingUnoUpdate(msg.getRoomNum());
         }
