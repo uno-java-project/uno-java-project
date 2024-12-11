@@ -344,6 +344,7 @@ public class ServerGUI extends JFrame {
                     } else {
                         printDisplay("잘못된 방 번호 요청: " + roomToDelete);
                     }
+                    brodcastingMainRoomInfo();
                     break;
                 default:
                     break;
@@ -438,14 +439,20 @@ public class ServerGUI extends JFrame {
             printDisplay("방이 추가 되었습니다.");
 
             broadcastingRoomUpdate();
-
-            int participantsCount = RoomNumUid.get(roomCount).size();
-            sendRoomInfo(roomCount, participantsCount);
+            brodcastingMainRoomInfo();
         }
         private void broadcastRoomInfo(int roomNumber) {
             int currentParticipants = RoomNumUid.get(roomNumber).size();
             for (ClientHandler client : users) {
                 client.sendRoomInfo(roomNumber, currentParticipants);
+            }
+        }
+
+        private void brodcastingMainRoomInfo() {
+            int participantsCount;
+            for (int i = RoomNumUid.size() - 1; i > 0; i--) {
+                participantsCount = RoomNumUid.get(i).size();
+                sendRoomInfo(i, participantsCount);
             }
         }
 

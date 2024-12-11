@@ -151,7 +151,6 @@ public class ClientGUI extends JFrame {
             deleteButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    t_display.setText(""); // 보낸 후 입력창은 비우기
                     removeRoom(uid, roomNumber);
                     revalidate();
                     repaint();
