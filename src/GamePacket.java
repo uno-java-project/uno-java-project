@@ -16,6 +16,7 @@ public class GamePacket implements Serializable {
     public static final int MODE_ROOM_JOIN = 0x42;  // 방 입장 요청
     public static final int MODE_ROOM_READY = 0x43;
     public static final int MODE_ROOM_INFO = 0x44;
+    public static final int MODE_ROOM_DELETE = 0x44;
 
     public static final int MODE_UNO_START = 0x50;
     public static final int MODE_UNO_UPDATE = 0x51;
@@ -63,11 +64,6 @@ public class GamePacket implements Serializable {
         this(userID, mode, message, image, null, 0, 0, 0, roomNum, 0);
     }
 
-/*    // 방 번호와 UnoGame 객체만 전달하는 생성자
-    public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
-        this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
-    }*/
-    // 승리한 플레이어 ID와 게임 상태 및 방 번호를 전달하는 생성자
     public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
         this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
     }

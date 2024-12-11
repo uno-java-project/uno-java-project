@@ -87,6 +87,17 @@ public class ServerGUI extends JFrame {
         return imageLabel;
     }
 
+    private void deleteRoom(int roomNumber) {
+        if (roomNumber > 0 && roomNumber <= roomCount) {
+            roomPanel.remove(roomNumber - 1); // 방 UI 제거 (인덱스는 0부터 시작)
+            roomPanel.revalidate();
+            roomPanel.repaint();
+        } else {
+            printDisplay("삭제하려는 방 번호가 유효하지 않습니다: " + roomNumber);
+        }
+    }
+
+
     // 방 추가 메서드
     private void addRoom() {
         int roomNumber = roomPanel.getComponentCount();
@@ -329,6 +340,18 @@ public class ServerGUI extends JFrame {
                 case GamePacket.MODE_UNO_GAME_OVER:
                     handleGameOver(msg);
                     break;
+                case GamePacket.MODE_ROOM_DELETE:
+                    int roomToDelete = msg.getRoomNum();
+
+                    // 유효한 방 번호인지 확인
+                    if (roomToDelete > 0 && roomToDelete <= roomCount) {
+                        deleteRoom(roomToDelete); // 방 삭제
+                        handleRoomDelete(roomToDelete); // 방 삭제 후 후속 처리
+                    } else {
+                        printDisplay("잘못된 방 번호 요청: " + roomToDelete);
+                    }
+                    break;
+
                 default:
                     break;
 
@@ -342,8 +365,9 @@ public class ServerGUI extends JFrame {
 
             printDisplay("방 " + roomNumber + "에서 게임이 종료되었습니다. 승자는 " + winner + "입니다!");
             broadcastingMessages(roomNumber, "게임이 종료되었습니다! 승리자는 " + winner + "입니다!");
-            resetRoom(roomNumber); // 방 리셋
+            resetRoom(roomNumber); // 방 상태 초기화
         }
+
 
 
         private void updateGUIOnGameOver(int roomNumber, String winner) {
@@ -425,12 +449,32 @@ public class ServerGUI extends JFrame {
             broadcasting(msg);
         }
 
+        private void handleRoomDelete(int roomNumber) {
+            // 삭제된 방 이후의 방 번호 재정렬
+            for (int i = roomNumber; i < roomCount; i++) {
+                RoomNumUid.put(i, RoomNumUid.remove(i + 1)); // 다음 방을 현재 방 번호로 이동
+                ReadyProgress.put(i, ReadyProgress.remove(i + 1)); // 준비 상태도 이동
+            }
+
+            // 마지막 방 정보 제거
+            RoomNumUid.remove(roomCount);
+            ReadyProgress.remove(roomCount);
+
+            roomCount--; // 방 개수 감소
+
+            // 모든 클라이언트에게 업데이트 브로드캐스트
+            broadcastingRoomUpdate();
+
+            printDisplay("방 " + roomNumber + "이 삭제되었습니다.");
+        }
+
+
         private void handleRoomAdd() {
             addRoom();
             roomCount++;
 
-            printDisplay(uid + ": 방 추가 요청");
-            printDisplay("방이 추가 되었습니다.");
+            printDisplay(uid + ": 방 삭제 요청");
+            printDisplay("방이 삭제 되었습니다.");
 
             broadcastingRoomUpdate();
 
@@ -441,6 +485,7 @@ public class ServerGUI extends JFrame {
             int currentParticipants = RoomNumUid.get(roomNumber).size();
             for (ClientHandler client : users) {
                 client.sendRoomInfo(roomNumber, currentParticipants);
+
             }
         }
 
@@ -474,7 +519,9 @@ public class ServerGUI extends JFrame {
 
             // 참가자 목록 UI 갱신
             updateRoomLabel(roomNumber);
-            updateParticipantsPanel();        }
+            updateParticipantsPanel();
+        }
+
         private void updateRoomLabel(int roomNumber) {
             JPanel singleRoomPanel = (JPanel) roomPanel.getComponent(roomNumber - 1); // 방 번호는 1부터 시작
             JLabel roomLabel = (JLabel) singleRoomPanel.getComponent(0); // 라벨은 첫 번째 컴포넌트로 가정
@@ -517,7 +564,11 @@ public class ServerGUI extends JFrame {
                 client.sendJoin(readyProgress, joinProgress, roomNum);
             }
         }
-
+        private void broadcastingDelete(Integer readyProgress, Integer joinProgress, int roomNum) {
+            for (ClientHandler client : users) {
+                client.sendDelete(readyProgress, joinProgress, roomNum);
+            }
+        }
         private void broadcastingMessages(int roomNum, String msg) {
             for (ClientHandler client : users) {
                     System.out.println("클라이언트로 메시지 전송: " + msg + " (방 번호 = " + roomNum + ")");
@@ -546,9 +597,10 @@ public class ServerGUI extends JFrame {
 
         private void broadcastingRoomUpdate() {
             for (ClientHandler client : users) {
-                client.sendRoomCount();
+                client.send(new GamePacket(null, GamePacket.MODE_ROOM_COUNT, null, null, null, roomCount, 0, 0, 0, 0));
             }
         }
+
 
 
         private void sendMessages(String msg, int roomNum){
@@ -558,7 +610,9 @@ public class ServerGUI extends JFrame {
         private void sendJoin(Integer readyProgress, Integer joinProgress, int roomNum){
             send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, readyProgress, joinProgress ,roomNum));
         }
-
+        private void sendDelete(Integer readyProgress, Integer joinProgress, int roomNum){
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_DELETE, readyProgress, joinProgress ,roomNum));
+        }
         private void sendUnoStart(int roomNum) {
             send(new GamePacket(uid, GamePacket.MODE_UNO_START, unoGame, roomNum));
         }

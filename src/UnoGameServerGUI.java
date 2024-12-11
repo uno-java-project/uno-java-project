@@ -212,14 +212,22 @@ public class UnoGameServerGUI extends JPanel {
         if (!unoGame.playCard(card, playerIndex)) {
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
         } else {
-            String winner = unoGame.checkGameOver();
+            // 게임 종료 여부 확인
+            String winner = unoGame.gameOver();
             if (winner != null) {
-                GamePacket gameOverPacket = new GamePacket(winner, GamePacket.MODE_UNO_GAME_OVER, unoGame, roomNumber);
-                uc.send(gameOverPacket); // 서버로 게임 종료 패킷 전송
+                // 게임 종료 패킷 생성
+                GamePacket gameOverPacket = new GamePacket(
+                        winner,
+                        GamePacket.MODE_UNO_GAME_OVER,
+                        unoGame,
+                        roomNumber
+                );
+                uc.send(gameOverPacket); // 서버로 전송
             }
         }
         updateGamePanel();
     }
+
 
 
 
