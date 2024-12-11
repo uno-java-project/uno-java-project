@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.*;
@@ -23,6 +24,7 @@ public class ServerGUI extends JFrame {
     private UnoGameServerGUI unoGameServerGUI;
     private int viewingRoomNumber = 0;
     private int roomCount = 0;
+    private ArrayList<Integer> deletedRooms = new ArrayList<Integer>();
 
     public ServerGUI(int port) {
         super("Uno Game");
@@ -101,7 +103,20 @@ public class ServerGUI extends JFrame {
         JLabel roomLabel = new JLabel("방 " + (roomNumber + 1) + " (" + RoomNumUid.get(roomNumber + 1).size() + "/4)", SwingConstants.CENTER);
         JButton joinButton = new JButton("관전");
 
-        joinButton.addActionListener(e -> handleRoomJoin(roomNumber + 1));
+        joinButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JButton clickedButton = (JButton) actionEvent.getSource();
+                if (ReadyProgress.get(roomNumber+1).size() < 4) {
+                    printDisplay("현재 room " + (roomNumber+1) + "이 시작되지 않았습니다");
+                } else {
+                    clickedButton.setEnabled(false);
+                    UnoGameViewing((roomNumber+1));
+                    t_display.setText("");
+                    updateParticipantsPanel();
+                }
+            }
+        });
 
         singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
         singleRoomPanel.add(joinButton, BorderLayout.EAST);
@@ -264,6 +279,17 @@ public class ServerGUI extends JFrame {
         repaint();
     }
 
+    private void UnoGameEnd() {
+        if(unoGameServerGUI != null){
+            remove(unoGameServerGUI);
+            add(leftWrapperPanel, BorderLayout.CENTER);
+        }
+        add(leftWrapperPanel, BorderLayout.CENTER);
+
+        revalidate();
+        repaint();
+    }
+
     private void joinRoom(String uid, int roomNumber) {
         RoomNumUid.get(0).remove(uid);
         RoomNumUid.get(roomNumber).add(uid);
@@ -406,9 +432,11 @@ public class ServerGUI extends JFrame {
 
             broadcastingRoomUpdate();
 
+
             int participantsCount = RoomNumUid.get(roomCount).size();
             sendRoomInfo(roomCount, participantsCount);
         }
+
         private void broadcastRoomInfo(int roomNumber) {
             int currentParticipants = RoomNumUid.get(roomNumber).size();
             for (ClientHandler client : users) {
@@ -417,7 +445,7 @@ public class ServerGUI extends JFrame {
         }
 
         private void sendRoomInfo(int roomNumber, int participantsCount) {
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, roomNumber, participantsCount));
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_INFO, null, null, null, 0, 0, 0, roomNumber, participantsCount, null));
         }
 
         private void handleRoomJoin(GamePacket msg) {
@@ -465,15 +493,16 @@ public class ServerGUI extends JFrame {
                 if(unoGame != null && unoGame.getPlayerCards(i).isEmpty()){
                     String winner = unoGame.getPlayerNumMap().get(i);
                     broadcastingMessages(msg.getRoomNum(), "게임 종료 우승자 [ " + winner + " ]");
+                    UnoGameEnd();
+                    return;
                 }
             }
-
             UnoGameUpdate();
             broadcastingUnoUpdate(msg.getRoomNum());
         }
 
         private void sendRoomCount() {
-            send(new GamePacket(uid, GamePacket.MODE_ROOM_COUNT, null, null, null, roomCount, 0, 0, 0, 0));
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_COUNT, null, null, null, roomCount, 0, 0, 0, 0, deletedRooms));
         }
 
         private void send(GamePacket msg) {

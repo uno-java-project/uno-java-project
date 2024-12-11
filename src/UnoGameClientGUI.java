@@ -128,7 +128,7 @@ public class UnoGameClientGUI extends JPanel {
 
                     if (playerList.size() == 1 && !unoGame.getIsUNO().get(playerUid)) {
                         // 플레이어가 카드 1장을 남겼고 UNO를 외치지 않았다면, 한 장 더 뽑아야 함
-                        uc.send(new GamePacket(uid, GamePacket.MODE_TX_STRING, "UNO!!! " + playerUid + "가 한 장 더 뽑습니다!!", uc.myRoomNumber));
+                        uc.send(new GamePacket(uid, GamePacket.MODE_TX_STRING, playerUid + "가 한 장 더 뽑습니다!!", uc.myRoomNumber));
                         drawCardUpdate(playerNumber);  // 한 장 더 뽑기
                         uc.sendUnoUpdate(uid, unoGame);
                     }

@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class GamePacket implements Serializable {
     // 메시지 모드를 정의하는 상수들
@@ -12,10 +13,12 @@ public class GamePacket implements Serializable {
     public static final int MODE_TX_IMAGE = 0x30;
 
     public static final int MODE_ROOM_ADD = 0x40;  // 방 추가 정보
-    public static final int MODE_ROOM_COUNT = 0x41;  // 방 수와 포트 정보
-    public static final int MODE_ROOM_JOIN = 0x42;  // 방 입장 요청
-    public static final int MODE_ROOM_READY = 0x43;
-    public static final int MODE_ROOM_INFO = 0x44;
+    public static final int MODE_ROOM_DELETE = 0x41;  // 방 추가 정보
+
+    public static final int MODE_ROOM_COUNT = 0x42;  // 방 수와 포트 정보
+    public static final int MODE_ROOM_JOIN = 0x43;  // 방 입장 요청
+    public static final int MODE_ROOM_READY = 0x44;
+    public static final int MODE_ROOM_INFO = 0x45;
 
     public static final int MODE_UNO_START = 0x50;
     public static final int MODE_UNO_UPDATE = 0x51;
@@ -32,9 +35,10 @@ public class GamePacket implements Serializable {
     private Integer roomJoin;
     private int roomNum;
     private int participantsCount;
+    private ArrayList<Integer> deletedRooms;
 
     // 모든 필드를 처리할 수 있는 생성자
-    public GamePacket(String userID, int mode, String message, ImageIcon image, UnoGame uno, int roomCount, Integer roomReady, Integer roomJoin, int roomNum, int participantsCount) {
+    public GamePacket(String userID, int mode, String message, ImageIcon image, UnoGame uno, int roomCount, Integer roomReady, Integer roomJoin, int roomNum, int participantsCount, ArrayList<Integer> deletedRooms) {
         this.userID = userID;
         this.mode = mode;
         this.message = message;
@@ -45,31 +49,32 @@ public class GamePacket implements Serializable {
         this.roomJoin = roomJoin;
         this.roomNum = roomNum;
         this.participantsCount = participantsCount;
+        this.deletedRooms = deletedRooms;
     }
 
     // 방 번호와 참가자 수를 전달하는 생성자
     public GamePacket(String userID, int mode, int roomNum, int participantsCount) {
-        this(userID, mode, null, null, null, 0, 0, 0, roomNum, participantsCount);
+        this(userID, mode, null, null, null, 0, 0, 0, roomNum, participantsCount, null);
     }
 
     // 메시지와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, String message, int roomNum) {
-        this(userID, mode, message, null, null, 0, 0, 0, roomNum, 0);
+        this(userID, mode, message, null, null, 0, 0, 0, roomNum, 0, null);
     }
 
     // 메시지와 이미지만 전달하는 생성자
     public GamePacket(String userID, int mode, String message, ImageIcon image, int roomNum) {
-        this(userID, mode, message, image, null, 0, 0, 0, roomNum, 0);
+        this(userID, mode, message, image, null, 0, 0, 0, roomNum, 0, null);
     }
 
     // 방 번호와 UnoGame 객체만 전달하는 생성자
     public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
-        this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
+        this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0, null);
     }
 
     // 방 레디/참가 정보와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, Integer roomReady, Integer roomJoin, int roomNum) {
-        this(userID, mode, null, null, null, 0, roomReady, roomJoin, roomNum, 0);
+        this(userID, mode, null, null, null, 0, roomReady, roomJoin, roomNum, 0, null);
     }
 
     // Getter와 Setter (필요시 사용 가능)
@@ -112,6 +117,8 @@ public class GamePacket implements Serializable {
     public int getParticipantsCount() {
         return participantsCount;
     }
+
+    public ArrayList<Integer> getDeletedRooms() {return deletedRooms;}
 
     // Setter for participantsCount
     public void setParticipantsCount(int participantsCount) {

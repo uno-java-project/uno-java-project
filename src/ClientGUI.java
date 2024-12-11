@@ -29,6 +29,7 @@ public class ClientGUI extends JFrame {
     private JPanel currentUNOGUI;
     public int myRoomNumber = 0;
     private int roomCount = 0;
+    private ArrayList<Integer> deletedRooms;
 
 
     public ClientGUI(String uid, String serverAddress, int serverPort) {
@@ -116,15 +117,21 @@ public class ClientGUI extends JFrame {
 
         // 방 생성 로직
         for (int i = 0; i < roomCount; i++) {
+
+            // 방 번호는 1부터 시작하도록
+            int roomNumber = i + 1;  // 1부터 시작하는 방 번호
+
+//            // deletedRooms에 해당 방 번호가 포함되어 있으면 그리지 않음
+//            if (deletedRooms.contains(roomNumber)) {
+//                continue;  // 해당 방은 그리지 않고 다음 방으로 넘어감
+//            }
+
             JPanel singleRoomPanel = new JPanel(new BorderLayout());
             singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
             // 각 방의 크기를 고정 (예: 550x50 크기로 설정)
             singleRoomPanel.setPreferredSize(new Dimension(550, 50));  // 방 크기 고정
             singleRoomPanel.setMaximumSize(new Dimension(550, 50));  // 방 크기 고정
-
-            // 방 번호는 1부터 시작하도록
-            int roomNumber = i + 1;  // 1부터 시작하는 방 번호
 
             // 방 이름을 레이블로 설정
             JLabel roomLabel = new JLabel("방 " + roomNumber , SwingConstants.CENTER);
@@ -326,27 +333,27 @@ public class ClientGUI extends JFrame {
     }
     // 로그인 시 사용자 ID와 현재 방 번호를 전송
     private void sendUserID() {
-        send(new GamePacket(uid, GamePacket.MODE_LOGIN, null, null, null, 0, 0, 0, myRoomNumber, 0));
+        send(new GamePacket(uid, GamePacket.MODE_LOGIN, null, null, null, 0, 0, 0, myRoomNumber, 0, null));
     }
 
     // UNO 업데이트 정보를 방 번호와 함께 전
     public void sendUnoUpdate(String uid, UnoGame unoGame) {
-        send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, null, null, unoGame, 0, 0, 0, myRoomNumber, 0));
+        send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, null, null, unoGame, 0, 0, 0, myRoomNumber, 0, null));
     }
 
     // 방 추가 요청 시 사용자 ID와 현재 방 번호를 전송
     public void sendAddRoom(String uid) {
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, null, null, null, 0, 0, 0, myRoomNumber, 0));
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, null, null, null, 0, 0, 0, myRoomNumber, 0, null));
     }
 
     // 방 입장 요청 시 사용자 ID와 입장할 방 번호를 전송
     public void sendJoinRoom(String uid, int joinRoomNum) {
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, null, null, null, 0, 0, joinRoomNum, joinRoomNum, 0));
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, null, null, null, 0, 0, joinRoomNum, joinRoomNum, 0, null));
     }
 
     // 준비 상태를 서버로 전송 (참여 인원 정보 포함 가능)
     public void sendReady(int roomNumber) {
-        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, null, null, null, 0, roomNumber, 0, roomNumber, 0));
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_READY, null, null, null, 0, roomNumber, 0, roomNumber, 0, null));
     }
 
     private void printDisplay(ImageIcon icon) {
@@ -420,6 +427,7 @@ public class ClientGUI extends JFrame {
 
                 case GamePacket.MODE_ROOM_COUNT:
                     if(0 == myRoomNumber) {
+                        deletedRooms = inMsg.getDeletedRooms();
                         roomCount = inMsg.getRoomCount();  // getter 사용
                         updateRoom();  // 방 리스트나 UI 갱신 함수 호출
                     }
@@ -542,7 +550,7 @@ public class ClientGUI extends JFrame {
     }
 
     private void disconnect() {
-        send(new GamePacket(uid, GamePacket.MODE_LOGOUT, null, null, null, 0, 0, 0, 0, 0)); // LOGOUT 패킷 전송
+        send(new GamePacket(uid, GamePacket.MODE_LOGOUT, null, null, null, 0, 0, 0, 0, 0, null)); // LOGOUT 패킷 전송
         try {
             receiveThread = null; // 수신 스레드 종료
             socket.close(); // 소켓 닫기
