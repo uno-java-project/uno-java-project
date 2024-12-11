@@ -113,10 +113,4 @@ public class GamePacket implements Serializable {
     public int getParticipantsCount() {
         return participantsCount;
     }
-
-    // Setter for participantsCount
-    public void setParticipantsCount(int participantsCount) {
-        this.participantsCount = participantsCount;
-    }
-
 }

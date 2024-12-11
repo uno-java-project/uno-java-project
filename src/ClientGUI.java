@@ -10,6 +10,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class ClientGUI extends JFrame {
     private String serverAddress;
@@ -17,6 +18,7 @@ public class ClientGUI extends JFrame {
     private ObjectOutputStream out;
     private JPanel leftWrapperPanel;
     private JPanel roomPanel;
+    private JPanel resultPanel;
     private ClientReadyRoomGUI waitingPanel;
 
     private JButton b_exit, b_select, b_disconnect;;
@@ -503,9 +505,6 @@ public class ClientGUI extends JFrame {
 
                 case GamePacket.MODE_UNO_UPDATE:
                     if (inMsg.getRoomNum() == myRoomNumber){
-                        // UNO 게임 상태 업데이트 처리
-//                        printDisplay("턴이 종료되었습니다.");
-
                         if (waitingPanel != null) {
                             remove(waitingPanel);
                         }
@@ -525,6 +524,54 @@ public class ClientGUI extends JFrame {
 
                     if(myRoomNumber == 0){
                         updateRoomParticipants(roomNumber, participantsCount);
+                    }
+                    break;
+
+                case GamePacket.MODE_UNO_GAME_OVER:
+                    if(inMsg.getRoomNum() == myRoomNumber) {
+                        if (currentUNOGUI != null) {
+                            remove(currentUNOGUI);
+                        }
+                        resultPanel = new JPanel();
+                        JLabel imageLabel = new JLabel();
+                        ImageIcon imageIcon;
+                        Image scaledImage;
+                        if(Objects.equals(inMsg.getMessage(), uid)){
+                            imageIcon = new ImageIcon("assets/win.png");
+                            scaledImage = imageIcon.getImage().getScaledInstance(800, 600, Image.SCALE_SMOOTH); // 이미지 크기 조정
+                        }else{
+                            imageIcon = new ImageIcon("assets/lose.png");
+                            scaledImage = imageIcon.getImage().getScaledInstance(600, 500, Image.SCALE_SMOOTH); // 이미지 크기 조정
+                        }
+                        imageLabel.setIcon(new ImageIcon(scaledImage));
+                        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
+                        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
+                        imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 30, 20, 30)); // 여백 설정
+
+
+                        // 결과 이미지 라벨을 결과 패널에 추가
+                        resultPanel.add(imageLabel, BorderLayout.CENTER);
+
+                        // 버튼 생성
+                        JButton playAgainButton = new JButton("다시 하기");
+                        playAgainButton.setHorizontalAlignment(SwingConstants.CENTER); // 버튼 정렬
+                        playAgainButton.addActionListener(e -> {
+                            remove(resultPanel);
+                            add(leftWrapperPanel, BorderLayout.CENTER);
+                            updateRoom();
+                            revalidate();
+                            repaint();
+                        });
+
+                        // 버튼을 결과 패널 하단에 추가
+                        resultPanel.add(playAgainButton, BorderLayout.SOUTH);
+
+                        // 결과 패널을 현재 화면에 추가
+                        add(resultPanel, BorderLayout.CENTER);
+                        myRoomNumber = 0;
+
+                        revalidate();
+                        repaint();
                     }
                     break;
 
