@@ -433,8 +433,14 @@ public class ServerGUI extends JFrame {
             broadcastingRoomUpdate();
 
 
-            int participantsCount = RoomNumUid.get(roomCount).size();
-            sendRoomInfo(roomCount, participantsCount);
+//            int participantsCount = RoomNumUid.get(roomCount).size();
+//            sendRoomInfo(roomCount, participantsCount);
+
+            int participantsCount;
+            for (int i = RoomNumUid.size() - 1; i > 0; i--) {
+                participantsCount = RoomNumUid.get(i).size();
+                sendRoomInfo(i, participantsCount);
+            }
         }
 
         private void broadcastRoomInfo(int roomNumber) {
