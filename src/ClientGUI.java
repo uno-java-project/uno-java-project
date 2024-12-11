@@ -512,8 +512,12 @@ public class ClientGUI extends JFrame {
                     }
                     break;
                 case GamePacket.MODE_UNO_GAME_OVER:
-                    returnToLobby();
+                    if (inMsg.getRoomNum() == myRoomNumber) {
+                        printDisplay("게임이 종료되었습니다! 승리자: " + inMsg.getUserID());
+                        returnToLobby(); // 로비로 복귀하는 메서드 호출
+                    }
                     break;
+
                 // 기존 케이스들..
                 default:
                     printDisplay("알 수 없는 메시지 모드: " + inMsg.getMode());

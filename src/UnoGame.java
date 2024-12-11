@@ -74,7 +74,7 @@ public class UnoGame implements Serializable {
         Collections.shuffle(deck);
 
         // 4명의 플레이어에게 7장씩 나누어 주기
-        for (int i = 0; i < 7; i++) {  // 각 플레이어에게 7장
+        for (int i = 0; i < 2; i++) {  // 각 플레이어에게 7장
             player1List.add(deck.remove(0));
             player2List.add(deck.remove(0));
             player3List.add(deck.remove(0));
@@ -127,6 +127,15 @@ public class UnoGame implements Serializable {
                 case 2: player3List.remove(card); break;
                 case 3: player4List.remove(card); break;
             }
+            if (getPlayerCards(playerIndex).isEmpty()) {
+                String winner = playerNum.get(playerIndex); // 승리자 ID 확인
+                System.out.println("플레이어 " + winner + "가 승리했습니다!");
+                return true; // 게임 종료 신호 반환
+            }
+            if (getPlayerCards(playerIndex).isEmpty()) {
+                System.out.println("플레이어 " + playerIndex + "가 모든 카드를 사용했습니다! 게임 종료.");
+                return true; // 게임 종료 신호
+            }
 
             if (value.equals("Skip")) {
                 jumpTurn();  // 턴 반전 호출
@@ -158,6 +167,8 @@ public class UnoGame implements Serializable {
                 nextTurn();
             }
 
+                // 게임 종료 처리
+
             // topCard 갱신
             topCard = card;
             return true;
@@ -180,6 +191,16 @@ public class UnoGame implements Serializable {
                 case 3: player4List.add(drawnCard); break;
             }
         }
+    }
+    public String checkGameOver() {
+        for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
+            int playerIndex = entry.getKey();
+            String playerID = entry.getValue();
+            if (getPlayerCards(playerIndex).isEmpty()) {
+                return playerID; // 승리한 플레이어 ID 반환
+            }
+        }
+        return null; // 종료되지 않음
     }
 
     public void nextTurn() {

@@ -52,6 +52,7 @@ public class GamePacket implements Serializable {
         this(userID, mode, null, null, null, 0, 0, 0, roomNum, participantsCount);
     }
 
+
     // 메시지와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, String message, int roomNum) {
         this(userID, mode, message, null, null, 0, 0, 0, roomNum, 0);
@@ -62,7 +63,11 @@ public class GamePacket implements Serializable {
         this(userID, mode, message, image, null, 0, 0, 0, roomNum, 0);
     }
 
-    // 방 번호와 UnoGame 객체만 전달하는 생성자
+/*    // 방 번호와 UnoGame 객체만 전달하는 생성자
+    public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
+        this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
+    }*/
+    // 승리한 플레이어 ID와 게임 상태 및 방 번호를 전달하는 생성자
     public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
         this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
     }

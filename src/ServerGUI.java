@@ -243,7 +243,7 @@ public class ServerGUI extends JFrame {
     private void UnoGameViewing(int roomNumber) {
         viewingRoomNumber = roomNumber;
         remove(leftWrapperPanel);
-        unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        unoGameServerGUI = new UnoGameServerGUI(unoGame, viewingRoomNumber);
         add(unoGameServerGUI, BorderLayout.CENTER);
 
         revalidate();
@@ -254,7 +254,7 @@ public class ServerGUI extends JFrame {
         if(unoGameServerGUI!=null){
             remove(unoGameServerGUI);
         }
-        unoGameServerGUI = new UnoGameServerGUI(unoGame);
+        unoGameServerGUI = new UnoGameServerGUI(unoGame, viewingRoomNumber);
 
         if(viewingRoomNumber!=0){
             add(unoGameServerGUI, BorderLayout.CENTER);
@@ -335,17 +335,21 @@ public class ServerGUI extends JFrame {
             }
         }
         private void handleGameOver(GamePacket msg) {
-            String winner = msg.getUserID(); // 승리한 플레이어
+            String winner = msg.getUserID();
             int roomNumber = msg.getRoomNum();
 
-            // 종료 메시지 출력
+            System.out.println("서버에서 게임 종료 패킷 수신: 방 번호 = " + roomNumber + ", 승자 = " + winner);
+
             printDisplay("방 " + roomNumber + "에서 게임이 종료되었습니다. 승자는 " + winner + "입니다!");
-
-            // 해당 방의 모든 클라이언트에 종료 메시지 브로드캐스트
             broadcastingMessages(roomNumber, "게임이 종료되었습니다! 승리자는 " + winner + "입니다!");
+            resetRoom(roomNumber); // 방 리셋
+        }
 
-            // 방 초기화
-            resetRoom(roomNumber);
+
+        private void updateGUIOnGameOver(int roomNumber, String winner) {
+            if (unoGameServerGUI != null) {
+                unoGameServerGUI.updateOnGameOver(roomNumber, winner);
+            }
         }
 
         private void resetRoom(int roomNumber) {
@@ -516,7 +520,8 @@ public class ServerGUI extends JFrame {
 
         private void broadcastingMessages(int roomNum, String msg) {
             for (ClientHandler client : users) {
-                client.sendMessages(msg, roomNum);
+                    System.out.println("클라이언트로 메시지 전송: " + msg + " (방 번호 = " + roomNum + ")");
+                    client.send(new GamePacket(null, GamePacket.MODE_BROAD_STRING, msg, roomNum));
             }
         }
 
@@ -544,6 +549,7 @@ public class ServerGUI extends JFrame {
                 client.sendRoomCount();
             }
         }
+
 
         private void sendMessages(String msg, int roomNum){
             send(new GamePacket(uid, GamePacket.MODE_BROAD_STRING ,msg ,roomNum));
