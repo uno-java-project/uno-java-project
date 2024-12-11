@@ -448,25 +448,21 @@ public class ServerGUI extends JFrame {
             printDisplay(uid + ": " + msg.getMessage());
             broadcasting(msg);
         }
-
         private void handleRoomDelete(int roomNumber) {
-            // 삭제된 방 이후의 방 번호 재정렬
+            // 방 번호 재정렬
             for (int i = roomNumber; i < roomCount; i++) {
                 RoomNumUid.put(i, RoomNumUid.remove(i + 1)); // 다음 방을 현재 방 번호로 이동
                 ReadyProgress.put(i, ReadyProgress.remove(i + 1)); // 준비 상태도 이동
             }
-
-            // 마지막 방 정보 제거
-            RoomNumUid.remove(roomCount);
+            RoomNumUid.remove(roomCount); // 마지막 방 제거
             ReadyProgress.remove(roomCount);
-
             roomCount--; // 방 개수 감소
 
-            // 모든 클라이언트에게 업데이트 브로드캐스트
+            // 클라이언트로 방 갱신 정보 브로드캐스트
             broadcastingRoomUpdate();
-
             printDisplay("방 " + roomNumber + "이 삭제되었습니다.");
         }
+
 
 
         private void handleRoomAdd() {

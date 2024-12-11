@@ -438,11 +438,10 @@ public class ClientGUI extends JFrame {
                     break;
 
                 case GamePacket.MODE_ROOM_COUNT:
-                    if(0 == myRoomNumber) {
-                        roomCount = inMsg.getRoomCount();  // getter 사용
-                        updateRoom();  // 방 리스트나 UI 갱신 함수 호출
-                    }
+                    roomCount = inMsg.getRoomCount();
+                    updateRoom(); // UI 갱신
                     break;
+
 
                 case GamePacket.MODE_ROOM_JOIN:
                     if(inMsg.getRoomNum() == myRoomNumber) {
