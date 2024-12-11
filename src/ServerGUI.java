@@ -86,7 +86,15 @@ public class ServerGUI extends JFrame {
         imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0));
         return imageLabel;
     }
-
+    private void deleteRoom(int roomNumber) {
+        if (roomNumber > 0 && roomNumber <= roomCount) {
+            roomPanel.remove(roomNumber - 1); // 방 UI 제거 (인덱스는 0부터 시작)
+            roomPanel.revalidate();
+            roomPanel.repaint();
+        } else {
+            printDisplay("삭제하려는 방 번호가 유효하지 않습니다: " + roomNumber);
+        }
+    }
     // 방 추가 메서드
     private void addRoom() {
         int roomNumber = roomPanel.getComponentCount();
@@ -326,6 +334,17 @@ public class ServerGUI extends JFrame {
                 case GamePacket.MODE_UNO_UPDATE:
                     handleUnoUpdate(msg);
                     break;
+                case GamePacket.MODE_ROOM_DELETE:
+                    int roomToDelete = msg.getRoomNum();
+
+                    // 유효한 방 번호인지 확인
+                    if (roomToDelete > 0 && roomToDelete <= roomCount) {
+                        deleteRoom(roomToDelete); // 방 삭제
+                        handleRoomDelete(roomToDelete); // 방 삭제 후 후속 처리
+                    } else {
+                        printDisplay("잘못된 방 번호 요청: " + roomToDelete);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -385,6 +404,20 @@ public class ServerGUI extends JFrame {
             }
         }
 
+  private void handleRoomDelete(int roomNumber) {
+            // 방 번호 재정렬
+            for (int i = roomNumber; i < roomCount; i++) {
+                RoomNumUid.put(i, RoomNumUid.remove(i + 1)); // 다음 방을 현재 방 번호로 이동
+                ReadyProgress.put(i, ReadyProgress.remove(i + 1)); // 준비 상태도 이동
+            }
+            RoomNumUid.remove(roomCount); // 마지막 방 제거
+            ReadyProgress.remove(roomCount);
+            roomCount--; // 방 개수 감소
+
+            // 클라이언트로 방 갱신 정보 브로드캐스트
+            broadcastingRoomUpdate();
+            printDisplay("방 " + roomNumber + "이 삭제되었습니다.");
+        }
 
         private void handleMessage(GamePacket msg) {
             String message = uid + ": " + msg.getMessage();
@@ -495,7 +528,11 @@ public class ServerGUI extends JFrame {
                 client.sendMessages(msg, roomNum);
             }
         }
-
+        private void broadcastingDelete(Integer readyProgress, Integer joinProgress, int roomNum) {
+            for (ClientHandler client : users) {
+                client.sendDelete(readyProgress, joinProgress, roomNum);
+            }
+        }
         private void broadcastingUnoStart(int roomNum) {
             for (ClientHandler client : users) {
                 client.sendUnoStart(roomNum);
@@ -540,7 +577,9 @@ public class ServerGUI extends JFrame {
         private void sendUnoUpdate(int roomNum) {
             send(new GamePacket(uid, GamePacket.MODE_UNO_UPDATE, unoGame, roomNum));
         }
-
+        private void sendDelete(Integer readyProgress, Integer joinProgress, int roomNum){
+            send(new GamePacket(uid, GamePacket.MODE_ROOM_DELETE, readyProgress, joinProgress ,roomNum));
+        }
         private void closeSocket(Socket cs) {
             try {
                 cs.close();

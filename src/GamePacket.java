@@ -16,6 +16,7 @@ public class GamePacket implements Serializable {
     public static final int MODE_ROOM_JOIN = 0x42;  // 방 입장 요청
     public static final int MODE_ROOM_READY = 0x43;
     public static final int MODE_ROOM_INFO = 0x44;
+    public static final int MODE_ROOM_DELETE = 0x45;
 
     public static final int MODE_UNO_START = 0x50;
     public static final int MODE_UNO_UPDATE = 0x51;

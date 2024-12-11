@@ -120,24 +120,25 @@ public class ClientGUI extends JFrame {
             singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
 
             // 각 방의 크기를 고정 (예: 550x50 크기로 설정)
-            singleRoomPanel.setPreferredSize(new Dimension(550, 50));  // 방 크기 고정
-            singleRoomPanel.setMaximumSize(new Dimension(550, 50));  // 방 크기 고정
+            singleRoomPanel.setPreferredSize(new Dimension(550, 50)); // 방 크기 고정
+            singleRoomPanel.setMaximumSize(new Dimension(550, 50)); // 방 크기 고정
 
             // 방 번호는 1부터 시작하도록
-            int roomNumber = i + 1;  // 1부터 시작하는 방 번호
+            int roomNumber = i + 1; // 1부터 시작하는 방 번호
 
             // 방 이름을 레이블로 설정
-            JLabel roomLabel = new JLabel("방 " + roomNumber , SwingConstants.CENTER);
+            JLabel roomLabel = new JLabel("방 " + roomNumber, SwingConstants.CENTER);
 
-            // 참가 버튼 생성
+            // 참가 및 삭제 버튼을 포함하는 버튼 패널 생성
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼을 오른쪽 정렬
             JButton joinButton = new JButton("참가");
+            JButton deleteButton = new JButton("삭제");
 
             // 참가 버튼 클릭 시 해당 방 번호로 이동 (myRoomNumber에 값 할당)
             joinButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
                     t_display.setText(""); // 보낸 후 입력창은 비우기
-
                     remove(leftWrapperPanel);
                     myRoomNumber = roomNumber;
                     sendJoinRoom(uid, myRoomNumber);
@@ -146,9 +147,24 @@ public class ClientGUI extends JFrame {
                 }
             });
 
-            // 방 레이블과 버튼을 방 패널에 추가
+            // 삭제 버튼 클릭 시 해당 방 삭제
+            deleteButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    t_display.setText(""); // 보낸 후 입력창은 비우기
+                    removeRoom(uid, roomNumber);
+                    revalidate();
+                    repaint();
+                }
+            });
+
+            // 버튼 패널에 참가 및 삭제 버튼 추가
+            buttonPanel.add(joinButton);
+            buttonPanel.add(deleteButton);
+
+            // 방 레이블과 버튼 패널을 방 패널에 추가
             singleRoomPanel.add(roomLabel, BorderLayout.CENTER);
-            singleRoomPanel.add(joinButton, BorderLayout.EAST);
+            singleRoomPanel.add(buttonPanel, BorderLayout.EAST);
 
             // 새 방을 roomPanel에 추가
             roomPanel.add(singleRoomPanel);
@@ -338,7 +354,9 @@ public class ClientGUI extends JFrame {
     public void sendAddRoom(String uid) {
         send(new GamePacket(uid, GamePacket.MODE_ROOM_ADD, null, null, null, 0, 0, 0, myRoomNumber, 0));
     }
-
+    public void removeRoom(String uid, int roomNumber) {
+        send(new GamePacket(uid, GamePacket.MODE_ROOM_DELETE, null, null, null, 0, 0, roomNumber, roomNumber, 0));
+    }
     // 방 입장 요청 시 사용자 ID와 입장할 방 번호를 전송
     public void sendJoinRoom(String uid, int joinRoomNum) {
         send(new GamePacket(uid, GamePacket.MODE_ROOM_JOIN, null, null, null, 0, 0, joinRoomNum, joinRoomNum, 0));
@@ -419,10 +437,9 @@ public class ClientGUI extends JFrame {
                     break;
 
                 case GamePacket.MODE_ROOM_COUNT:
-                    if(0 == myRoomNumber) {
                         roomCount = inMsg.getRoomCount();  // getter 사용
                         updateRoom();  // 방 리스트나 UI 갱신 함수 호출
-                    }
+
                     break;
 
                 case GamePacket.MODE_ROOM_JOIN:
