@@ -20,8 +20,9 @@ public class ClientGUI extends JFrame {
     private JPanel roomPanel;
     private JPanel resultPanel;
     private ClientReadyRoomGUI waitingPanel;
+    private static JFrame cImageFrame;
 
-    private JButton b_exit, b_select, b_disconnect;;
+    private JButton b_exit, b_select, b_disconnect, b_rule;;
     private JTextPane t_display;
     private JTextField t_input;
     private DefaultStyledDocument document;
@@ -144,6 +145,9 @@ public class ClientGUI extends JFrame {
                     remove(leftWrapperPanel);
                     myRoomNumber = roomNumber;
                     sendJoinRoom(uid, myRoomNumber);
+                    b_rule.setEnabled(false);
+                    b_disconnect.setEnabled(false);
+                    b_exit.setEnabled(false);
                     revalidate();
                     repaint();
                 }
@@ -243,6 +247,37 @@ public class ClientGUI extends JFrame {
             }
         });
         inputPanel.add(t_input, BorderLayout.NORTH); // 입력 필드는 상단에 배치
+
+        // 버튼 패널 (보내기, 선택하기 버튼)
+        JPanel p_button = new JPanel(new GridLayout(2, 3, 5, 5)); // 가로로 두 개 버튼 배치
+        JButton b_cardList = new JButton("카드종류");
+        b_cardList.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 이미지 프레임이 아직 만들어지지 않았다면 처음 생성
+                if (cImageFrame == null) {
+                    cImageFrame = new JFrame("카드 종류");
+                    cImageFrame.setSize(410, 240);
+
+                    ImageIcon originalIcon = new ImageIcon("assets/kind.png");
+                    Image img = originalIcon.getImage(); // 원본 이미지
+                    Image resizedImg = img.getScaledInstance(400, 200, Image.SCALE_SMOOTH); // 이미지 크기 조정
+                    ImageIcon resizedIcon = new ImageIcon(resizedImg); // 리사이즈된 이미지를 새 ImageIcon으로
+
+                    JLabel imageLabel = new JLabel(resizedIcon);
+                    cImageFrame.add(imageLabel);
+                    cImageFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE); // 닫으면 숨기기
+                }
+
+                // 이미지 프레임이 보일 때는 숨기고, 안 보일 때는 보이도록
+                if (cImageFrame.isVisible()) {
+                    cImageFrame.setVisible(false);  // 프레임 숨기기
+                } else {
+                    cImageFrame.setVisible(true);   // 프레임 보이기
+                }
+            }
+        });
+        
         // 이모티콘 선택 버튼 추가
         JButton b_emoji = new JButton("이모티콘");
         b_emoji.addActionListener(new ActionListener() {
@@ -278,15 +313,24 @@ public class ClientGUI extends JFrame {
             }
         });
 
-// 이모티콘 버튼을 입력 필드 오른쪽에 배치
-        inputPanel.add(b_emoji, BorderLayout.EAST);
+        b_rule = new JButton("룰보기");
+        b_rule.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    // URL을 브라우저에서 열기
+                    Desktop.getDesktop().browse(new URI("https://youtu.be/bbtMloNezvM?si=K5zwMUtZUyz164Ow")); // 여기서 URL을 지정
+                } catch (IOException | URISyntaxException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
 
-        // 버튼 패널 (보내기, 선택하기 버튼)
-        JPanel p_button = new JPanel(new GridLayout(1, 3, 5, 5)); // 가로로 두 개 버튼 배치
         b_exit = new JButton("종료하기");
         b_exit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
+                disconnect();
                 System.exit(0);
             }
         });
@@ -299,7 +343,7 @@ public class ClientGUI extends JFrame {
             }
         });
 
-        b_select = new JButton("선택하기");
+        b_select = new JButton("파일 전송");
         b_select.addActionListener(new ActionListener() {
             JFileChooser chooser = new JFileChooser();
 
@@ -320,8 +364,10 @@ public class ClientGUI extends JFrame {
             }
         });
 
-        // 버튼들을 버튼 패널에 추가
+        p_button.add(b_cardList);
         p_button.add(b_select);
+        p_button.add(b_emoji);
+        p_button.add(b_rule);
         p_button.add(b_disconnect);
         p_button.add(b_exit);
 
@@ -559,6 +605,9 @@ public class ClientGUI extends JFrame {
                             remove(resultPanel);
                             add(leftWrapperPanel, BorderLayout.CENTER);
                             updateRoom();
+                            b_rule.setEnabled(true);
+                            b_disconnect.setEnabled(true);
+                            b_exit.setEnabled(true);
                             revalidate();
                             repaint();
                         });
