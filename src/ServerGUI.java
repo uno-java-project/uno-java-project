@@ -527,7 +527,7 @@ public class ServerGUI extends JFrame {
         }
 
         private void handleUnoUpdate(GamePacket msg) {
-            printDisplay("[ Room " + msg.getRoomNum() + " ] " +uid + "님 플레이 완료");
+            printDisplay("[ Room " + msg.getRoomNum() + " ] " +uid + "님 플레이");
             unoGame = msg.getUno();
             for (int i = 0; i < 4; i++) {
                 if(unoGame != null && unoGame.getPlayerCards(i).isEmpty()){
