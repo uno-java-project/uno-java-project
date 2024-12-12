@@ -45,12 +45,14 @@ public class ClientReadyRoomGUI extends JPanel {
 
             uidPanel.setPreferredSize(new Dimension(100, 20));
             boxPanel.add(uidPanel, BorderLayout.NORTH);
+            boxPanel.setBackground(Color.white);
 
             // 네모 생성
             JPanel box = new JPanel();
             box.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             box.setPreferredSize(new Dimension(100, 100));
 
+            box.setBackground(Color.WHITE);
 
             if (joinProgress > i) {
                 // 이미지 아이콘을 생성하여 JLabel에 설정
@@ -134,6 +136,8 @@ public class ClientReadyRoomGUI extends JPanel {
         add(statePanel, BorderLayout.NORTH); // statePanel을 상단에 배치
         add(boxesPanel, BorderLayout.CENTER);
         add(readyButton, BorderLayout.SOUTH);
+
+
     }
 
     // 외부에서 readyProgress를 변경하는 메서드 추가
