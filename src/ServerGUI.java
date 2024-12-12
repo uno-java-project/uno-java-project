@@ -402,8 +402,10 @@ public class ServerGUI extends JFrame {
 
             // 레디 상태 업데이트
             if (ReadyProgress.get(roomNumber).contains(userID)) {
+                printDisplay("[ " + roomNumber + "번방 ] " + userID + " 래디 취소");
                 ReadyProgress.get(roomNumber).remove(userID); // 레디 취소
             } else {
+                printDisplay("[ " + roomNumber + "번방 ] " + userID + " 래디");
                 ReadyProgress.get(roomNumber).add(userID); // 레디 추가
             }
 
@@ -414,6 +416,7 @@ public class ServerGUI extends JFrame {
 
             // 게임 시작 조건 확인
             if (readyCount == 4) {
+                printDisplay("[ " + roomNumber + "번방 ] 게임 시작");
                 unoGame = new UnoGame();
                 unoGame.setPlayers(RoomNumUid.get(roomNumber));
                 unoGame.startGame();
@@ -438,7 +441,12 @@ public class ServerGUI extends JFrame {
         }
 
         private void handleMessage(GamePacket msg) {
-            String message = uid + ": " + msg.getMessage();
+            String message;
+            if(msg.getRoomNum() == 0){
+                message = "[ 메인룸 ] " + uid + ": " + msg.getMessage();
+            }else {
+                message = "[ " + msg.getRoomNum() +  "번방 ] " + uid + ": " + msg.getMessage();
+            }
             printDisplay(message);
             broadcasting(msg);
         }
@@ -458,6 +466,7 @@ public class ServerGUI extends JFrame {
             broadcastingRoomUpdate();
             broadcastingMainRoomInfo();
         }
+
         private void broadcastRoomInfo(int roomNumber) {
             int currentParticipants = RoomNumUid.get(roomNumber).size();
             for (ClientHandler client : users) {

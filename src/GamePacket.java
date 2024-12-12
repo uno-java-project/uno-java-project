@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.io.Serializable;
 
 public class GamePacket implements Serializable {
-    // 메시지 모드를 정의하는 상수들
     public static final int MODE_LOGIN = 0x1;
     public static final int MODE_LOGOUT = 0x2;
 
@@ -11,9 +10,9 @@ public class GamePacket implements Serializable {
 
     public static final int MODE_TX_IMAGE = 0x30;
 
-    public static final int MODE_ROOM_ADD = 0x40;  // 방 추가 정보
-    public static final int MODE_ROOM_COUNT = 0x41;  // 방 수와 포트 정보
-    public static final int MODE_ROOM_JOIN = 0x42;  // 방 입장 요청
+    public static final int MODE_ROOM_ADD = 0x40;
+    public static final int MODE_ROOM_COUNT = 0x41;
+    public static final int MODE_ROOM_JOIN = 0x42;
     public static final int MODE_ROOM_READY = 0x43;
     public static final int MODE_ROOM_INFO = 0x44;
     public static final int MODE_ROOM_DELETE = 0x45;
@@ -22,7 +21,6 @@ public class GamePacket implements Serializable {
     public static final int MODE_UNO_UPDATE = 0x51;
     public static final int MODE_UNO_GAME_OVER = 0x52;
 
-    // 필드들
     private String userID;
     private int mode;
     private String message;
@@ -34,7 +32,6 @@ public class GamePacket implements Serializable {
     private int roomNum;
     private int participantsCount;
 
-    // 모든 필드를 처리할 수 있는 생성자
     public GamePacket(String userID, int mode, String message, ImageIcon image, UnoGame uno, int roomCount, Integer roomReady, Integer roomJoin, int roomNum, int participantsCount) {
         this.userID = userID;
         this.mode = mode;
@@ -48,32 +45,23 @@ public class GamePacket implements Serializable {
         this.participantsCount = participantsCount;
     }
 
-    // 방 번호와 참가자 수를 전달하는 생성자
-    public GamePacket(String userID, int mode, int roomNum, int participantsCount) {
-        this(userID, mode, null, null, null, 0, 0, 0, roomNum, participantsCount);
-    }
-
-    // 메시지와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, String message, int roomNum) {
         this(userID, mode, message, null, null, 0, 0, 0, roomNum, 0);
     }
 
-    // 메시지와 이미지만 전달하는 생성자
     public GamePacket(String userID, int mode, String message, ImageIcon image, int roomNum) {
         this(userID, mode, message, image, null, 0, 0, 0, roomNum, 0);
     }
 
-    // 방 번호와 UnoGame 객체만 전달하는 생성자
     public GamePacket(String userID, int mode, UnoGame uno, int roomNum) {
         this(userID, mode, null, null, uno, 0, 0, 0, roomNum, 0);
     }
 
-    // 방 레디/참가 정보와 방 번호만 전달하는 생성자
     public GamePacket(String userID, int mode, Integer roomReady, Integer roomJoin, int roomNum) {
         this(userID, mode, null, null, null, 0, roomReady, roomJoin, roomNum, 0);
     }
 
-    // Getter와 Setter (필요시 사용 가능)
+    // Getter
     public String getUserID() {
         return userID;
     }
