@@ -84,7 +84,7 @@ public class ClientGUI extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f)); // 투명도 설정 (0.7f = 70%)
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f)); // 투명도 설정 (0.7f = 70%)
                 g2d.setColor(getBackground());
                 g2d.fillRect(0, 0, getWidth(), getHeight());
                 g2d.dispose();
@@ -92,9 +92,9 @@ public class ClientGUI extends JFrame {
         };
         singleRoomPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
         singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        singleRoomPanel.setPreferredSize(new Dimension(550, 60)); // 방 크기 고정
-        singleRoomPanel.setMaximumSize(new Dimension(550, 60)); // 방 크기 고정
-        singleRoomPanel.setBackground(new Color(255, 255, 255, 226)); // 흰색 배경, 알파값 포함
+        singleRoomPanel.setPreferredSize(new Dimension(550, 50)); // 방 크기 고정
+        singleRoomPanel.setMaximumSize(new Dimension(550, 50)); // 방 크기 고정
+        singleRoomPanel.setBackground(new Color(255, 255, 255, 230)); // 흰색 배경, 알파값 포함
 
         JLabel roomLabel = new JLabel("방 " + roomNumber, SwingConstants.CENTER);
         roomLabel.setOpaque(false); // 기본 배경 비활성화
@@ -105,7 +105,7 @@ public class ClientGUI extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2d = (Graphics2D) g.create();
-                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f)); // 투명도 설정
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f)); // 투명도 설정
                 g2d.setColor(getBackground());
                 g2d.fillRect(0, 0, getWidth(), getHeight());
                 g2d.dispose();
@@ -187,7 +187,7 @@ public class ClientGUI extends JFrame {
 
         // "방 추가" 버튼
         JButton addRoomButton = new JButton("방 추가");
-        addRoomButton.setFont(new Font("Arial", Font.BOLD, 20)); // 버튼 텍스트 크기 증가
+        //addRoomButton.setFont(new Font("Arial", Font.BOLD, 20)); // 버튼 텍스트 크기 증가
         addRoomButton.setPreferredSize(new Dimension(150, 50)); // 버튼 크기 설정
         addRoomButton.setAlignmentX(Component.CENTER_ALIGNMENT); // 버튼 중앙 정렬
         addRoomButton.setBackground(new Color(255, 255, 255)); // 흰색 배경
@@ -376,7 +376,7 @@ public class ClientGUI extends JFrame {
 
     // 파일 선택 버튼 생성 메소드
     private JButton createFileSelectButton() {
-        JButton b_select = new JButton("이미지");
+        JButton b_select = new JButton("아미지");
         b_select.addActionListener(e -> selectFile());
         return b_select;
     }
