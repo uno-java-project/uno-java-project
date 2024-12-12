@@ -59,6 +59,7 @@ public class ClientGUI extends JFrame {
         leftWrapperPanel = new JPanel();
         leftWrapperPanel.setLayout(new BoxLayout(leftWrapperPanel, BoxLayout.Y_AXIS));  // 세로로 배치
         leftWrapperPanel.add(createLeftPanel());  // createLeftPanel()을 내부에 추가
+        leftWrapperPanel.setBackground(Color.WHITE);
 
         this.add(leftWrapperPanel, BorderLayout.CENTER);  // leftWrapperPanel을 WEST에 추가
         this.add(createRightPanel(), BorderLayout.EAST);
@@ -78,16 +79,45 @@ public class ClientGUI extends JFrame {
 
     // 방 패널을 생성하는 메서드
     private JPanel createRoomPanel(int roomNumber) {
-        JPanel singleRoomPanel = new JPanel(new BorderLayout());
+        JPanel singleRoomPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f)); // 투명도 설정 (0.7f = 70%)
+                g2d.setColor(getBackground());
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+        singleRoomPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
         singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        singleRoomPanel.setPreferredSize(new Dimension(550, 50)); // 방 크기 고정
-        singleRoomPanel.setMaximumSize(new Dimension(550, 50)); // 방 크기 고정
+        singleRoomPanel.setPreferredSize(new Dimension(550, 60)); // 방 크기 고정
+        singleRoomPanel.setMaximumSize(new Dimension(550, 60)); // 방 크기 고정
+        singleRoomPanel.setBackground(new Color(255, 255, 255, 226)); // 흰색 배경, 알파값 포함
 
         JLabel roomLabel = new JLabel("방 " + roomNumber, SwingConstants.CENTER);
+        roomLabel.setOpaque(false); // 기본 배경 비활성화
+        roomLabel.setForeground(Color.BLACK); // 글자 색 설정
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼을 오른쪽 정렬
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f)); // 투명도 설정
+                g2d.setColor(getBackground());
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+        buttonPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        buttonPanel.setBackground(new Color(255, 255, 255, 230)); // 흰색 배경, 알파값 포함
+
         JButton joinButton = new JButton("참가");
         JButton deleteButton = new JButton("삭제");
+        joinButton.setBackground(new Color(255, 255, 255, 230)); // 버튼 배경 흰색 및 투명도 적용
+        deleteButton.setBackground(new Color(255, 255, 255, 230)); // 버튼 배경 흰색 및 투명도 적용
 
         // 참가 버튼 클릭 시 해당 방 번호로 이동 (myRoomNumber에 값 할당)
         joinButton.addActionListener(createJoinRoomActionListener(roomNumber));
@@ -103,6 +133,7 @@ public class ClientGUI extends JFrame {
 
         return singleRoomPanel;
     }
+
 
     // 참가 버튼
     private ActionListener createJoinRoomActionListener(int roomNumber) {
@@ -135,37 +166,65 @@ public class ClientGUI extends JFrame {
     }
 
     private JPanel createLeftPanel() {
+        // 전체 패널 생성
         JPanel leftPanel = new JPanel(new BorderLayout());
-        JPanel leftTopPanel = new JPanel(new BorderLayout());
 
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH); // 이미지 크기 조정
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
-        imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0)); // 여백 설정
-        leftTopPanel.add(imageLabel, BorderLayout.CENTER);
+        // 레이어드 패널 생성
+        JLayeredPane layeredPane = new JLayeredPane();
+        layeredPane.setPreferredSize(new Dimension(800, 800));
 
+        // 배경 이미지 설정
+        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon("assets/UNO1.PNG")
+                .getImage().getScaledInstance(800, 800, Image.SCALE_SMOOTH)));
+        backgroundLabel.setBounds(0, 0, 800, 800); // 배경 이미지 크기와 위치 설정
+        layeredPane.add(backgroundLabel, Integer.valueOf(0)); // 배경을 가장 아래 레이어에 추가
+
+        // "방 추가" 버튼 및 방 목록 패널
+        JPanel overlayPanel = new JPanel();
+        overlayPanel.setOpaque(false); // 투명 배경
+        overlayPanel.setLayout(new BoxLayout(overlayPanel, BoxLayout.Y_AXIS));
+        overlayPanel.setBounds(0, 0, 800, 800); // 이미지와 동일한 크기로 설정
+
+        // "방 추가" 버튼
         JButton addRoomButton = new JButton("방 추가");
-        leftTopPanel.add(addRoomButton, BorderLayout.SOUTH);
+        addRoomButton.setFont(new Font("Arial", Font.BOLD, 20)); // 버튼 텍스트 크기 증가
+        addRoomButton.setPreferredSize(new Dimension(150, 50)); // 버튼 크기 설정
+        addRoomButton.setAlignmentX(Component.CENTER_ALIGNMENT); // 버튼 중앙 정렬
+        addRoomButton.setBackground(new Color(255, 255, 255)); // 흰색 배경
+        addRoomButton.setFocusPainted(false); // 포커스 테두리 제거
 
-        roomPanel = new JPanel();
-        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
-        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
-
-        addRoomButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendAddRoom(uid);
-                updateRoom();
-            }
+        addRoomButton.addActionListener(e -> {
+            sendAddRoom(uid);
+            updateRoom();
         });
 
-        leftPanel.add(leftTopPanel, BorderLayout.NORTH);
-        leftPanel.add(new JScrollPane(roomPanel), BorderLayout.CENTER);
+        // 방 목록 패널 생성
+        roomPanel = new JPanel();
+        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));
+        roomPanel.setOpaque(false); // 방 목록 투명
+        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
+
+        JScrollPane scrollPane = new JScrollPane(roomPanel);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // 스크롤 바 경계 제거
+
+        // 버튼과 방 목록 패널 추가
+        overlayPanel.add(Box.createRigidArea(new Dimension(0, 30))); // 버튼 위쪽 여백
+        overlayPanel.add(addRoomButton); // 방 추가 버튼
+        overlayPanel.add(Box.createRigidArea(new Dimension(0, 20))); // 버튼과 목록 간 여백
+        overlayPanel.add(scrollPane); // 방 목록
+
+        // 레이어드 패널에 오버레이 패널 추가
+        layeredPane.add(overlayPanel, Integer.valueOf(1));
+
+        // 전체 패널에 레이어드 패널 추가
+        leftPanel.add(layeredPane, BorderLayout.CENTER);
 
         return leftPanel;
     }
+
+
 
 
     private JPanel createDisplayPanel() {
@@ -193,7 +252,7 @@ public class ClientGUI extends JFrame {
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setPreferredSize(new Dimension(270, 800));
-
+        panel.setBackground(Color.WHITE);
         // 디스플레이 패널 설정
         JPanel displayPanel = createDisplayPanel();
         panel.add(displayPanel, BorderLayout.CENTER);
@@ -216,11 +275,13 @@ public class ClientGUI extends JFrame {
         p_button.add(createRuleButton());
         p_button.add(createDisconnectButton());
         p_button.add(createExitButton());
+        p_button.setBackground(Color.WHITE);
 
         inputPanel.add(p_button, BorderLayout.SOUTH); // 버튼 패널은 입력 필드 아래에 배치
 
         // Input 패널 전체를 Right Panel의 하단에 추가
         panel.add(inputPanel, BorderLayout.SOUTH);
+        panel.setBackground(Color.WHITE);
 
         return panel;
     }
@@ -315,7 +376,7 @@ public class ClientGUI extends JFrame {
 
     // 파일 선택 버튼 생성 메소드
     private JButton createFileSelectButton() {
-        JButton b_select = new JButton("아미지");
+        JButton b_select = new JButton("이미지");
         b_select.addActionListener(e -> selectFile());
         return b_select;
     }
