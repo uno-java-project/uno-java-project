@@ -63,6 +63,7 @@ public class LoginGUI extends JFrame {
         p.add(t_hostAddr);
         p.add(new JLabel("포트번호:"));
         p.add(t_portNum);
+        p.setBackground(Color.WHITE); // 패널 배경색 흰색으로 설정
 
         return p;
     }
@@ -70,6 +71,7 @@ public class LoginGUI extends JFrame {
     // 왼쪽 패널 생성 (이미지와 사용자 정보 포함)
     private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(Color.WHITE); // 패널 배경색 흰색으로 설정
 
         // 이미지 패널 설정
         JLabel imageLabel = new JLabel();
@@ -81,24 +83,48 @@ public class LoginGUI extends JFrame {
 
         // 이미지 레이블을 패널에 추가
         JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.setBorder(BorderFactory.createEmptyBorder(200, 0, 100, 0));
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(100, 0, 50, 0)); // 여백 조정
         imagePanel.add(imageLabel, BorderLayout.CENTER);
+        imagePanel.setBackground(Color.WHITE); // 이미지 패널 배경도 흰색으로 설정
+
+        // 이미지 패널 추가
         leftPanel.add(imagePanel, BorderLayout.NORTH);
 
         // 하단 패널 설정 (사용자 정보 및 버튼)
-        JPanel lowerPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-        lowerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        lowerPanel.add(createInfoPanel());
-        lowerPanel.add(createControlPanel());
+        JPanel lowerPanel = new JPanel(new BorderLayout());
+        lowerPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50)); // 여백을 크게 설정
+        lowerPanel.setBackground(Color.WHITE); // 하단 패널 배경도 흰색으로 설정
 
-        leftPanel.add(lowerPanel, BorderLayout.SOUTH);
+        // 로그인 정보 패널 추가
+        JPanel infoPanelWrapper = new JPanel(new BorderLayout());
+        infoPanelWrapper.setBackground(Color.WHITE);
+        infoPanelWrapper.add(createInfoPanel(), BorderLayout.CENTER);
+
+        // 버튼 패널 추가
+        JPanel controlPanelWrapper = new JPanel();
+        controlPanelWrapper.setBackground(Color.WHITE);
+        controlPanelWrapper.setLayout(new BoxLayout(controlPanelWrapper, BoxLayout.Y_AXIS));
+        controlPanelWrapper.add(Box.createVerticalGlue()); // 수직 정렬
+        controlPanelWrapper.add(createControlPanel());
+        controlPanelWrapper.add(Box.createVerticalGlue()); // 수직 정렬
+
+        // 로그인 정보와 버튼 패널을 수평으로 배치
+        lowerPanel.add(infoPanelWrapper, BorderLayout.CENTER); // 왼쪽 정보 패널
+        lowerPanel.add(controlPanelWrapper, BorderLayout.EAST); // 오른쪽 버튼 패널
+
+        // 하단 패널 추가
+        leftPanel.add(lowerPanel, BorderLayout.CENTER);
 
         return leftPanel;
     }
 
+
+
     // 버튼 컨트롤 패널 생성
     private JPanel createControlPanel() {
         b_start = new JButton("접속하기");
+        b_start.setBackground(Color.WHITE); // 버튼 배경색 흰색으로 설정
+
         b_start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -118,6 +144,8 @@ public class LoginGUI extends JFrame {
         });
 
         b_exit = new JButton("종료하기");
+        b_exit.setBackground(Color.WHITE); // 버튼 배경색 흰색으로 설정
+
         b_exit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
