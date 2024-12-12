@@ -1,14 +1,10 @@
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
-
-import static java.lang.System.out;
 
 public class UnoGame implements Serializable {
 
     private static final String[] COLORS = {"Red", "Green", "Blue", "Yellow"};
     private static final String[] VALUES = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "Skip", "Reverse", "Draw2"};
-    private int roomNumber;
 
     private List<String> deck; // 전체 덱
     private List<String> player1List, player2List, player3List, player4List; // 플레이어 덱
@@ -27,13 +23,7 @@ public class UnoGame implements Serializable {
         player3List = new ArrayList<>();
         player4List = new ArrayList<>();
     }
-    public void setRoomNumber(int roomNumber) {
-        this.roomNumber = roomNumber;
-    }
 
-    public int getRoomNumber() {
-        return roomNumber;
-    }
     public void setPlayers(List<String> players) {
         turn = players;
         playerNum = new HashMap<Integer, String>();
@@ -84,7 +74,7 @@ public class UnoGame implements Serializable {
         Collections.shuffle(deck);
 
         // 4명의 플레이어에게 7장씩 나누어 주기
-        for (int i = 0; i < 2; i++) {  // 각 플레이어에게 7장
+        for (int i = 0; i < 7; i++) {  // 각 플레이어에게 7장
             player1List.add(deck.remove(0));
             player2List.add(deck.remove(0));
             player3List.add(deck.remove(0));
@@ -115,22 +105,10 @@ public class UnoGame implements Serializable {
         }
     }
 
-
     public List<String> getTurn() {
         return turn;
     }
     public HashMap<String, Boolean> getIsUNO() {return isUNO;}
-    public String gameOver() {
-        // 각 플레이어의 카드 수 확인
-        for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
-            int playerIndex = entry.getKey();
-            String playerID = entry.getValue();
-            if (getPlayerCards(playerIndex).isEmpty()) {
-                return playerID; // 승리한 플레이어 ID 반환
-            }
-        }
-        return null; // 종료되지 않음
-    }
 
     public boolean playCard(String card, int playerIndex) {
         String[] cardParts = card.split(" ");
@@ -150,14 +128,6 @@ public class UnoGame implements Serializable {
                 case 3: player4List.remove(card); break;
             }
 
-            if (getPlayerCards(playerIndex).isEmpty()) {
-                String winner = playerNum.get(playerIndex); // 승리자 ID 확인
-                out.println("플레이어 " + winner + "가 승리했습니다!");
-
-
-                return true; // 게임 종료 신호 반환
-            }
-
             if (value.equals("Skip")) {
                 jumpTurn();  // 턴 반전 호출
             }
@@ -165,7 +135,16 @@ public class UnoGame implements Serializable {
                 reverseTurn();  // 턴 반전 호출
             }
             else if (value.equals("Draw2")) {
-                switch ((playerIndex + 1)%4) {
+                String nextTurn = turn.get(1);
+                int nextTurnNum = 4;
+
+                for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
+                    if (entry.getValue().equals(nextTurn)) {
+                        nextTurnNum = entry.getKey(); // 번호(키)를 반환
+                    }
+                }
+
+                switch (nextTurnNum) {
                     case 0:
                         player1List.add(deck.remove(0));
                         player1List.add(deck.remove(0));
@@ -187,8 +166,6 @@ public class UnoGame implements Serializable {
             }else {
                 nextTurn();
             }
-
-                // 게임 종료 처리
 
             // topCard 갱신
             topCard = card;
@@ -213,16 +190,6 @@ public class UnoGame implements Serializable {
             }
         }
     }
-    public String checkGameOver() {
-        for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
-            int playerIndex = entry.getKey();
-            String playerID = entry.getValue();
-            if (getPlayerCards(playerIndex).isEmpty()) {
-                return playerID; // 승리한 플레이어 ID 반환
-            }
-        }
-        return null; // 종료되지 않음
-    }
 
     public void nextTurn() {
         // 턴 변경: turn 리스트에서 첫 번째 아이템을 맨 뒤로 보냄
@@ -239,9 +206,5 @@ public class UnoGame implements Serializable {
     public void reverseTurn() {
         // turn 리스트를 뒤집음
         Collections.reverse(turn);
-    }
-
-    public int getRemainingCardCount() {
-        return deck.size();
     }
 }

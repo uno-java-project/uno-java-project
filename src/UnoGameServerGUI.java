@@ -10,15 +10,12 @@ public class UnoGameServerGUI extends JPanel {
     private UnoGame unoGame;
     private JPanel gamePanel;
     private JLabel remainingCardsLabel;  // 덱에 남은 카드 수를 표시할 레이블
-    private ClientGUI uc;
-    private int roomNumber; // 방 번호를 저장할 필드 추가
 
-    public UnoGameServerGUI(UnoGame unoGame, int roomNumber) {
+    public UnoGameServerGUI(UnoGame unoGame) {
     	setLayout(new BorderLayout()); // 기존의 레이아웃 설정
     	setPreferredSize(new Dimension(615, 830));
-        this.roomNumber = roomNumber; // 생성자에서 초기화
-
-            // 게임 패널 설정
+    	
+        // 게임 패널 설정
         gamePanel = new JPanel();
         gamePanel.setLayout(new GridLayout(6, 1)); // 한 행에 6개 항목을 표시
         add(gamePanel, BorderLayout.CENTER);
@@ -144,7 +141,7 @@ public class UnoGameServerGUI extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     // 카드 클릭 시 처리할 코드
-                    playCardUpdate(currentCard, playerIndex, roomNumber);
+                    playCardUpdate(currentCard, playerIndex);
                 }
             });
 
@@ -208,42 +205,13 @@ public class UnoGameServerGUI extends JPanel {
         return new JPanel();
     }
 
-    private void playCardUpdate(String card, int playerIndex, int roomNumber) {
-        if (!unoGame.playCard(card, playerIndex)) {
+    private void playCardUpdate(String card, int playerIndex) {
+        if(!unoGame.playCard(card, playerIndex)){
             JOptionPane.showMessageDialog(this, "이 카드는 플레이할 수 없습니다. 색상 또는 숫자가 일치하지 않습니다.");
-        } else {
-            // 게임 종료 여부 확인
-            String winner = unoGame.gameOver();
-            if (winner != null) {
-                // 게임 종료 패킷 생성
-                GamePacket gameOverPacket = new GamePacket(
-                        winner,
-                        GamePacket.MODE_UNO_GAME_OVER,
-                        unoGame,
-                        roomNumber
-                );
-                uc.send(gameOverPacket); // 서버로 전송
-            }
         }
         updateGamePanel();
     }
 
-
-
-
-    public void updateOnGameOver(int roomNumber, String winner) {
-        JOptionPane.showMessageDialog(this,
-                "방 " + roomNumber + "의 게임이 종료되었습니다. 승자는 " + winner + "입니다!",
-                "게임 종료", JOptionPane.INFORMATION_MESSAGE);
-        resetGameBoard(); // 게임 보드 초기화
-    }
-
-    private void resetGameBoard() {
-        gamePanel.removeAll();
-        gamePanel.revalidate();
-        gamePanel.repaint();
-        remainingCardsLabel.setText("남은 카드 수 : 0");
-    }
     private void drawCardUpdate(int playerIndex) {
         // 덱에서 한 장의 카드를 뽑아 해당 플레이어에게 추가
         unoGame.drawCard(playerIndex);
@@ -251,7 +219,7 @@ public class UnoGameServerGUI extends JPanel {
         // 게임 화면 갱신
         updateGamePanel();
     }
-
+    
     private JPanel displayTurnPanel() {
         JPanel turnPanel = new JPanel();
         turnPanel.setLayout(new GridLayout(unoGame.getTurn().size() + 1, 1));  // 각 플레이어를 세로로 나열
