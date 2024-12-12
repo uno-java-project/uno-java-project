@@ -135,7 +135,16 @@ public class UnoGame implements Serializable {
                 reverseTurn();  // 턴 반전 호출
             }
             else if (value.equals("Draw2")) {
-                switch ((playerIndex + 1)%4) {
+                String nextTurn = turn.get(1);
+                int nextTurnNum = 4;
+
+                for (Map.Entry<Integer, String> entry : playerNum.entrySet()) {
+                    if (entry.getValue().equals(nextTurn)) {
+                        nextTurnNum = entry.getKey(); // 번호(키)를 반환
+                    }
+                }
+
+                switch (nextTurnNum) {
                     case 0:
                         player1List.add(deck.remove(0));
                         player1List.add(deck.remove(0));

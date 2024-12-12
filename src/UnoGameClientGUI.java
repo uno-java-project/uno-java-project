@@ -8,6 +8,7 @@ import java.util.List;
 public class UnoGameClientGUI extends JPanel {
     private UnoGame unoGame;
     private JPanel gamePanel;
+    private JPanel gameCenterPanel;
     private String uid;
     private int myNum;
     private HashMap<Integer, String> userMap;
@@ -73,7 +74,7 @@ public class UnoGameClientGUI extends JPanel {
 
 
         // Top Card 표시 (중앙)
-        playersPanel.add(displayTopCardPanel(), BorderLayout.CENTER);
+        playersPanel.add(GameCenterPanel(), BorderLayout.CENTER);
 
         gamePanel.add(playersPanel, BorderLayout.CENTER);  // 플레이어 덱을 게임 패널 중앙에 배치
 
@@ -180,7 +181,6 @@ public class UnoGameClientGUI extends JPanel {
             cardButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    // 카드 클릭 시 동작 정의
                 }
             });
 
@@ -241,6 +241,41 @@ public class UnoGameClientGUI extends JPanel {
         playerPanel.add(cardPanel, BorderLayout.CENTER);  // 카드 패널을 중앙에 배치
 
         return playerPanel;
+    }
+
+    private JPanel GameCenterPanel() {
+        gameCenterPanel = new JPanel(new BorderLayout());
+        gameCenterPanel.add(displayTopCardPanel(), BorderLayout.CENTER);
+
+        // 플레이어 차례 패널 생성
+        JPanel Player1Turn = new JPanel();  // 남쪽
+        JPanel Player2Turn = new JPanel();  // 서쪽
+        JPanel Player3Turn = new JPanel();  // 북쪽
+        JPanel Player4Turn = new JPanel();  // 동쪽
+
+        Player1Turn.setBackground(Color.LIGHT_GRAY);
+        Player2Turn.setBackground(Color.LIGHT_GRAY);
+        Player3Turn.setBackground(Color.LIGHT_GRAY);
+        Player4Turn.setBackground(Color.LIGHT_GRAY);
+
+
+        String currentPlayerName = unoGame.getTurn().getFirst();
+        if(Objects.equals(unoGame.getPlayerNumMap().get(myNum), currentPlayerName)){
+            Player1Turn.setBackground(Color.YELLOW);
+        }else if(Objects.equals(unoGame.getPlayerNumMap().get((myNum + 1) % 4), currentPlayerName)){
+            Player2Turn.setBackground(Color.YELLOW);
+        }else if(Objects.equals(unoGame.getPlayerNumMap().get((myNum + 2) % 4), currentPlayerName)){
+            Player3Turn.setBackground(Color.YELLOW);
+        }else{
+            Player4Turn.setBackground(Color.YELLOW);
+        }
+
+        gameCenterPanel.add(Player1Turn, BorderLayout.SOUTH);
+        gameCenterPanel.add(Player2Turn, BorderLayout.WEST);
+        gameCenterPanel.add(Player3Turn, BorderLayout.NORTH);
+        gameCenterPanel.add(Player4Turn, BorderLayout.EAST);
+
+        return gameCenterPanel;
     }
 
     private JPanel displayTopCardPanel() {
@@ -315,24 +350,6 @@ public class UnoGameClientGUI extends JPanel {
 
         // 게임 화면 갱신
         updateGamePanel();
-    }
-
-    private void nextTurnUpdate() {
-        unoGame.nextTurn();
-
-        // 게임 화면 업데이트
-        updateGamePanel();
-    }
-
-    private Color getColorForCard(String color) {
-        // 색상에 맞는 배경색을 반환
-        switch (color) {
-            case "Red": return Color.RED;
-            case "Green": return Color.GREEN;
-            case "Blue": return Color.BLUE;
-            case "Yellow": return Color.YELLOW;
-            default: return Color.GRAY;  // 기본 색상
-        }
     }
 }
 
