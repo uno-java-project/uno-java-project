@@ -104,6 +104,8 @@ public class UnoGameClientGUI extends JPanel {
         JButton drawButton = new JButton("Draw");
         JButton unoButton = new JButton("UNO");
         buttonPanel.setBackground(darkOrange); // 배경색 설정
+        drawButton.setBackground(Color.white); // 배경색 설정
+        unoButton.setBackground(Color.white); // 배경색 설정
 
         // 각 버튼에 액션 리스너 추가
         drawButton.addActionListener(new ActionListener() {

@@ -88,18 +88,18 @@ public class LoginGUI extends JFrame {
         panel.setOpaque(false); // 투명 배경
 
         // 폰트 설정
-        Font labelFont = new Font("Arial", Font.BOLD, 16); // JLabel 폰트
+      /*  Font labelFont = new Font("Arial", Font.BOLD, 16); // JLabel 폰트
         Font textFieldFont = new Font("Arial", Font.PLAIN, 15); // JTextField 폰트
-
+*/
         // JTextField 생성 및 설정
         t_userID = new JTextField(7);
-        t_userID.setFont(textFieldFont); // 폰트 설정
+        //t_userID.setFont(textFieldFont); // 폰트 설정
 
         t_hostAddr = new JTextField(12);
-        t_hostAddr.setFont(textFieldFont);
+        //t_hostAddr.setFont(textFieldFont);
 
         t_portNum = new JTextField(5);
-        t_portNum.setFont(textFieldFont);
+        //t_portNum.setFont(textFieldFont);
         t_portNum.setEditable(false);
 
         // 기본값 설정
@@ -109,13 +109,13 @@ public class LoginGUI extends JFrame {
 
         // JLabel 생성 및 설정
         JLabel userIDLabel = new JLabel("아이디:");
-        userIDLabel.setFont(labelFont);
+     //   userIDLabel.setFont(labelFont);
 
         JLabel hostAddrLabel = new JLabel("서버주소:");
-        hostAddrLabel.setFont(labelFont);
+       // hostAddrLabel.setFont(labelFont);
 
         JLabel portNumLabel = new JLabel("포트번호:");
-        portNumLabel.setFont(labelFont);
+        //portNumLabel.setFont(labelFont);
 
         // 컴포넌트 추가
         panel.add(userIDLabel);
@@ -137,9 +137,12 @@ public class LoginGUI extends JFrame {
         Dimension buttonSize = new Dimension(150, 50);
         b_start.setPreferredSize(buttonSize);
         b_exit.setPreferredSize(buttonSize);
-        Font buttonFont = new Font("Arial", Font.BOLD, 15);
-        b_start.setFont(buttonFont);
-        b_exit.setFont(buttonFont);
+        b_exit.setBackground(Color.white); // READY 상태일 때 배경을 초록색으로 변경
+        b_start.setBackground(Color.white); // READY 상태일 때 배경을 초록색으로 변경
+
+        // Font buttonFont = new Font("Arial", Font.BOLD, 15);
+        //b_start.setFont(buttonFont);
+        //b_exit.setFont(buttonFont);
         b_start.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {

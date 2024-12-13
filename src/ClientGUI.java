@@ -290,6 +290,8 @@ public class ClientGUI extends JFrame {
     private JButton createCardListButton() {
         JButton b_cardList = new JButton("카드종류");
         b_cardList.addActionListener(e -> toggleCardListFrame());
+        b_cardList.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_cardList;
     }
 
@@ -316,6 +318,8 @@ public class ClientGUI extends JFrame {
     private JButton createEmojiButton() {
         JButton b_emoji = new JButton("이모티콘");
         b_emoji.addActionListener(e -> showEmojiPopup(b_emoji));
+        b_emoji.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_emoji;
     }
 
@@ -345,6 +349,8 @@ public class ClientGUI extends JFrame {
     private JButton createRuleButton() {
         b_rule = new JButton("룰보기");
         b_rule.addActionListener(e -> openRuleURL());
+        b_rule.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_rule;
     }
 
@@ -361,6 +367,8 @@ public class ClientGUI extends JFrame {
     private JButton createDisconnectButton() {
         b_disconnect = new JButton("접속 끊기");
         b_disconnect.addActionListener(e -> disconnect());
+        b_disconnect.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_disconnect;
     }
 
@@ -371,13 +379,17 @@ public class ClientGUI extends JFrame {
             disconnect();
             System.exit(0);
         });
+        b_exit.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_exit;
     }
 
     // 파일 선택 버튼 생성 메소드
     private JButton createFileSelectButton() {
-        JButton b_select = new JButton("아미지");
+        JButton b_select = new JButton("이미지");
         b_select.addActionListener(e -> selectFile());
+        b_select.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_select;
     }
 
@@ -695,7 +707,7 @@ public class ClientGUI extends JFrame {
         playAgainButton.addActionListener(e -> resetGame());
         resultPanel.add(playAgainButton, BorderLayout.SOUTH);
         resultPanel.setBackground(new Color(255, 122, 0, 253)); // 진한 주황색
-
+        playAgainButton.setBackground(Color.white);
         add(resultPanel, BorderLayout.CENTER);
         myRoomNumber = 0;
 
