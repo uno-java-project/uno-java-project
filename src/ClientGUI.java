@@ -694,6 +694,7 @@ public class ClientGUI extends JFrame {
         playAgainButton.setHorizontalAlignment(SwingConstants.CENTER);
         playAgainButton.addActionListener(e -> resetGame());
         resultPanel.add(playAgainButton, BorderLayout.SOUTH);
+        resultPanel.setBackground(new Color(255, 122, 0, 253)); // 진한 주황색
 
         add(resultPanel, BorderLayout.CENTER);
         myRoomNumber = 0;
@@ -720,6 +721,8 @@ public class ClientGUI extends JFrame {
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
         imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 30, 20, 30));
+        imageLabel.setOpaque(true); // 배경색을 보이게 설정
+        imageLabel.setBackground(new Color(255, 122, 0, 253)); // 진한 주황색
 
         return imageLabel;
     }
