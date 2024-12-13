@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
+import java.awt.*;
 
 public class UnoGameClientGUI extends JPanel {
     private UnoGame unoGame;
@@ -244,8 +246,11 @@ public class UnoGameClientGUI extends JPanel {
     }
 
     private JPanel GameCenterPanel() {
+        gameCenterPanel = new BackgroundPanel("assets/uno1.png"); // 중앙 배경 이미지
+
         gameCenterPanel = new JPanel(new BorderLayout());
         gameCenterPanel.add(displayTopCardPanel(), BorderLayout.CENTER);
+        gameCenterPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
 
         // 플레이어 차례 패널 생성
         JPanel Player1Turn = new JPanel();  // 남쪽

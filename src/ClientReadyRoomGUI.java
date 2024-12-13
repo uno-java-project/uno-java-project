@@ -19,6 +19,7 @@ public class ClientReadyRoomGUI extends JPanel {
         setLayout(new BorderLayout());
         createReadyRoomPanel();
     }
+
     public void handleRoomInfo(GamePacket packet) {
         int roomNumber = packet.getRoomNum();
         int participantsCount = packet.getRoomJoin();
@@ -37,7 +38,11 @@ public class ClientReadyRoomGUI extends JPanel {
 
     private void createReadyRoomPanel() {
         // 네모와 버튼을 가로로 배치하는 패널
-        JPanel boxesPanel = new JPanel(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
+        JPanel boxesPanel = new BackgroundPanel("assets/uno1.png"); // 이미지 경로
+
+        boxesPanel.setLayout(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
+        //boxesPanel.setBackground(Color.YELLOW); // boxesPanel 배경색 주황색으로 설정
+
         for (int i = 0; i < 4; i++) {
             // 개별 네모와 버튼을 포함하는 패널 생성
             JPanel boxPanel = new JPanel(new BorderLayout());
@@ -45,14 +50,15 @@ public class ClientReadyRoomGUI extends JPanel {
 
             uidPanel.setPreferredSize(new Dimension(100, 20));
             boxPanel.add(uidPanel, BorderLayout.NORTH);
-            boxPanel.setBackground(Color.white);
+            uidPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+            boxPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
 
             // 네모 생성
             JPanel box = new JPanel();
             box.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
             box.setPreferredSize(new Dimension(100, 100));
+            box.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
 
-            box.setBackground(Color.WHITE);
 
             if (joinProgress > i) {
                 // 이미지 아이콘을 생성하여 JLabel에 설정
@@ -83,6 +89,10 @@ public class ClientReadyRoomGUI extends JPanel {
 
         // StatePanel 내에 4개의 박스를 추가
         JPanel stateBoxesPanel = new JPanel(new GridLayout(1, 4, 10, 10)); // 1x4 그리드
+        Color darkOrange = new Color(255, 120, 0); // RGB 값으로 진한 오렌지 생성
+
+// stateBoxesPanel에 진한 오렌지 색상 설정
+        stateBoxesPanel.setBackground(darkOrange);
         for (int i = 0; i < 4; i++) {
             JPanel stateBoxPanel = new JPanel();
             stateBoxPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
@@ -94,7 +104,7 @@ public class ClientReadyRoomGUI extends JPanel {
                     stateBoxPanel.setBackground(Color.GREEN);
                 } else {
                     // 접속했지만 레디하지 않았으면 주황색
-                    stateBoxPanel.setBackground(Color.ORANGE);
+                    stateBoxPanel.setBackground(Color.YELLOW);
                 }
             } else {
                 // 접속하지 않았으면 하얀색
@@ -105,6 +115,7 @@ public class ClientReadyRoomGUI extends JPanel {
         }
 
         statePanel.add(stateBoxesPanel, BorderLayout.CENTER);
+        statePanel.setBackground(darkOrange);
 
         // 버튼 생성
         JButton readyButton = new JButton("READY");
@@ -136,8 +147,6 @@ public class ClientReadyRoomGUI extends JPanel {
         add(statePanel, BorderLayout.NORTH); // statePanel을 상단에 배치
         add(boxesPanel, BorderLayout.CENTER);
         add(readyButton, BorderLayout.SOUTH);
-
-
     }
 
     // 외부에서 readyProgress를 변경하는 메서드 추가
@@ -186,7 +195,7 @@ public class ClientReadyRoomGUI extends JPanel {
                     stateBoxPanel.setBackground(Color.GREEN);
                 } else {
                     // 접속했지만 레디하지 않았으면 주황색
-                    stateBoxPanel.setBackground(Color.ORANGE);
+                    stateBoxPanel.setBackground(Color.YELLOW);
                 }
             } else {
                 // 접속하지 않았으면 하얀색
