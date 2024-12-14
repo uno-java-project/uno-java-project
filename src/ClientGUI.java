@@ -96,7 +96,7 @@ public class ClientGUI extends JFrame {
         singleRoomPanel.setMaximumSize(new Dimension(550, 50)); // 방 크기 고정
         singleRoomPanel.setBackground(new Color(255, 255, 255, 230)); // 흰색 배경, 알파값 포함
 
-        JLabel roomLabel = new JLabel("방 " + roomNumber, SwingConstants.CENTER);
+        JLabel roomLabel = new JLabel("방 " + roomNumber+ " (0/4)", SwingConstants.CENTER);
         roomLabel.setOpaque(false); // 기본 배경 비활성화
         roomLabel.setForeground(Color.BLACK); // 글자 색 설정
 
