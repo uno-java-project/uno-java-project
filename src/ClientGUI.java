@@ -761,6 +761,31 @@ public class ClientGUI extends JFrame {
                 // 방 번호를 확인하여 레이블 텍스트 업데이트
                 if (roomLabel.getText().contains("방 " + roomNumber)) {
                     roomLabel.setText("방 " + roomNumber + " (" + participantsCount + "/4)");
+
+                    // "참가"와 "삭제" 버튼 상태 업데이트
+                    Component[] components = singleRoomPanel.getComponents();
+                    for (Component innerComp : components) {
+                        if (innerComp instanceof JPanel) {
+                            JPanel buttonPanel = (JPanel) innerComp;
+                            for (Component btn : buttonPanel.getComponents()) {
+                                if (btn instanceof JButton) {
+                                    JButton button = (JButton) btn;
+
+                                    // "참가" 버튼 비활성화 조건
+                                    if ("참가".equals(button.getText())) {
+                                        button.setEnabled(participantsCount < 4); // 4명일 경우 비활성화
+                                        button.setToolTipText(participantsCount >= 4 ? "참가자가 가득 찬 방입니다." : null);
+                                    }
+
+                                    // "삭제" 버튼 비활성화 조건
+                                    if ("삭제".equals(button.getText())) {
+                                        button.setEnabled(participantsCount == 0); // 1명 이상일 경우 비활성화
+                                        button.setToolTipText(participantsCount > 0 ? "참가자가 있는 방은 삭제할 수 없습니다." : null);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
             }
@@ -768,6 +793,9 @@ public class ClientGUI extends JFrame {
         roomPanel.revalidate();
         roomPanel.repaint();
     }
+
+
+
 
     private void disconnect() {
         send(new GamePacket(uid, GamePacket.MODE_LOGOUT, null, null, null, 0, 0, 0, 0, 0)); // LOGOUT 패킷 전송
