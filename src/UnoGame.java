@@ -74,7 +74,7 @@ public class UnoGame implements Serializable {
         Collections.shuffle(deck);
 
         // 4명의 플레이어에게 7장씩 나누어 주기
-        for (int i = 0; i < 1; i++) {  // 각 플레이어에게 7장
+        for (int i = 0; i < 7; i++) {  // 각 플레이어에게 7장
             player1List.add(deck.remove(0));
             player2List.add(deck.remove(0));
             player3List.add(deck.remove(0));

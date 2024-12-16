@@ -158,7 +158,7 @@ public class ServerGUI extends JFrame {
     }
 
     // 서버 시작 및 클라이언트 연결 처리
-    private void startServerThread() {
+/*    private void startServerThread() {
         acceptThread = new Thread(() -> startServer());
         acceptThread.start();
 
@@ -177,8 +177,35 @@ public class ServerGUI extends JFrame {
         } catch (IOException e) {
             printDisplay("서버 종료");
         }
-    }
+    }*/
+    private void startServer() {
+        Socket clientSocket = null;
+        try {
+            serverSocket = new ServerSocket(port);
+            printDisplay("서버가 시작됐습니다." + getLocalAddr());
+            while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
+                clientSocket = serverSocket.accept();
+                String cAddr = clientSocket.getInetAddress().getHostAddress();
+                t_display.append("클라이언트 연결:" + cAddr + "\n");
+                ClientHandler cHandler = new ClientHandler(clientSocket);
+                users.add(cHandler);
+                cHandler.start();
+            }
+        } catch (SocketException e) {
+            printDisplay("서버 소캣 종료");
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (clientSocket != null) clientSocket.close();
+                if (serverSocket != null) serverSocket.close();
+            } catch (IOException e) {
+                System.err.println("서버 닫기 오류 > " + e.getMessage());
+                System.exit(-1);
+            }
+        }
+    }
     // 클라이언트 연결 처리
     private void handleClientConnection(Socket clientSocket) {
         String clientAddr = clientSocket.getInetAddress().getHostAddress();
@@ -209,15 +236,59 @@ public class ServerGUI extends JFrame {
     }
 
     // 서버 제어 버튼 생성
-    private JPanel createControlPanel() {
-        b_connect = createButton("서버 시작", e -> startServerThread(), true);
-        b_disconnect = createButton("서버 종료", e -> disconnect(), false);
-        b_exit = createButton("종료하기", e -> exitServer(), true);
+    private JPanel createControlPanel() { // 제일 밑단 종료 버튼
+
+        b_connect = new JButton("서버 시작");
+        b_connect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                acceptThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startServer();
+                    }
+                });
+                acceptThread.start();
+                //접속 끊기 전에는 종료하거나 다시 접속하기 불가
+                b_connect.setEnabled(false);
+                b_disconnect.setEnabled(true);
+                b_exit.setEnabled(false);
+
+            }
+        });
+
+        b_disconnect = new JButton("서버 종료");
+        b_disconnect.setEnabled(false); // 처음엔 비활성화
+        b_disconnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                disconnect();
+                b_connect.setEnabled(true);
+                b_disconnect.setEnabled(false);
+
+                b_exit.setEnabled(true);
+            }
+        });
+
+        b_exit = new JButton("종료하기");
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                try {
+                    if (serverSocket != null) serverSocket.close();
+                } catch (IOException e) {
+                    System.err.println("서버 닫기 오류 > " + e.getMessage());
+                }
+                System.exit(-1);
+            }
+        });
 
         JPanel panel = new JPanel(new GridLayout(0, 3));
+
         panel.add(b_connect);
         panel.add(b_disconnect);
         panel.add(b_exit);
+        b_disconnect.setEnabled(false);
 
         return panel;
     }
