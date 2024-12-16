@@ -30,7 +30,7 @@ public class LoginGUI extends JFrame {
         this.add(layeredPane);
 
         // 배경 이미지 설정
-        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon("assets/unotitle.png")
+        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon("src/assets/unotitle.png")
                 .getImage().getScaledInstance(800, 800, Image.SCALE_SMOOTH)));
         backgroundLabel.setBounds(0, 0, 800, 800); // 배경 이미지 크기와 위치
         layeredPane.add(backgroundLabel, Integer.valueOf(0)); // 배경을 0번 레이어에 추가

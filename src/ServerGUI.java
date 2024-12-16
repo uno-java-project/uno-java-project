@@ -29,7 +29,7 @@ public class ServerGUI extends JFrame {
         super("Uno Game");
         this.port = port;
         initializeGUI();
-        startServerThread();
+        //startServerThread();
         setVisible(true);
     }
 
@@ -79,7 +79,7 @@ public class ServerGUI extends JFrame {
     // 이미지 라벨 생성
     private JLabel createImageLabel() {
         JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        ImageIcon imageIcon = new ImageIcon("src/assets/UNO.PNG");
         Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
         imageLabel.setIcon(new ImageIcon(scaledImage));
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -161,6 +161,7 @@ public class ServerGUI extends JFrame {
     private void startServerThread() {
         acceptThread = new Thread(() -> startServer());
         acceptThread.start();
+
     }
 
     // 서버 시작
@@ -170,7 +171,9 @@ public class ServerGUI extends JFrame {
             while (acceptThread == Thread.currentThread()) {
                 Socket clientSocket = serverSocket.accept();
                 handleClientConnection(clientSocket);
+
             }
+
         } catch (IOException e) {
             printDisplay("서버 종료");
         }
@@ -207,9 +210,9 @@ public class ServerGUI extends JFrame {
 
     // 서버 제어 버튼 생성
     private JPanel createControlPanel() {
-        b_connect = createButton("서버 시작", e -> startServerThread(), false);
-        b_disconnect = createButton("서버 종료", e -> disconnect(), true);
-        b_exit = createButton("종료하기", e -> exitServer(), false);
+        b_connect = createButton("서버 시작", e -> startServerThread(), true);
+        b_disconnect = createButton("서버 종료", e -> disconnect(), false);
+        b_exit = createButton("종료하기", e -> exitServer(), true);
 
         JPanel panel = new JPanel(new GridLayout(0, 3));
         panel.add(b_connect);

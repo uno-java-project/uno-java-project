@@ -23,7 +23,7 @@ public class UnoGameClientGUI extends JPanel {
         setPreferredSize(new Dimension(615, 830));
 
         // 게임 패널 설정
-        gamePanel = new BackgroundPanel("assets/unotable.png"); // 이미지 경로
+        gamePanel = new BackgroundPanel("src/assets/unotable.png"); // 이미지 경로
         gamePanel.setLayout(new BorderLayout());  // 전체 화면을 BorderLayout으로 설정
         add(gamePanel, BorderLayout.CENTER); // 패널 추가
 
@@ -174,15 +174,15 @@ public class UnoGameClientGUI extends JPanel {
         int cardHeight = 30;
 
         if (playerIndex == (myNum + 1) % 4) {
-            imagePath = "assets/cards/uno1.png";  // 서쪽 패널
+            imagePath = "src/assets/cards/uno1.png";  // 서쪽 패널
         } else if (playerIndex == (myNum + 3) % 4) {
-            imagePath = "assets/cards/uno3.png";  // 동쪽 패널
+            imagePath = "src/assets/cards/uno3.png";  // 동쪽 패널
         } else if (playerIndex == (myNum + 2) % 4) {
-            imagePath = "assets/cards/uno2.png";  // 북쪽 패널
+            imagePath = "src/assets/cards/uno2.png";  // 북쪽 패널
             cardWidth = 30;  // 북쪽은 세로로 표시
             cardHeight = 90;
         } else {
-            imagePath = "assets/cards/uno1.png";  // 기본 이미지, 필요시 변경
+            imagePath = "src/assets/cards/uno1.png";  // 기본 이미지, 필요시 변경
         }
 
         // 각 카드에 대해 이미지를 버튼으로 설정
@@ -223,7 +223,7 @@ public class UnoGameClientGUI extends JPanel {
             String value = cardParts[1]; // 값
 
             // 예시 경로 : "assets/cards/Red_1.png"
-            String imagePath = "assets/cards/" + color + "_" + value + ".png";
+            String imagePath = "src/assets/cards/" + color + "_" + value + ".png";
 
             // 이미지 로드
             ImageIcon cardImage = new ImageIcon(imagePath);
@@ -299,7 +299,7 @@ public class UnoGameClientGUI extends JPanel {
 
     private JPanel displayTopCardPanel() {
         // 메인 패널을 BorderLayout으로 설정
-        JPanel topCardPanel = new BackgroundPanel("assets/unotable.png");
+        JPanel topCardPanel = new BackgroundPanel("src/assets/unotable.png");
         topCardPanel.setLayout(new BorderLayout());
         topCardPanel.setLayout(new BorderLayout());  // BorderLayout을 사용하여 상단과 중앙에 패널을 배치
         topCardPanel.setOpaque(false); // displayTopCardPanel의 최상위 패널
@@ -331,7 +331,7 @@ public class UnoGameClientGUI extends JPanel {
             String topValue = topCardParts[1];  // 값
 
             // 이미지 경로 생성 (예: "assets/cards/Red_1.png")
-            String imagePath = "assets/cards/" + topColor + "_" + topValue + ".png";
+            String imagePath = "src/assets/cards/" + topColor + "_" + topValue + ".png";
 
             // topCard 이미지 로드
             ImageIcon topCardImage = new ImageIcon(imagePath);
@@ -342,7 +342,7 @@ public class UnoGameClientGUI extends JPanel {
             topCardButton.setPreferredSize(new Dimension(80, 200));
 
             // BackButton 이미지 로드 (예: "uno1.png")
-            String backButtonImagePath = "assets/cards/uno4.png";  // 경로 변경 가능
+            String backButtonImagePath = "src/assets/cards/uno4.png";  // 경로 변경 가능
             ImageIcon backButtonImage = new ImageIcon(backButtonImagePath);
             Image scaledBackButtonImage = backButtonImage.getImage().getScaledInstance(80, 200, Image.SCALE_SMOOTH);
 

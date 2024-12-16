@@ -38,7 +38,7 @@ public class ClientReadyRoomGUI extends JPanel {
 
     private void createReadyRoomPanel() {
         // 네모와 버튼을 가로로 배치하는 패널
-        JPanel boxesPanel = new BackgroundPanel("assets/uno1.png"); // 이미지 경로
+        JPanel boxesPanel = new BackgroundPanel("src/assets/uno1.png"); // 이미지 경로
 
         boxesPanel.setLayout(new GridLayout(2, 4, 10, 10)); // 1x4 그리드
         //boxesPanel.setBackground(Color.YELLOW); // boxesPanel 배경색 주황색으로 설정
@@ -62,7 +62,7 @@ public class ClientReadyRoomGUI extends JPanel {
 
             if (joinProgress > i) {
                 // 이미지 아이콘을 생성하여 JLabel에 설정
-                ImageIcon imageIcon = new ImageIcon("assets/pro.png");
+                ImageIcon imageIcon = new ImageIcon("src/assets/pro.png");
                 Image scaledImage = imageIcon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH); // 크기 조정
                 JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
 
@@ -170,7 +170,7 @@ public class ClientReadyRoomGUI extends JPanel {
 
             if (joinProgress > i) {
                 // 이미지 아이콘을 생성하여 JLabel에 설정
-                ImageIcon imageIcon = new ImageIcon("assets/pro.png");
+                ImageIcon imageIcon = new ImageIcon("src/assets/pro.png");
                 Image scaledImage = imageIcon.getImage().getScaledInstance(300, 300, Image.SCALE_SMOOTH); // 크기 조정
                 JLabel imageLabel = new JLabel(new ImageIcon(scaledImage));
 
