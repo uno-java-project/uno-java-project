@@ -1,10 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 
 public class BackgroundPanel extends JPanel {
     private Image backgroundImage;
 
-    public BackgroundPanel(String imagePath) {
+    public BackgroundPanel(URL imagePath) {
         this.backgroundImage = new ImageIcon(imagePath).getImage();
     }
     @Override

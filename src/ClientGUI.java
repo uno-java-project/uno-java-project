@@ -174,7 +174,7 @@ public class ClientGUI extends JFrame {
         layeredPane.setPreferredSize(new Dimension(800, 800));
 
         // 배경 이미지 설정
-        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon("src/assets/UNO1.PNG")
+        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon(this.getClass().getClassLoader().getResource("assets/uno1.png"))
                 .getImage().getScaledInstance(800, 800, Image.SCALE_SMOOTH)));
         backgroundLabel.setBounds(0, 0, 800, 800); // 배경 이미지 크기와 위치 설정
         layeredPane.add(backgroundLabel, Integer.valueOf(0)); // 배경을 가장 아래 레이어에 추가
@@ -301,7 +301,7 @@ public class ClientGUI extends JFrame {
             cImageFrame = new JFrame("카드 종류");
             cImageFrame.setSize(410, 240);
 
-            ImageIcon originalIcon = new ImageIcon("src/assets/kind.png");
+            ImageIcon originalIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/kind.png"));
             Image resizedImg = originalIcon.getImage().getScaledInstance(400, 200, Image.SCALE_SMOOTH);
             ImageIcon resizedIcon = new ImageIcon(resizedImg);
 
@@ -329,21 +329,29 @@ public class ClientGUI extends JFrame {
         String[] emojiFiles = {"happy.png", "sad.png", "cry.png", "heeng.png"};
 
         for (String emojiFile : emojiFiles) {
-            ImageIcon emojiIcon = new ImageIcon("src/assets/" + emojiFile);
-            Image scaledImage = emojiIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
-            ImageIcon scaledIcon = new ImageIcon(scaledImage);
+            // getResource를 통해 이미지 경로 설정
+            URL imageUrl = this.getClass().getClassLoader().getResource("assets/" + emojiFile);
 
-            JMenuItem emojiItem = new JMenuItem(emojiFile, scaledIcon);
-            emojiItem.addActionListener(e -> {
-                t_input.setText("이모티콘: " + emojiFile);
-                sendImage(new ImageIcon("src/assets/" + emojiFile));
-            });
+            if (imageUrl != null) { // 이미지가 존재하는 경우만 처리
+                ImageIcon emojiIcon = new ImageIcon(imageUrl);
+                Image scaledImage = emojiIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+                ImageIcon scaledIcon = new ImageIcon(scaledImage);
 
-            emojiMenu.add(emojiItem);
+                JMenuItem emojiItem = new JMenuItem(emojiFile, scaledIcon);
+                emojiItem.addActionListener(e -> {
+                    t_input.setText("이모티콘: " + emojiFile);
+                    sendImage(new ImageIcon(this.getClass().getClassLoader().getResource("assets/" + emojiFile)));
+                });
+
+                emojiMenu.add(emojiItem);
+            } else {
+                System.out.println("이미지를 찾을 수 없습니다: " + emojiFile);
+            }
         }
 
         emojiMenu.show(b_emoji, b_emoji.getWidth() / 2, b_emoji.getHeight() / 2);
     }
+
 
     // 룰 보기 버튼 생성 메소드
     private JButton createRuleButton() {
@@ -722,10 +730,10 @@ public class ClientGUI extends JFrame {
         Image scaledImage;
 
         if (Objects.equals(inMsg.getMessage(), uid)) {
-            imageIcon = new ImageIcon("src/assets/win.png");
+            imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/win.png"));
             scaledImage = imageIcon.getImage().getScaledInstance(800, 600, Image.SCALE_SMOOTH);
         } else {
-            imageIcon = new ImageIcon("src/assets/lose.png");
+            imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/lose.png"));
             scaledImage = imageIcon.getImage().getScaledInstance(600, 500, Image.SCALE_SMOOTH);
         }
 

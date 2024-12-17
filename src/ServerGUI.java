@@ -79,7 +79,7 @@ public class ServerGUI extends JFrame {
     // 이미지 라벨 생성
     private JLabel createImageLabel() {
         JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("src/assets/UNO.PNG");
+        ImageIcon imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/uno.png"));
         Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
         imageLabel.setIcon(new ImageIcon(scaledImage));
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
