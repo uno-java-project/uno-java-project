@@ -224,7 +224,7 @@ public class UnoGameServerGUI extends JPanel {
         JPanel turnPanel = new JPanel();
         turnPanel.setLayout(new GridLayout(unoGame.getTurn().size() + 1, 1));  // 각 플레이어를 세로로 나열
         
-        JLabel nowTurn = new JLabel("현제 차례 : " + unoGame.getTurn().getFirst());
+        JLabel nowTurn = new JLabel("현제 차례 : " + unoGame.getTurn().get(0));
         turnPanel.add(nowTurn);
         
 

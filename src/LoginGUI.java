@@ -101,7 +101,6 @@ public class LoginGUI extends JFrame {
 
         t_portNum = new JTextField(5);
         //t_portNum.setFont(textFieldFont);
-        t_portNum.setEditable(false);
 
         // 기본값 설정
         t_userID.setText("guest" + getLocalAddr().split("\\.")[3]);

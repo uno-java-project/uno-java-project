@@ -117,7 +117,7 @@ public class UnoGameClientGUI extends JPanel {
                 uc.sendUnoUpdate(uid, unoGame);
             }
         });
-        if(!(Objects.equals(unoGame.getTurn().getFirst(), uid))){
+        if(!(Objects.equals(unoGame.getTurn().get(0), uid))){
             drawButton.setEnabled(false);
         }
 
@@ -246,7 +246,7 @@ public class UnoGameClientGUI extends JPanel {
             });
 
             // 해당 플레이어가 아닌 경우 버튼 비활성화
-            if (!(Objects.equals(unoGame.getTurn().getFirst(), uid))) {
+            if (!(Objects.equals(unoGame.getTurn().get(0), uid))) {
                 cardButton.setEnabled(false);
             }
 
@@ -279,7 +279,7 @@ public class UnoGameClientGUI extends JPanel {
         Player4Turn.setBackground(Color.LIGHT_GRAY);
 
 
-        String currentPlayerName = unoGame.getTurn().getFirst();
+        String currentPlayerName = unoGame.getTurn().get(0);
         if(Objects.equals(unoGame.getPlayerNumMap().get(myNum), currentPlayerName)){
             Player1Turn.setBackground(Color.YELLOW);
         }else if(Objects.equals(unoGame.getPlayerNumMap().get((myNum + 1) % 4), currentPlayerName)){
@@ -313,7 +313,7 @@ public class UnoGameClientGUI extends JPanel {
             currentTurnPanel.setBorder(BorderFactory.createTitledBorder("현재 차례"));
 
             // 현재 차례를 가져와 라벨에 표시
-            JLabel currentTurnLabel = new JLabel(unoGame.getTurn().getFirst());  // 'getFirst()'가 현재 플레이어 이름을 반환한다고 가정
+            JLabel currentTurnLabel = new JLabel(unoGame.getTurn().get(0));  // 'getFirst()'가 현재 플레이어 이름을 반환한다고 가정
             currentTurnPanel.add(currentTurnLabel);
 
             // "현재 차례" 패널을 상단에 배치

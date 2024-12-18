@@ -181,7 +181,7 @@ public class UnoGame implements Serializable {
 
     public void drawCard(int playerIndex) {
         if (!deck.isEmpty()) {
-            String drawnCard = deck.removeFirst();
+            String drawnCard = deck.remove(0);
             switch (playerIndex) {
                 case 0: player1List.add(drawnCard); break;
                 case 1: player2List.add(drawnCard); break;
@@ -193,8 +193,8 @@ public class UnoGame implements Serializable {
 
     public void nextTurn() {
         // 턴 변경: turn 리스트에서 첫 번째 아이템을 맨 뒤로 보냄
-        String firstPlayer = turn.getFirst();
-        turn.removeFirst();  // 첫 번째 요소를 리스트에서 제거
+        String firstPlayer = turn.get(0);
+        turn.remove(0);  // 첫 번째 요소를 리스트에서 제거
         turn.add(firstPlayer);  // 첫 번째 플레이어를 리스트의 마지막에 추가
     }
 

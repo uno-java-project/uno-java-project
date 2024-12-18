@@ -737,12 +737,10 @@ public class ServerGUI extends JFrame {
             text = "서버 ip: " + ipAddress + ", 포트번호: " + port;
 
             System.out.println(text);
-            printDisplay(text);
         } catch (IOException e) {
             text = "server.txt 파일을 읽을 수 없어 기본 설정을 사용.\n서버 ip: " + ipAddress + ", 포트번호: " + port;
 
             System.err.println(text);
-            printDisplay(text);
         }
     }
 
