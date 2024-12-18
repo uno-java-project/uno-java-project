@@ -70,10 +70,6 @@ public class LoginGUI extends JFrame {
         return inputPanel;
     }
 
-
-
-
-
     private String getLocalAddr() {
         try {
             InetAddress local = InetAddress.getLocalHost();

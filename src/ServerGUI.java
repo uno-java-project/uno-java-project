@@ -182,7 +182,7 @@ public class ServerGUI extends JFrame {
         Socket clientSocket = null;
         try {
             serverSocket = new ServerSocket(port);
-            printDisplay("서버가 시작됐습니다." + getLocalAddr());
+            printDisplay("서버가 시작됐습니다." + ipAddress);
             while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
                 clientSocket = serverSocket.accept();
                 String cAddr = clientSocket.getInetAddress().getHostAddress();
