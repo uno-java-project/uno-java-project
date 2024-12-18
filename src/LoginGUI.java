@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.*;
 
 public class LoginGUI extends JFrame {
@@ -12,9 +15,8 @@ public class LoginGUI extends JFrame {
     private JTextField t_portNum;
     private JButton b_start, b_exit;
     private String uid;
-    public LoginGUI(String serverAddress, int serverPort) {
-        this.serverAddress = serverAddress;
-        this.serverPort = serverPort;
+    public LoginGUI() {
+        setServerConfig();
         buildGUI();
         this.setSize(800, 800);
         this.setTitle("UNO Login");
@@ -165,9 +167,25 @@ public class LoginGUI extends JFrame {
         return panel;
     }
 
+    private void setServerConfig(){
+        String text = null;
+
+        // server.txt에서 서버 설정 읽기
+        try (BufferedReader br = new BufferedReader(new FileReader("server.txt"))) {
+            serverAddress = br.readLine(); // 첫 번째 줄 ip 주소
+            serverPort = Integer.parseInt(br.readLine()); // 두 번째 줄 포트 번호
+
+            text = "서버 ip: " + serverAddress + ", 포트번호: " + serverPort;
+
+            System.out.println(text);
+        } catch (IOException e) {
+            text = "server.txt 파일을 읽을 수 없어 기본 설정을 사용.\n서버 ip: " + serverAddress + ", 포트번호: " + serverPort;
+
+            System.err.println(text);
+        }
+    }
+
     public static void main(String[] args) {
-        String serverAddress = "localhost";
-        int serverPort = 54321;
-        new LoginGUI(serverAddress, serverPort);
+        new LoginGUI();
     }
 }

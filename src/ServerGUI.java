@@ -10,6 +10,7 @@ import java.util.List;
 public class ServerGUI extends JFrame {
     private UnoGame unoGame;
     private int port;
+    private String ipAddress;
     private JPanel serverPanel;
     private JPanel participantsPanel;
     private JPanel roomPanel;
@@ -25,11 +26,10 @@ public class ServerGUI extends JFrame {
     private int viewingRoomNumber = 0;
     private int roomCount = 0;
 
-    public ServerGUI(int port) {
+    public ServerGUI() {
         super("Uno Game");
-        this.port = port;
+        setServerConfig();
         initializeGUI();
-        //startServerThread();
         setVisible(true);
     }
 
@@ -726,8 +726,27 @@ public class ServerGUI extends JFrame {
         }
     }
 
+    private void setServerConfig(){
+        String text = null;
+
+        // server.txt에서 서버 설정 읽기
+        try (BufferedReader br = new BufferedReader(new FileReader("server.txt"))) {
+            ipAddress = br.readLine(); // 첫 번째 줄 ip 주소
+            port = Integer.parseInt(br.readLine()); // 두 번째 줄 포트 번호
+
+            text = "서버 ip: " + ipAddress + ", 포트번호: " + port;
+
+            System.out.println(text);
+            printDisplay(text);
+        } catch (IOException e) {
+            text = "server.txt 파일을 읽을 수 없어 기본 설정을 사용.\n서버 ip: " + ipAddress + ", 포트번호: " + port;
+
+            System.err.println(text);
+            printDisplay(text);
+        }
+    }
+
     public static void main(String[] args) {
-        int port = 54321;
-        new ServerGUI(port);
+        new ServerGUI();
     }
 }
