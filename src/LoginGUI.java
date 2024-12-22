@@ -15,6 +15,7 @@ public class LoginGUI extends JFrame {
     private JTextField t_portNum;
     private JButton b_start, b_exit;
     private String uid;
+
     public LoginGUI() {
         setServerConfig();
         buildGUI();
@@ -146,9 +147,8 @@ public class LoginGUI extends JFrame {
                 serverPort = Integer.parseInt(t_portNum.getText());
                 uid = t_userID.getText();
 
-                System.out.println(uid + serverAddress + serverPort);
-
                 SwingUtilities.invokeLater(() -> new ClientGUI(uid, serverAddress, serverPort));
+                System.out.println(uid + " " + serverAddress + " " + serverPort);
 
                 dispose();
             }

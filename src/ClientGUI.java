@@ -508,7 +508,7 @@ public class ClientGUI extends JFrame {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket();
+        socket = new Socket(serverAddress, serverPort);
         SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
         socket.connect(sa, 3000);
         out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
