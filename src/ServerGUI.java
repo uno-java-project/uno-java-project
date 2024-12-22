@@ -10,6 +10,7 @@ import java.util.List;
 public class ServerGUI extends JFrame {
     private UnoGame unoGame;
     private int port;
+    private String ipAddress;
     private JPanel serverPanel;
     private JPanel participantsPanel;
     private JPanel roomPanel;
@@ -25,11 +26,10 @@ public class ServerGUI extends JFrame {
     private int viewingRoomNumber = 0;
     private int roomCount = 0;
 
-    public ServerGUI(int port) {
+    public ServerGUI() {
         super("Uno Game");
-        this.port = port;
+        setServerConfig();
         initializeGUI();
-        startServerThread();
         setVisible(true);
     }
 
@@ -79,7 +79,7 @@ public class ServerGUI extends JFrame {
     // 이미지 라벨 생성
     private JLabel createImageLabel() {
         JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
+        ImageIcon imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/uno.png"));
         Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH);
         imageLabel.setIcon(new ImageIcon(scaledImage));
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -158,9 +158,10 @@ public class ServerGUI extends JFrame {
     }
 
     // 서버 시작 및 클라이언트 연결 처리
-    private void startServerThread() {
+/*    private void startServerThread() {
         acceptThread = new Thread(() -> startServer());
         acceptThread.start();
+
     }
 
     // 서버 시작
@@ -170,12 +171,41 @@ public class ServerGUI extends JFrame {
             while (acceptThread == Thread.currentThread()) {
                 Socket clientSocket = serverSocket.accept();
                 handleClientConnection(clientSocket);
+
             }
+
         } catch (IOException e) {
             printDisplay("서버 종료");
         }
-    }
+    }*/
+    private void startServer() {
+        Socket clientSocket = null;
+        try {
+            serverSocket = new ServerSocket(port);
+            printDisplay("서버가 시작됐습니다." + ipAddress);
+            while (acceptThread == Thread.currentThread()) { // 클라이언트 접속 기다림
+                clientSocket = serverSocket.accept();
+                String cAddr = clientSocket.getInetAddress().getHostAddress();
+                t_display.append("클라이언트 연결:" + cAddr + "\n");
+                ClientHandler cHandler = new ClientHandler(clientSocket);
+                users.add(cHandler);
+                cHandler.start();
+            }
+        } catch (SocketException e) {
+            printDisplay("서버 소캣 종료");
 
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (clientSocket != null) clientSocket.close();
+                if (serverSocket != null) serverSocket.close();
+            } catch (IOException e) {
+                System.err.println("서버 닫기 오류 > " + e.getMessage());
+                System.exit(-1);
+            }
+        }
+    }
     // 클라이언트 연결 처리
     private void handleClientConnection(Socket clientSocket) {
         String clientAddr = clientSocket.getInetAddress().getHostAddress();
@@ -206,15 +236,59 @@ public class ServerGUI extends JFrame {
     }
 
     // 서버 제어 버튼 생성
-    private JPanel createControlPanel() {
-        b_connect = createButton("서버 시작", e -> startServerThread(), false);
-        b_disconnect = createButton("서버 종료", e -> disconnect(), true);
-        b_exit = createButton("종료하기", e -> exitServer(), false);
+    private JPanel createControlPanel() { // 제일 밑단 종료 버튼
+
+        b_connect = new JButton("서버 시작");
+        b_connect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                acceptThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startServer();
+                    }
+                });
+                acceptThread.start();
+                //접속 끊기 전에는 종료하거나 다시 접속하기 불가
+                b_connect.setEnabled(false);
+                b_disconnect.setEnabled(true);
+                b_exit.setEnabled(false);
+
+            }
+        });
+
+        b_disconnect = new JButton("서버 종료");
+        b_disconnect.setEnabled(false); // 처음엔 비활성화
+        b_disconnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                disconnect();
+                b_connect.setEnabled(true);
+                b_disconnect.setEnabled(false);
+
+                b_exit.setEnabled(true);
+            }
+        });
+
+        b_exit = new JButton("종료하기");
+        b_exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                try {
+                    if (serverSocket != null) serverSocket.close();
+                } catch (IOException e) {
+                    System.err.println("서버 닫기 오류 > " + e.getMessage());
+                }
+                System.exit(-1);
+            }
+        });
 
         JPanel panel = new JPanel(new GridLayout(0, 3));
+
         panel.add(b_connect);
         panel.add(b_disconnect);
         panel.add(b_exit);
+        b_disconnect.setEnabled(false);
 
         return panel;
     }
@@ -652,8 +726,25 @@ public class ServerGUI extends JFrame {
         }
     }
 
+    private void setServerConfig(){
+        String text = null;
+
+        // server.txt에서 서버 설정 읽기
+        try (BufferedReader br = new BufferedReader(new FileReader("server.txt"))) {
+            ipAddress = br.readLine(); // 첫 번째 줄 ip 주소
+            port = Integer.parseInt(br.readLine()); // 두 번째 줄 포트 번호
+
+            text = "서버 ip: " + ipAddress + ", 포트번호: " + port;
+
+            System.out.println(text);
+        } catch (IOException e) {
+            text = "server.txt 파일을 읽을 수 없어 기본 설정을 사용.\n서버 ip: " + ipAddress + ", 포트번호: " + port;
+
+            System.err.println(text);
+        }
+    }
+
     public static void main(String[] args) {
-        int port = 54321;
-        new ServerGUI(port);
+        new ServerGUI();
     }
 }

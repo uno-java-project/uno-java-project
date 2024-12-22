@@ -59,6 +59,7 @@ public class ClientGUI extends JFrame {
         leftWrapperPanel = new JPanel();
         leftWrapperPanel.setLayout(new BoxLayout(leftWrapperPanel, BoxLayout.Y_AXIS));  // 세로로 배치
         leftWrapperPanel.add(createLeftPanel());  // createLeftPanel()을 내부에 추가
+        leftWrapperPanel.setBackground(Color.WHITE);
 
         this.add(leftWrapperPanel, BorderLayout.CENTER);  // leftWrapperPanel을 WEST에 추가
         this.add(createRightPanel(), BorderLayout.EAST);
@@ -78,16 +79,45 @@ public class ClientGUI extends JFrame {
 
     // 방 패널을 생성하는 메서드
     private JPanel createRoomPanel(int roomNumber) {
-        JPanel singleRoomPanel = new JPanel(new BorderLayout());
+        JPanel singleRoomPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f)); // 투명도 설정 (0.7f = 70%)
+                g2d.setColor(getBackground());
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+        singleRoomPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
         singleRoomPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY));
         singleRoomPanel.setPreferredSize(new Dimension(550, 50)); // 방 크기 고정
         singleRoomPanel.setMaximumSize(new Dimension(550, 50)); // 방 크기 고정
+        singleRoomPanel.setBackground(new Color(255, 255, 255, 230)); // 흰색 배경, 알파값 포함
 
-        JLabel roomLabel = new JLabel("방 " + roomNumber, SwingConstants.CENTER);
+        JLabel roomLabel = new JLabel("방 " + roomNumber+ " (0/4)", SwingConstants.CENTER);
+        roomLabel.setOpaque(false); // 기본 배경 비활성화
+        roomLabel.setForeground(Color.BLACK); // 글자 색 설정
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // 버튼을 오른쪽 정렬
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g.create();
+                g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f)); // 투명도 설정
+                g2d.setColor(getBackground());
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+                g2d.dispose();
+            }
+        };
+        buttonPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        buttonPanel.setBackground(new Color(255, 255, 255, 230)); // 흰색 배경, 알파값 포함
+
         JButton joinButton = new JButton("참가");
         JButton deleteButton = new JButton("삭제");
+        joinButton.setBackground(new Color(255, 255, 255, 230)); // 버튼 배경 흰색 및 투명도 적용
+        deleteButton.setBackground(new Color(255, 255, 255, 230)); // 버튼 배경 흰색 및 투명도 적용
 
         // 참가 버튼 클릭 시 해당 방 번호로 이동 (myRoomNumber에 값 할당)
         joinButton.addActionListener(createJoinRoomActionListener(roomNumber));
@@ -103,6 +133,7 @@ public class ClientGUI extends JFrame {
 
         return singleRoomPanel;
     }
+
 
     // 참가 버튼
     private ActionListener createJoinRoomActionListener(int roomNumber) {
@@ -135,37 +166,65 @@ public class ClientGUI extends JFrame {
     }
 
     private JPanel createLeftPanel() {
+        // 전체 패널 생성
         JPanel leftPanel = new JPanel(new BorderLayout());
-        JPanel leftTopPanel = new JPanel(new BorderLayout());
 
-        JLabel imageLabel = new JLabel();
-        ImageIcon imageIcon = new ImageIcon("assets/UNO.PNG");
-        Image scaledImage = imageIcon.getImage().getScaledInstance(200, 200, Image.SCALE_SMOOTH); // 이미지 크기 조정
-        imageLabel.setIcon(new ImageIcon(scaledImage));
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER); // 수평 중앙 정렬
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);   // 수직 중앙 정렬
-        imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 0, 80, 0)); // 여백 설정
-        leftTopPanel.add(imageLabel, BorderLayout.CENTER);
+        // 레이어드 패널 생성
+        JLayeredPane layeredPane = new JLayeredPane();
+        layeredPane.setPreferredSize(new Dimension(800, 800));
 
+        // 배경 이미지 설정
+        JLabel backgroundLabel = new JLabel(new ImageIcon(new ImageIcon(this.getClass().getClassLoader().getResource("assets/uno1.png"))
+                .getImage().getScaledInstance(800, 800, Image.SCALE_SMOOTH)));
+        backgroundLabel.setBounds(0, 0, 800, 800); // 배경 이미지 크기와 위치 설정
+        layeredPane.add(backgroundLabel, Integer.valueOf(0)); // 배경을 가장 아래 레이어에 추가
+
+        // "방 추가" 버튼 및 방 목록 패널
+        JPanel overlayPanel = new JPanel();
+        overlayPanel.setOpaque(false); // 투명 배경
+        overlayPanel.setLayout(new BoxLayout(overlayPanel, BoxLayout.Y_AXIS));
+        overlayPanel.setBounds(0, 0, 800, 800); // 이미지와 동일한 크기로 설정
+
+        // "방 추가" 버튼
         JButton addRoomButton = new JButton("방 추가");
-        leftTopPanel.add(addRoomButton, BorderLayout.SOUTH);
+        //addRoomButton.setFont(new Font("Arial", Font.BOLD, 20)); // 버튼 텍스트 크기 증가
+        addRoomButton.setPreferredSize(new Dimension(150, 50)); // 버튼 크기 설정
+        addRoomButton.setAlignmentX(Component.CENTER_ALIGNMENT); // 버튼 중앙 정렬
+        addRoomButton.setBackground(new Color(255, 255, 255)); // 흰색 배경
+        addRoomButton.setFocusPainted(false); // 포커스 테두리 제거
 
-        roomPanel = new JPanel();
-        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));  // 세로로 배치
-        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
-
-        addRoomButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendAddRoom(uid);
-                updateRoom();
-            }
+        addRoomButton.addActionListener(e -> {
+            sendAddRoom(uid);
+            updateRoom();
         });
 
-        leftPanel.add(leftTopPanel, BorderLayout.NORTH);
-        leftPanel.add(new JScrollPane(roomPanel), BorderLayout.CENTER);
+        // 방 목록 패널 생성
+        roomPanel = new JPanel();
+        roomPanel.setLayout(new BoxLayout(roomPanel, BoxLayout.Y_AXIS));
+        roomPanel.setOpaque(false); // 방 목록 투명
+        roomPanel.setBorder(BorderFactory.createTitledBorder("방 목록"));
+
+        JScrollPane scrollPane = new JScrollPane(roomPanel);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder()); // 스크롤 바 경계 제거
+
+        // 버튼과 방 목록 패널 추가
+        overlayPanel.add(Box.createRigidArea(new Dimension(0, 30))); // 버튼 위쪽 여백
+        overlayPanel.add(addRoomButton); // 방 추가 버튼
+        overlayPanel.add(Box.createRigidArea(new Dimension(0, 20))); // 버튼과 목록 간 여백
+        overlayPanel.add(scrollPane); // 방 목록
+
+        // 레이어드 패널에 오버레이 패널 추가
+        layeredPane.add(overlayPanel, Integer.valueOf(1));
+
+        // 전체 패널에 레이어드 패널 추가
+        leftPanel.add(layeredPane, BorderLayout.CENTER);
 
         return leftPanel;
     }
+
+
 
 
     private JPanel createDisplayPanel() {
@@ -193,7 +252,7 @@ public class ClientGUI extends JFrame {
     private JPanel createRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setPreferredSize(new Dimension(270, 800));
-
+        panel.setBackground(Color.WHITE);
         // 디스플레이 패널 설정
         JPanel displayPanel = createDisplayPanel();
         panel.add(displayPanel, BorderLayout.CENTER);
@@ -216,11 +275,13 @@ public class ClientGUI extends JFrame {
         p_button.add(createRuleButton());
         p_button.add(createDisconnectButton());
         p_button.add(createExitButton());
+        p_button.setBackground(Color.WHITE);
 
         inputPanel.add(p_button, BorderLayout.SOUTH); // 버튼 패널은 입력 필드 아래에 배치
 
         // Input 패널 전체를 Right Panel의 하단에 추가
         panel.add(inputPanel, BorderLayout.SOUTH);
+        panel.setBackground(Color.WHITE);
 
         return panel;
     }
@@ -229,6 +290,8 @@ public class ClientGUI extends JFrame {
     private JButton createCardListButton() {
         JButton b_cardList = new JButton("카드종류");
         b_cardList.addActionListener(e -> toggleCardListFrame());
+        b_cardList.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_cardList;
     }
 
@@ -238,7 +301,7 @@ public class ClientGUI extends JFrame {
             cImageFrame = new JFrame("카드 종류");
             cImageFrame.setSize(410, 240);
 
-            ImageIcon originalIcon = new ImageIcon("assets/kind.png");
+            ImageIcon originalIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/kind.png"));
             Image resizedImg = originalIcon.getImage().getScaledInstance(400, 200, Image.SCALE_SMOOTH);
             ImageIcon resizedIcon = new ImageIcon(resizedImg);
 
@@ -255,6 +318,8 @@ public class ClientGUI extends JFrame {
     private JButton createEmojiButton() {
         JButton b_emoji = new JButton("이모티콘");
         b_emoji.addActionListener(e -> showEmojiPopup(b_emoji));
+        b_emoji.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_emoji;
     }
 
@@ -264,26 +329,36 @@ public class ClientGUI extends JFrame {
         String[] emojiFiles = {"happy.png", "sad.png", "cry.png", "heeng.png"};
 
         for (String emojiFile : emojiFiles) {
-            ImageIcon emojiIcon = new ImageIcon("assets/" + emojiFile);
-            Image scaledImage = emojiIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
-            ImageIcon scaledIcon = new ImageIcon(scaledImage);
+            // getResource를 통해 이미지 경로 설정
+            URL imageUrl = this.getClass().getClassLoader().getResource("assets/" + emojiFile);
 
-            JMenuItem emojiItem = new JMenuItem(emojiFile, scaledIcon);
-            emojiItem.addActionListener(e -> {
-                t_input.setText("이모티콘: " + emojiFile);
-                sendImage(new ImageIcon("assets/" + emojiFile));
-            });
+            if (imageUrl != null) { // 이미지가 존재하는 경우만 처리
+                ImageIcon emojiIcon = new ImageIcon(imageUrl);
+                Image scaledImage = emojiIcon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
+                ImageIcon scaledIcon = new ImageIcon(scaledImage);
 
-            emojiMenu.add(emojiItem);
+                JMenuItem emojiItem = new JMenuItem(emojiFile, scaledIcon);
+                emojiItem.addActionListener(e -> {
+                    t_input.setText("이모티콘: " + emojiFile);
+                    sendImage(new ImageIcon(this.getClass().getClassLoader().getResource("assets/" + emojiFile)));
+                });
+
+                emojiMenu.add(emojiItem);
+            } else {
+                System.out.println("이미지를 찾을 수 없습니다: " + emojiFile);
+            }
         }
 
         emojiMenu.show(b_emoji, b_emoji.getWidth() / 2, b_emoji.getHeight() / 2);
     }
 
+
     // 룰 보기 버튼 생성 메소드
     private JButton createRuleButton() {
         b_rule = new JButton("룰보기");
         b_rule.addActionListener(e -> openRuleURL());
+        b_rule.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_rule;
     }
 
@@ -300,6 +375,8 @@ public class ClientGUI extends JFrame {
     private JButton createDisconnectButton() {
         b_disconnect = new JButton("접속 끊기");
         b_disconnect.addActionListener(e -> disconnect());
+        b_disconnect.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_disconnect;
     }
 
@@ -310,13 +387,17 @@ public class ClientGUI extends JFrame {
             disconnect();
             System.exit(0);
         });
+        b_exit.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_exit;
     }
 
     // 파일 선택 버튼 생성 메소드
     private JButton createFileSelectButton() {
-        JButton b_select = new JButton("아미지");
+        JButton b_select = new JButton("이미지");
         b_select.addActionListener(e -> selectFile());
+        b_select.setBackground(Color.white); // 배경색을 하얗게 설정
+
         return b_select;
     }
 
@@ -379,7 +460,7 @@ public class ClientGUI extends JFrame {
         Image scaledImage = image.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
         ImageIcon resizedIcon = new ImageIcon(scaledImage);
         //이모지 사이즈 조절
-        send(new GamePacket(uid, GamePacket.MODE_TX_IMAGE, "이모지", resizedIcon, myRoomNumber));
+        send(new GamePacket(uid, GamePacket.MODE_TX_IMAGE, "", resizedIcon, myRoomNumber));
     }
 
     // 로그인 시 사용자 ID와 방 번호 전송
@@ -427,7 +508,7 @@ public class ClientGUI extends JFrame {
     }
 
     private void connectToServer() throws IOException {
-        socket = new Socket();
+        socket = new Socket(serverAddress, serverPort);
         SocketAddress sa = new InetSocketAddress(serverAddress, serverPort);
         socket.connect(sa, 3000);
         out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
@@ -633,7 +714,8 @@ public class ClientGUI extends JFrame {
         playAgainButton.setHorizontalAlignment(SwingConstants.CENTER);
         playAgainButton.addActionListener(e -> resetGame());
         resultPanel.add(playAgainButton, BorderLayout.SOUTH);
-
+        resultPanel.setBackground(new Color(255, 122, 0, 253)); // 진한 주황색
+        playAgainButton.setBackground(Color.white);
         add(resultPanel, BorderLayout.CENTER);
         myRoomNumber = 0;
 
@@ -648,10 +730,10 @@ public class ClientGUI extends JFrame {
         Image scaledImage;
 
         if (Objects.equals(inMsg.getMessage(), uid)) {
-            imageIcon = new ImageIcon("assets/win.png");
+            imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/win.png"));
             scaledImage = imageIcon.getImage().getScaledInstance(800, 600, Image.SCALE_SMOOTH);
         } else {
-            imageIcon = new ImageIcon("assets/lose.png");
+            imageIcon = new ImageIcon(this.getClass().getClassLoader().getResource("assets/lose.png"));
             scaledImage = imageIcon.getImage().getScaledInstance(600, 500, Image.SCALE_SMOOTH);
         }
 
@@ -659,6 +741,8 @@ public class ClientGUI extends JFrame {
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
         imageLabel.setBorder(BorderFactory.createEmptyBorder(80, 30, 20, 30));
+        imageLabel.setOpaque(true); // 배경색을 보이게 설정
+        imageLabel.setBackground(new Color(255, 122, 0, 253)); // 진한 주황색
 
         return imageLabel;
     }
@@ -685,6 +769,31 @@ public class ClientGUI extends JFrame {
                 // 방 번호를 확인하여 레이블 텍스트 업데이트
                 if (roomLabel.getText().contains("방 " + roomNumber)) {
                     roomLabel.setText("방 " + roomNumber + " (" + participantsCount + "/4)");
+
+                    // "참가"와 "삭제" 버튼 상태 업데이트
+                    Component[] components = singleRoomPanel.getComponents();
+                    for (Component innerComp : components) {
+                        if (innerComp instanceof JPanel) {
+                            JPanel buttonPanel = (JPanel) innerComp;
+                            for (Component btn : buttonPanel.getComponents()) {
+                                if (btn instanceof JButton) {
+                                    JButton button = (JButton) btn;
+
+                                    // "참가" 버튼 비활성화 조건
+                                    if ("참가".equals(button.getText())) {
+                                        button.setEnabled(participantsCount < 4); // 4명일 경우 비활성화
+                                        button.setToolTipText(participantsCount >= 4 ? "참가자가 가득 찬 방입니다." : null);
+                                    }
+
+                                    // "삭제" 버튼 비활성화 조건
+                                    if ("삭제".equals(button.getText())) {
+                                        button.setEnabled(participantsCount == 0); // 1명 이상일 경우 비활성화
+                                        button.setToolTipText(participantsCount > 0 ? "참가자가 있는 방은 삭제할 수 없습니다." : null);
+                                    }
+                                }
+                            }
+                        }
+                    }
                     break;
                 }
             }
@@ -692,6 +801,9 @@ public class ClientGUI extends JFrame {
         roomPanel.revalidate();
         roomPanel.repaint();
     }
+
+
+
 
     private void disconnect() {
         send(new GamePacket(uid, GamePacket.MODE_LOGOUT, null, null, null, 0, 0, 0, 0, 0)); // LOGOUT 패킷 전송

@@ -2,8 +2,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 import java.util.*;
 import java.util.List;
+import javax.swing.*;
+import java.awt.*;
 
 public class UnoGameClientGUI extends JPanel {
     private UnoGame unoGame;
@@ -14,15 +17,17 @@ public class UnoGameClientGUI extends JPanel {
     private HashMap<Integer, String> userMap;
     private ClientGUI uc;
     private String currentTurn;
+    Color darkOrange = new Color(255, 120, 0); // RGB 값으로 진한 오렌지 생성
 
     public UnoGameClientGUI(UnoGame unoGame, String uid, ClientGUI uc) {
         setLayout(new BorderLayout()); // 기존의 레이아웃 설정
         setPreferredSize(new Dimension(615, 830));
 
         // 게임 패널 설정
-        gamePanel = new JPanel();
+        gamePanel = new BackgroundPanel(this.getClass().getClassLoader().getResource("assets/unotable.png")); // 이미지 경로
         gamePanel.setLayout(new BorderLayout());  // 전체 화면을 BorderLayout으로 설정
-        add(gamePanel, BorderLayout.CENTER);
+        add(gamePanel, BorderLayout.CENTER); // 패널 추가
+
 
         this.uid = uid;
         this.unoGame = unoGame;
@@ -50,14 +55,16 @@ public class UnoGameClientGUI extends JPanel {
         gamePanel.removeAll();  // 기존 내용 제거
 
         JPanel player1Panel = new JPanel(new BorderLayout());
-
+        player1Panel.setOpaque(true); // 배경색이 보이도록 설정
+        player1Panel.setBackground(darkOrange); // 배경색 설정
         // 상단에 플레이어 덱 (Player 1, 2, 3, 4) 배치
         JPanel playersPanel = new JPanel(new BorderLayout());
         player1Panel.add(displayMyCards(unoGame.getPlayerCards(myNum), myNum), BorderLayout.CENTER); // Player 1 덱
         player1Panel.add(displayActionButtons(), BorderLayout.EAST);  // 플레이어 1 버튼은 오른쪽에 배치
         player1Panel.setPreferredSize(new Dimension(0, 150));  // 남쪽 패널 크기 고정
-
         // 동쪽(WEST)과 서쪽(EAST) 패널의 크기 고정
+
+
         JPanel player2Panel = displayPlayerCards(unoGame.getPlayerCards((myNum+1)%4), (myNum+1)%4);
         player2Panel.setPreferredSize(new Dimension(120, 0));  // 서쪽 패널 크기 고정
         playersPanel.add(player2Panel, BorderLayout.WEST); // Player 2 덱
@@ -76,7 +83,13 @@ public class UnoGameClientGUI extends JPanel {
         // Top Card 표시 (중앙)
         playersPanel.add(GameCenterPanel(), BorderLayout.CENTER);
 
-        gamePanel.add(playersPanel, BorderLayout.CENTER);  // 플레이어 덱을 게임 패널 중앙에 배치
+        gamePanel.add(playersPanel, BorderLayout.CENTER);  // 플레이어
+        // 덱을 게임 패널 중앙에 배치
+       // player1Panel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        player3Panel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        player2Panel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        player4Panel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        playersPanel.setBackground(darkOrange);
 
         // 게임 패널 재배치
         gamePanel.revalidate();
@@ -91,6 +104,9 @@ public class UnoGameClientGUI extends JPanel {
         // Draw, Next, UNO 버튼들 생성
         JButton drawButton = new JButton("Draw");
         JButton unoButton = new JButton("UNO");
+        buttonPanel.setBackground(darkOrange); // 배경색 설정
+        drawButton.setBackground(Color.white); // 배경색 설정
+        unoButton.setBackground(Color.white); // 배경색 설정
 
         // 각 버튼에 액션 리스너 추가
         drawButton.addActionListener(new ActionListener() {
@@ -101,7 +117,7 @@ public class UnoGameClientGUI extends JPanel {
                 uc.sendUnoUpdate(uid, unoGame);
             }
         });
-        if(!(Objects.equals(unoGame.getTurn().getFirst(), uid))){
+        if(!(Objects.equals(unoGame.getTurn().get(0), uid))){
             drawButton.setEnabled(false);
         }
 
@@ -151,22 +167,23 @@ public class UnoGameClientGUI extends JPanel {
 
         JPanel cardPanel = new JPanel();
         cardPanel.setLayout(new FlowLayout(FlowLayout.LEFT));  // 카드 버튼들을 왼쪽에 배치
+        cardPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
 
         // 동쪽, 서쪽, 북쪽 패널에 따라 다른 이미지 경로와 크기 설정
-        String imagePath = "";  // 카드 이미지 경로를 동적으로 설정
+        URL imagePath ;   // 카드 이미지 경로를 동적으로 설정
         int cardWidth = 90;
         int cardHeight = 30;
 
         if (playerIndex == (myNum + 1) % 4) {
-            imagePath = "assets/cards/uno1.png";  // 서쪽 패널
+            imagePath = this.getClass().getClassLoader().getResource("assets/cards/uno1.png");  // 서쪽 패널
         } else if (playerIndex == (myNum + 3) % 4) {
-            imagePath = "assets/cards/uno3.png";  // 동쪽 패널
+            imagePath = this.getClass().getClassLoader().getResource("assets/cards/uno3.png");  // 동쪽 패널
         } else if (playerIndex == (myNum + 2) % 4) {
-            imagePath = "assets/cards/uno2.png";  // 북쪽 패널
+            imagePath = this.getClass().getClassLoader().getResource("assets/cards/uno2.png");  // 북쪽 패널
             cardWidth = 30;  // 북쪽은 세로로 표시
             cardHeight = 90;
         } else {
-            imagePath = "assets/cards/uno1.png";  // 기본 이미지, 필요시 변경
+            imagePath = this.getClass().getClassLoader().getResource("assets/cards/uno1.png");  // 기본 이미지, 필요시 변경
         }
 
         // 각 카드에 대해 이미지를 버튼으로 설정
@@ -196,10 +213,10 @@ public class UnoGameClientGUI extends JPanel {
         JPanel playerPanel = new JPanel();
         playerPanel.setBorder(BorderFactory.createTitledBorder(unoGame.getPlayerNumMap().get(playerIndex)));
         playerPanel.setLayout(new BorderLayout());
-
+        playerPanel.setBackground(darkOrange); // 배경색 설정
         JPanel cardPanel = new JPanel();
         cardPanel.setLayout(new FlowLayout(FlowLayout.LEFT));  // 카드 버튼들을 왼쪽에 배치
-
+        cardPanel.setBackground(darkOrange); // 배경색 설정
         for (String card : playerList) {
             // 카드 이름을 색상과 값으로 나누어 표시
             String[] cardParts = card.split(" ");
@@ -207,7 +224,7 @@ public class UnoGameClientGUI extends JPanel {
             String value = cardParts[1]; // 값
 
             // 예시 경로 : "assets/cards/Red_1.png"
-            String imagePath = "assets/cards/" + color + "_" + value + ".png";
+            URL imagePath = this.getClass().getClassLoader().getResource("assets/cards/" + color + "_" + value + ".png");
 
             // 이미지 로드
             ImageIcon cardImage = new ImageIcon(imagePath);
@@ -229,7 +246,7 @@ public class UnoGameClientGUI extends JPanel {
             });
 
             // 해당 플레이어가 아닌 경우 버튼 비활성화
-            if (!(Objects.equals(unoGame.getTurn().getFirst(), uid))) {
+            if (!(Objects.equals(unoGame.getTurn().get(0), uid))) {
                 cardButton.setEnabled(false);
             }
 
@@ -244,8 +261,11 @@ public class UnoGameClientGUI extends JPanel {
     }
 
     private JPanel GameCenterPanel() {
+
         gameCenterPanel = new JPanel(new BorderLayout());
         gameCenterPanel.add(displayTopCardPanel(), BorderLayout.CENTER);
+        gameCenterPanel.setOpaque(false); // 투명도를 위해 기본 불투명 설정 해제
+        gameCenterPanel.setBackground(darkOrange); // 투명도를 위해 기본 불투명 설정 해제
 
         // 플레이어 차례 패널 생성
         JPanel Player1Turn = new JPanel();  // 남쪽
@@ -259,7 +279,7 @@ public class UnoGameClientGUI extends JPanel {
         Player4Turn.setBackground(Color.LIGHT_GRAY);
 
 
-        String currentPlayerName = unoGame.getTurn().getFirst();
+        String currentPlayerName = unoGame.getTurn().get(0);
         if(Objects.equals(unoGame.getPlayerNumMap().get(myNum), currentPlayerName)){
             Player1Turn.setBackground(Color.YELLOW);
         }else if(Objects.equals(unoGame.getPlayerNumMap().get((myNum + 1) % 4), currentPlayerName)){
@@ -280,8 +300,12 @@ public class UnoGameClientGUI extends JPanel {
 
     private JPanel displayTopCardPanel() {
         // 메인 패널을 BorderLayout으로 설정
-        JPanel topCardPanel = new JPanel();
+        JPanel topCardPanel = new BackgroundPanel(this.getClass().getClassLoader().getResource("assets/unotable.png"));
+        topCardPanel.setLayout(new BorderLayout());
         topCardPanel.setLayout(new BorderLayout());  // BorderLayout을 사용하여 상단과 중앙에 패널을 배치
+        topCardPanel.setOpaque(false); // displayTopCardPanel의 최상위 패널
+        topCardPanel.setBackground(darkOrange);
+
 
         // "현재 차례"를 표시하는 패널을 상단에 추가
         if (unoGame.getTurn() != null) {
@@ -289,11 +313,15 @@ public class UnoGameClientGUI extends JPanel {
             currentTurnPanel.setBorder(BorderFactory.createTitledBorder("현재 차례"));
 
             // 현재 차례를 가져와 라벨에 표시
-            JLabel currentTurnLabel = new JLabel(unoGame.getTurn().getFirst());  // 'getFirst()'가 현재 플레이어 이름을 반환한다고 가정
+            JLabel currentTurnLabel = new JLabel(unoGame.getTurn().get(0));  // 'getFirst()'가 현재 플레이어 이름을 반환한다고 가정
             currentTurnPanel.add(currentTurnLabel);
 
             // "현재 차례" 패널을 상단에 배치
             topCardPanel.add(currentTurnPanel, BorderLayout.NORTH);
+
+            currentTurnPanel.setOpaque(false);
+            currentTurnPanel.setBackground(Color.white);
+
         }
 
         // 상단 카드가 null이 아닌 경우 처리
@@ -304,7 +332,7 @@ public class UnoGameClientGUI extends JPanel {
             String topValue = topCardParts[1];  // 값
 
             // 이미지 경로 생성 (예: "assets/cards/Red_1.png")
-            String imagePath = "assets/cards/" + topColor + "_" + topValue + ".png";
+            URL imagePath = this.getClass().getClassLoader().getResource("assets/cards/" + topColor + "_" + topValue + ".png");
 
             // topCard 이미지 로드
             ImageIcon topCardImage = new ImageIcon(imagePath);
@@ -315,7 +343,7 @@ public class UnoGameClientGUI extends JPanel {
             topCardButton.setPreferredSize(new Dimension(80, 200));
 
             // BackButton 이미지 로드 (예: "uno1.png")
-            String backButtonImagePath = "assets/cards/uno4.png";  // 경로 변경 가능
+            URL backButtonImagePath = this.getClass().getClassLoader().getResource("assets/cards/uno4.png");  // 경로 변경 가능
             ImageIcon backButtonImage = new ImageIcon(backButtonImagePath);
             Image scaledBackButtonImage = backButtonImage.getImage().getScaledInstance(80, 200, Image.SCALE_SMOOTH);
 
@@ -331,6 +359,8 @@ public class UnoGameClientGUI extends JPanel {
 
             // 카드 패널을 중앙에 배치
             topCardPanel.add(cardPanel, BorderLayout.CENTER);
+            cardPanel.setOpaque(false);
+            cardPanel.setBackground(Color.white);
         }
 
         return topCardPanel;
@@ -352,4 +382,3 @@ public class UnoGameClientGUI extends JPanel {
         updateGamePanel();
     }
 }
-
